@@ -1,0 +1,38 @@
+{
+	"appId": "com.safezy.app",
+	"appName": "Safezy",
+	"webDir": "public",
+	"server": {
+		"url": "http://192.168.0.135:3000",
+		"cleartext": true,
+		"allowNavigation": [
+			"*.payu.in",
+			"secure.payu.in",
+			"api.payu.in"
+		]
+	},
+	"ios": {
+		"preferredContentMode": "mobile",
+		"zoomEnabled": false,
+		"limitsNavigationsToAppBoundDomains": false
+	},
+	"android": {},
+	"plugins": {
+		"SplashScreen": {
+			"launchAutoHide": false
+		},
+		"StatusBar": {
+			"overlaysWebView": false,
+			"backgroundColor": "#FF914DFF"
+		}
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"DevicePlugin",
+		"KeyboardPlugin",
+		"ScreenOrientationPlugin",
+		"SplashScreenPlugin",
+		"StatusBarPlugin",
+		"TextZoomPlugin"
+	]
+}

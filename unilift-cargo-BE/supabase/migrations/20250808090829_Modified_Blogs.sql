@@ -1,0 +1,3 @@
+ALTER TABLE public.blogs
+ALTER COLUMN title TYPE varchar,
+ALTER COLUMN title SET NOT NULL;
