@@ -11,8 +11,6 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import Spinner from '@/components/loaders/Spinner';
-import OrderDeliveryStateCheckModal from '@/components/modals/contractor/OrderDeliveryStateCheck';
-import { STATE } from '@/constants/constants';
 
 export const ProductFeedbackPage = ({
   handlePayment,
@@ -26,7 +24,6 @@ export const ProductFeedbackPage = ({
   state: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isStateModalOpen, setIsStateModalOpen] = useState(false);
 
   // Fetch products query
   const {
@@ -92,43 +89,36 @@ export const ProductFeedbackPage = ({
 
   return (
     <div>
-      {state.toLocaleLowerCase().trim() === STATE.GUJARAT ? (
-        !error &&
-        products?.data?.productsForFeedbacks &&
-        products.data.productsForFeedbacks.length > 0 ? (
-          <ProductFeedbackModal
-            products={products.data.productsForFeedbacks}
-            open={isOpen}
-            setIsOpen={setIsOpen}
-            onSubmit={feedback => {
-              feedbackMutation.mutate(feedback);
-            }}
-            onPayment={handlePayment}
-            isProcessing={isProcessing}
-            disabled={disabled}
-          />
-        ) : (
-          <Button
-            onClick={handlePayment}
-            disabled={isProcessing || disabled}
-            className="w-full text-xs sm:text-sm"
-            size="sm"
-          >
-            {isProcessing ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
-              </div>
-            ) : (
-              'Proceed to Payment'
-            )}
-          </Button>
-        )
-      ) : (
-        <OrderDeliveryStateCheckModal
-          open={isStateModalOpen}
-          setIsOpen={setIsStateModalOpen}
+      {!error &&
+      products?.data?.productsForFeedbacks &&
+      products.data.productsForFeedbacks.length > 0 ? (
+        <ProductFeedbackModal
+          products={products.data.productsForFeedbacks}
+          open={isOpen}
+          setIsOpen={setIsOpen}
+          onSubmit={feedback => {
+            feedbackMutation.mutate(feedback);
+          }}
+          onPayment={handlePayment}
+          isProcessing={isProcessing}
+          disabled={disabled}
         />
+      ) : (
+        <Button
+          onClick={handlePayment}
+          disabled={isProcessing || disabled}
+          className="w-full text-xs sm:text-sm"
+          size="sm"
+        >
+          {isProcessing ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processing...
+            </div>
+          ) : (
+            'Proceed to Payment'
+          )}
+        </Button>
       )}
     </div>
   );
