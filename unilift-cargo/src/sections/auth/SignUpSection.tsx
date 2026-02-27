@@ -152,7 +152,6 @@ const SignUpSection = () => {
               errorText={errors.noOfWorkers?.message}
               onChange={field.onChange}
               value={field.value}
-              required
             />
           )}
         />
@@ -160,7 +159,6 @@ const SignUpSection = () => {
         <div className="space-y-2 pb-5">
           <label className="capitalize">
             Type of Service Provided
-            <span className="ml-[2px] text-red-500">*</span>
           </label>
           <Controller
             name="typeOfServicesProvided"
@@ -180,7 +178,7 @@ const SignUpSection = () => {
               {errors.typeOfServicesProvided?.message}
             </div>
           )}
-          {watchTypeOfServicesProvided.includes('other') && (
+          {watchTypeOfServicesProvided?.includes('other') && (
             <InputFieldWithLabel
               label="Other"
               required
@@ -193,7 +191,6 @@ const SignUpSection = () => {
         <div className="space-y-2 pb-5">
           <label className="capitalize">
             Industries Served Type of Service Provided
-            <span className="ml-[2px] text-red-500">*</span>
           </label>
           <Controller
             name="industriesServed"
@@ -212,7 +209,7 @@ const SignUpSection = () => {
               {errors.industriesServed?.message}
             </div>
           )}
-          {watchIndustriesServed.includes('other') && (
+          {watchIndustriesServed?.includes('other') && (
             <InputFieldWithLabel
               label="Other"
               required
@@ -226,16 +223,13 @@ const SignUpSection = () => {
           <label className="capitalize">
             Locations Where Services Provided
           </label>
-          <span className="ml-[2px] text-red-500">*</span>
           {locationFields.map((field, index) => {
             return (
               <>
                 <div key={field.id} className="flex gap-1 items-center">
                   <Input
                     type="text"
-                    {...register(`locations.${index}.value`, {
-                      required: true
-                    })}
+                    {...register(`locations.${index}.value`)}
                   />
                   <Button
                     type="button"
@@ -296,7 +290,6 @@ const SignUpSection = () => {
         <div className="space-y-2 pb-5">
           <label className="capitalize">
             Sectors
-            <span className="ml-[2px] text-red-500">*</span>
           </label>
           <Controller
             name="geographicalLocation"
