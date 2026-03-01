@@ -11,6 +11,7 @@ import {
 } from '@/types/ehs.types';
 import { SuggestionType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
+import { notifyAllContractors } from '@/lib/notify-all-contractors';
 
 export const addChecklistTopic = async (
   checklist: EhsChecklistFormType
@@ -54,6 +55,12 @@ export const addChecklistTopic = async (
         message: ERROR_MESSAGES.CHECKLIST_TOPIC_NOT_ADDED
       };
     }
+
+    notifyAllContractors('portal_checklist', {
+      title: 'New Checklist Published',
+      body: `"${checklist.topic_name}" checklist is now available for you to complete.`,
+      url: '/contractor/ehs/checklists',
+    }, { checklist_id: data.id }).catch((err) => console.error('[push] checklist topic notification failed:', err));
 
     return {
       success: true,

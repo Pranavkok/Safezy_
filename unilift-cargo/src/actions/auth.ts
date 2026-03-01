@@ -18,6 +18,7 @@ import { addWarehouseOperatorDetails } from './warehouse-operator/warehouse';
 import { WarehouseOperatorSignUpType } from '@/sections/auth/SignUpWarehouseOperatorSection';
 import { addPrincipalDetails } from '@/actions/principal-employer/principal';
 import { addContractorDetails } from './contractor/contractor';
+import { sendPushNotification } from '@/lib/web-push';
 
 export const signUpUser = async (
   userDetails: SignUpType
@@ -83,6 +84,12 @@ export const signUpUser = async (
     if (!contractorResponse.success) {
       return contractorResponse;
     }
+
+    sendPushNotification(authId, 'registration', {
+      title: 'Welcome to Safezy!',
+      body: 'Your account is ready. Start exploring safety tools and manage your equipment.',
+      url: '/contractor/dashboard',
+    }).catch((err) => console.error('[push] registration notification failed:', err));
 
     const encodedEmail = btoa(userDetails.email);
 

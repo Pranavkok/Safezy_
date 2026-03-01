@@ -1,6 +1,7 @@
 import GlobalLoader from '@/components/common/GlobalLoader';
 import { CartProvider } from '@/context/CartContext';
 import MainNavbarLayout from '@/layouts/MainNavbarLayout';
+import PushNotificationSetup from '@/components/PushNotificationSetup';
 import { ReactNode, Suspense } from 'react';
 
 export default function PublicPageLayout({
@@ -10,6 +11,7 @@ export default function PublicPageLayout({
 }>) {
   return (
     <MainNavbarLayout>
+      <PushNotificationSetup />
       <Suspense fallback={<GlobalLoader />}>
         <CartProvider>{children}</CartProvider>
       </Suspense>

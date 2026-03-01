@@ -6,10 +6,27 @@ import {
   fetchDeliveredOrderNotAddedToInventory,
   addToInventory
 } from '@/actions/contractor/inventory';
+import {
+  fetchAppNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  type AppNotification
+} from '@/actions/contractor/notifications';
 import AddOrderInComplaintModal from '@/components/modals/AddOrderInComplaintModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+const NOTIFICATION_ICONS: Record<string, string> = {
+  registration: '👋',
+  toolbox_talk_completion: '✅',
+  checklist_submission: '✅',
+  incident_report: '📋',
+  cart_reminder: '🛒',
+  portal_news: '📰',
+  portal_toolbox_talk: '📚',
+  portal_checklist: '📋'
+};
 
 const NotificationPage = () => {
   const [openComplaintModal, setOpenComplaintModal] = useState<string | null>(
@@ -27,6 +44,14 @@ const NotificationPage = () => {
         );
       }
       return fetchedResponse.data;
+    }
+  });
+
+  const { data: appNotifications = [] } = useQuery({
+    queryKey: ['appNotifications'],
+    queryFn: async () => {
+      const res = await fetchAppNotifications();
+      return res.data;
     }
   });
 
@@ -82,6 +107,19 @@ const NotificationPage = () => {
   const handleComplaintSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
     queryClient.invalidateQueries({ queryKey: ['deliveredOrdersCount'] });
+  };
+
+  const handleAppNotificationClick = async (notif: AppNotification) => {
+    if (notif.is_read) return;
+    await markNotificationRead(notif.id);
+    queryClient.invalidateQueries({ queryKey: ['appNotifications'] });
+    queryClient.invalidateQueries({ queryKey: ['appNotificationsUnread'] });
+  };
+
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsRead();
+    queryClient.invalidateQueries({ queryKey: ['appNotifications'] });
+    queryClient.invalidateQueries({ queryKey: ['appNotificationsUnread'] });
   };
 
   return (
@@ -179,6 +217,59 @@ const NotificationPage = () => {
                       ))}
                   </div>
                 </div>
+
+                {/* Activity Section — notifications from push/app events */}
+                {appNotifications.length > 0 && (
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-base font-semibold text-gray-800">
+                        Activity
+                      </h2>
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Mark all as read
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {appNotifications.map(notif => (
+                        <button
+                          key={notif.id}
+                          onClick={() => handleAppNotificationClick(notif)}
+                          className={`w-full flex items-start gap-3 p-3 rounded-xl text-left transition ${
+                            notif.is_read
+                              ? 'bg-gray-50'
+                              : 'bg-blue-50 border border-blue-100'
+                          }`}
+                        >
+                          <span className="text-xl flex-shrink-0">
+                            {NOTIFICATION_ICONS[notif.type] ?? '🔔'}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-sm font-medium ${notif.is_read ? 'text-gray-700' : 'text-gray-900'}`}
+                            >
+                              {notif.title}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                              {notif.body}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {notif.created_at
+                                ? new Date(notif.created_at).toLocaleString()
+                                : ''}
+                            </p>
+                          </div>
+                          {!notif.is_read && (
+                            <span className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </CardContent>

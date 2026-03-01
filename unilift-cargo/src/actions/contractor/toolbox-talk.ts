@@ -4,7 +4,8 @@ import { createClient } from '@/utils/supabase/server';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { revalidatePath } from 'next/cache';
 import { ToolboxNoteType } from '@/types/ehs.types';
-import { getUserIdFromAuth } from '../user';
+import { getAuthId, getUserIdFromAuth } from '../user';
+import { sendPushNotification } from '@/lib/web-push';
 
 export const addToolboxNote = async (
   note: string,
@@ -27,6 +28,16 @@ export const addToolboxNote = async (
     }
 
     revalidatePath('/ehs/toolbox-talk');
+
+    getAuthId().then((authId) => {
+      if (authId) {
+        sendPushNotification(authId, 'toolbox_talk_completion', {
+          title: 'Toolbox Talk Completed',
+          body: 'Well done! You have completed a toolbox talk.',
+          url: '/contractor/ehs/toolbox-talks',
+        }).catch((err) => console.error('[push] toolbox note notification failed:', err));
+      }
+    }).catch(() => {});
 
     return {
       success: true,

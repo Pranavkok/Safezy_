@@ -9,8 +9,9 @@ import {
 } from '@/types/ehs.types';
 import { ChecklistTopicType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
-import { getUserIdFromAuth } from '../user';
+import { getAuthId, getUserIdFromAuth } from '../user';
 import { checklistCompletionEmailHTML } from '@/data/checklistCompletionEmail';
+import { sendPushNotification } from '@/lib/web-push';
 
 export const getAllChecklistTopics = async (): Promise<{
   success: boolean;
@@ -158,6 +159,16 @@ export const addChecklistResponseByContractor = async (
         message: ERROR_MESSAGES.CHECKLIST_DETAILS_NOT_ADDED
       };
     }
+
+    getAuthId().then((authId) => {
+      if (authId) {
+        sendPushNotification(authId, 'checklist_submission', {
+          title: 'Checklist Submitted',
+          body: 'Your checklist has been submitted successfully.',
+          url: '/contractor/ehs/checklists',
+        }).catch((err) => console.error('[push] checklist notification failed:', err));
+      }
+    }).catch(() => {});
 
     return {
       success: true,

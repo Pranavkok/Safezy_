@@ -14,6 +14,8 @@ import {
 import { IncidentAnalysisWithImageType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getAuthId } from '../user';
+import { sendPushNotification } from '@/lib/web-push';
 
 export const getIncidentDetailsById = async (
   incidentId: number
@@ -79,6 +81,16 @@ export const addIncidentTitle = async (
         message: ERROR_MESSAGES.INCIDENT_TITLE_NOT_ADDED
       };
     }
+
+    getAuthId().then((authId) => {
+      if (authId) {
+        sendPushNotification(authId, 'incident_report', {
+          title: 'Incident Report Filed',
+          body: 'Your incident report has been created. Continue filling in the details.',
+          url: '/contractor/ehs/incident-analysis',
+        }).catch((err) => console.error('[push] incident notification failed:', err));
+      }
+    }).catch(() => {});
 
     return {
       data: data,

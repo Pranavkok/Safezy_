@@ -1,6 +1,6 @@
 'use server';
 
-import { getUserIdFromAuth } from '@/actions/user';
+import { getAuthId, getUserIdFromAuth } from '@/actions/user';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { ToolboxTalkType, SuggestionType } from '@/types/index.types';
 import {
@@ -15,6 +15,8 @@ import {
 } from '@/types/ehs.types';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { notifyAllContractors } from '@/lib/notify-all-contractors';
+import { sendPushNotification } from '@/lib/web-push';
 
 export const getAllToolboxTalkDetails = async (
   searchQuery: string,
@@ -235,6 +237,16 @@ export const addToolboxUserDetails = async (
       bestPerformer: userData.best_performer
     };
 
+    getAuthId().then((authId) => {
+      if (authId) {
+        sendPushNotification(authId, 'toolbox_talk_completion', {
+          title: 'Toolbox Talk Completed',
+          body: 'Well done! You have completed a toolbox talk.',
+          url: '/contractor/ehs/toolbox-talks',
+        }).catch((err) => console.error('[push] toolbox completion notification failed:', err));
+      }
+    }).catch(() => {});
+
     return {
       success: true,
       message: SUCCESS_MESSAGES.TOOLBOX_USERS_ADDED,
@@ -338,9 +350,11 @@ export const addToolboxTalkDetails = async (
       summarized: toolbox.summarize
     };
 
-    const { error } = await supabase
+    const { data: insertedTbt, error } = await supabase
       .from('ehs_toolbox_talk')
-      .insert(newToolBoxTalk);
+      .insert(newToolBoxTalk)
+      .select('id')
+      .single();
 
     if (error) {
       console.error('Error adding toolbox topic', error);
@@ -351,6 +365,12 @@ export const addToolboxTalkDetails = async (
     }
 
     revalidatePath('/admin/ehs/toolbox-talk');
+
+    notifyAllContractors('portal_toolbox_talk', {
+      title: 'New Toolbox Talk Available',
+      body: `"${toolbox.topic_name}" has been added. Complete it to stay compliant.`,
+      url: '/contractor/ehs/toolbox-talks',
+    }, { toolbox_talk_id: insertedTbt.id }).catch((err) => console.error('[push] toolbox talk notification failed:', err));
 
     return {
       success: true,

@@ -3,6 +3,7 @@ import NavigationBreadcrumbs from '@/components/NavigationBreadcrumbs';
 import { AppRoutes } from '@/constants/AppRoutes';
 import Link from 'next/link';
 import ContractorNotificationCount from '@/components/ContractorNotificationCount';
+import PushNotificationSetup from '@/components/PushNotificationSetup';
 import { BreadcrumbOptionsType } from '@/types/global.types';
 
 type ContractorTopbarLayoutPropsType = {
@@ -17,6 +18,7 @@ const ContractorTopbarLayout = ({
 }: ContractorTopbarLayoutPropsType) => {
   return (
     <>
+      <PushNotificationSetup />
       <div className="hidden lg:block absolute w-10 h-10 -top-4 -right-4 bg-gray-100 rounded-full">
         <Link
           href={AppRoutes.CONTRACTOR_NOTIFICATION}

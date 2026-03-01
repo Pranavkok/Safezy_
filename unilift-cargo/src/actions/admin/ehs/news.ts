@@ -5,6 +5,7 @@ import { EhsNewsFormType } from '@/sections/admin/ehs/ehs-news/EhsAddUpdateSecti
 import { EhsNewsType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { notifyAllContractors } from '@/lib/notify-all-contractors';
 
 export const addEhsNews = async (newsData: EhsNewsFormType) => {
   const supabase = await createClient();
@@ -29,6 +30,12 @@ export const addEhsNews = async (newsData: EhsNewsFormType) => {
     }
 
     revalidatePath('/admin/ehs/news');
+
+    notifyAllContractors('portal_news', {
+      title: 'New Safety News',
+      body: `"${newsData.title}" has been published. Tap to read.`,
+      url: '/contractor/ehs/news',
+    }).catch((err) => console.error('[push] news notification failed:', err));
 
     return {
       success: true,
