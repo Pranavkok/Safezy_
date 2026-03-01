@@ -5,6 +5,31 @@ import { getAuthId, getUserIdFromAuth } from '../user';
 import { createClient } from '@/utils/supabase/server';
 import { CartItemType } from '@/context/CartContext';
 import { LeadTimeTiersType } from '@/types/index.types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+async function updateCartReminderTracking(userId: string, supabase: SupabaseClient) {
+  await supabase.from('cart_reminder_tracking').upsert(
+    {
+      user_id: userId,
+      last_cart_activity: new Date().toISOString(),
+      reminders_sent: 0,
+      last_reminder_at: null
+    },
+    { onConflict: 'user_id' }
+  );
+}
+
+async function resetCartReminderTracking(userId: string, supabase: SupabaseClient) {
+  await supabase.from('cart_reminder_tracking').upsert(
+    {
+      user_id: userId,
+      last_cart_activity: null,
+      reminders_sent: 0,
+      last_reminder_at: null
+    },
+    { onConflict: 'user_id' }
+  );
+}
 
 // [#] Get all cart items for a specific user
 export const getCartItems = async (): Promise<{
@@ -158,6 +183,8 @@ export const addToCart = async (cartItems: {
 
     if (insertError || !insertedData) throw insertError;
 
+    updateCartReminderTracking(userId, supabase).catch(() => {});
+
     const cartItemData: CartItemType = {
       id: insertedData.id,
       quantity: insertedData.quantity,
@@ -226,6 +253,8 @@ export const clearCart = async () => {
       };
     }
 
+    resetCartReminderTracking(userId, supabase).catch(() => {});
+
     return {
       success: true,
       message: SUCCESS_MESSAGES.CART_CLEARED
@@ -244,16 +273,22 @@ export const removeCartItem = async (cartItemId: number) => {
   const supabase = await createClient();
 
   try {
-    const { error } = await supabase
+    const { data: deleted, error } = await supabase
       .from('cart_items')
       .delete()
-      .eq('id', cartItemId);
+      .eq('id', cartItemId)
+      .select('user_id')
+      .maybeSingle();
 
     if (error) {
       return {
         success: false,
         message: ERROR_MESSAGES.CART_ITEM_NOT_REMOVED
       };
+    }
+
+    if (deleted?.user_id) {
+      updateCartReminderTracking(deleted.user_id, supabase).catch(() => {});
     }
 
     return {
@@ -277,12 +312,18 @@ export const updateQuantity = async (
 ): Promise<{ success: boolean; message: string }> => {
   const supabase = await createClient();
   try {
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('cart_items')
       .update({ quantity: updatedQuantity, item_price: updatedUnitPrice })
-      .eq('id', cartItemId);
+      .eq('id', cartItemId)
+      .select('user_id')
+      .maybeSingle();
 
     if (updateError) throw updateError;
+
+    if (updated?.user_id) {
+      updateCartReminderTracking(updated.user_id, supabase).catch(() => {});
+    }
 
     return {
       success: true,

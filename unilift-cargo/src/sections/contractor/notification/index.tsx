@@ -25,7 +25,9 @@ const NOTIFICATION_ICONS: Record<string, string> = {
   cart_reminder: '🛒',
   portal_news: '📰',
   portal_toolbox_talk: '📚',
-  portal_checklist: '📋'
+  portal_checklist: '📋',
+  order_placed: '📦',
+  order_delivered: '🚚'
 };
 
 const NotificationPage = () => {

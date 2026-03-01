@@ -32,8 +32,8 @@ export const addToolboxNote = async (
     getAuthId().then((authId) => {
       if (authId) {
         sendPushNotification(authId, 'toolbox_talk_completion', {
-          title: 'Toolbox Talk Completed',
-          body: 'Well done! You have completed a toolbox talk.',
+          title: 'Toolbox Talk',
+          body: 'Note saved for toolbox talk',
           url: '/contractor/ehs/toolbox-talks',
         }).catch((err) => console.error('[push] toolbox note notification failed:', err));
       }

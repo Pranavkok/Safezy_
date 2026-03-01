@@ -1728,6 +1728,8 @@ export type Database = {
         | "portal_news"
         | "portal_toolbox_talk"
         | "portal_checklist"
+        | "order_placed"
+        | "order_delivered"
       orderStatus:
         | "Processing"
         | "Returned"
@@ -1879,6 +1881,8 @@ export const Constants = {
         "portal_news",
         "portal_toolbox_talk",
         "portal_checklist",
+        "order_placed",
+        "order_delivered",
       ],
       orderStatus: [
         "Processing",

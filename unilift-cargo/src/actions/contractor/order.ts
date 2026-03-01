@@ -18,7 +18,8 @@ import {
 } from '@/types/order.types';
 import { createAdminClient, createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { getUserIdFromAuth } from '../user';
+import { getUserIdFromAuth, getAuthId } from '../user';
+import { sendPushNotification } from '@/lib/web-push';
 
 // Orders placed by a contractor
 export const fetchAllOrdersByContractor = async ({
@@ -378,6 +379,28 @@ export const placeOrder = async (
     }
 
     revalidatePath('/cart');
+
+    // Reset cart reminder tracking since the cart has been cleared by order placement
+    supabase
+      .from('cart_reminder_tracking')
+      .upsert(
+        { user_id: userId, last_cart_activity: null, reminders_sent: 0, last_reminder_at: null },
+        { onConflict: 'user_id' }
+      )
+      .then(() => {})
+      .catch(() => {});
+
+    getAuthId()
+      .then((authId) => {
+        if (authId) {
+          sendPushNotification(authId, 'order_placed', {
+            title: 'Order Placed Successfully',
+            body: `Your order #${orderId} has been placed and is being processed.`,
+            url: '/contractor/orders',
+          }).catch((err) => console.error('[push] order placed notification failed:', err));
+        }
+      })
+      .catch(() => {});
 
     return {
       success: true,

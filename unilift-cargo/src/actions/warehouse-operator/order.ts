@@ -7,6 +7,7 @@ import {
 } from '@/types/order.types';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { sendPushNotification } from '@/lib/web-push';
 
 export const updateOrderDetailsByWarehouseOperator = async (
   orderId: string,
@@ -41,6 +42,30 @@ export const updateOrderDetailsByWarehouseOperator = async (
     }
 
     revalidatePath('/warehouse-operator/manage-order');
+
+    if (orderStatus === 'Delivered') {
+      const { data: orderRow } = await supabase
+        .from('order')
+        .select('user_id')
+        .eq('id', orderId)
+        .single();
+
+      if (orderRow?.user_id) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('auth_id')
+          .eq('id', orderRow.user_id)
+          .single();
+
+        if (userRow?.auth_id) {
+          sendPushNotification(userRow.auth_id, 'order_delivered', {
+            title: 'Order Delivered',
+            body: `Your order #${orderId} has been delivered. Add items to inventory or raise a complaint.`,
+            url: '/contractor/notifications',
+          }).catch((err) => console.error('[push] order delivered notification failed:', err));
+        }
+      }
+    }
 
     return { success: true, message: SUCCESS_MESSAGES.ORDER_UPDATED };
   } catch (err) {
