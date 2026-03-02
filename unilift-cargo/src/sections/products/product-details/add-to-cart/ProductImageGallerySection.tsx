@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
+import ImageMagnifier from '@/components/ImageMagnifier';
 import {
   Carousel,
   CarouselContent,
@@ -131,13 +132,11 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
       <div className="aspect-square rounded-xl overflow-hidden bg-white w-full ring-1 ring-gray-200 grid place-content-center relative">
         {!isVideo ? (
           <>
-            <Image
+            <ImageMagnifier
               src={selectedMedia}
               alt={`${productName} - Selected Image`}
-              width={1024}
-              height={1024}
-              className="w-full h-full object-contain object-center rounded transition-transform hover:scale-110 select-none pointer-events-none"
-              priority
+              magnifierSize={150}
+              zoomLevel={2.5}
             />
             {FullscreenButton}
           </>
