@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { Plus, X } from 'lucide-react';
+import { Minus, Plus, X } from 'lucide-react';
 
 // Internal Components
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,7 @@ const SignUpSection = () => {
   });
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
+  const [showOptional, setShowOptional] = useState<boolean>(false);
 
   const watchIndustriesServed = watch('industriesServed');
   const watchTypeOfServicesProvided = watch('typeOfServicesProvided');
@@ -102,6 +103,7 @@ const SignUpSection = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Mandatory fields */}
       <div className="grid lg:grid-cols-2 lg:gap-x-4">
         <InputFieldWithLabel
           type="text"
@@ -140,177 +142,7 @@ const SignUpSection = () => {
           errorText={errors.email?.message}
           {...register('email')}
         />
-
-        <Controller
-          control={control}
-          name="noOfWorkers"
-          render={({ field }) => (
-            <SelectWithLabel
-              label="Total No. of Workers"
-              name="noOfWorkers"
-              options={TOTAL_NUMBER_OF_WORKERS_OPTIONS}
-              errorText={errors.noOfWorkers?.message}
-              onChange={field.onChange}
-              value={field.value}
-            />
-          )}
-        />
-
-        <div className="space-y-2 pb-5">
-          <label className="capitalize">
-            Type of Service Provided
-          </label>
-          <Controller
-            name="typeOfServicesProvided"
-            control={control}
-            render={({ field }) => (
-              <MultiSelect
-                options={TYPES_OF_SERVICES_PROVIDED_OPTIONS}
-                onValueChange={val => {
-                  field.onChange(val);
-                }}
-                variant={'inverted'}
-              />
-            )}
-          />
-          {errors.typeOfServicesProvided?.message && (
-            <div className="text-sm text-red-500">
-              {errors.typeOfServicesProvided?.message}
-            </div>
-          )}
-          {watchTypeOfServicesProvided?.includes('other') && (
-            <InputFieldWithLabel
-              label="Other"
-              required
-              errorText={errors.typeOfServicesProvidedOther?.message}
-              {...register('typeOfServicesProvidedOther')}
-            />
-          )}
-        </div>
-
-        <div className="space-y-2 pb-5">
-          <label className="capitalize">
-            Industries Served Type of Service Provided
-          </label>
-          <Controller
-            name="industriesServed"
-            control={control}
-            render={({ field }) => (
-              <MultiSelect
-                options={INDUSTRIES_SERVED_OPTIONS}
-                onValueChange={field.onChange}
-                value={field.value}
-                variant={'inverted'}
-              />
-            )}
-          />{' '}
-          {errors.industriesServed?.message && (
-            <div className="text-sm text-red-500">
-              {errors.industriesServed?.message}
-            </div>
-          )}
-          {watchIndustriesServed?.includes('other') && (
-            <InputFieldWithLabel
-              label="Other"
-              required
-              errorText={errors.industriesServedOther?.message}
-              {...register('industriesServedOther')}
-            />
-          )}
-        </div>
-
-        <div className="space-y-2 pb-5">
-          <label className="capitalize">
-            Locations Where Services Provided
-          </label>
-          {locationFields.map((field, index) => {
-            return (
-              <>
-                <div key={field.id} className="flex gap-1 items-center">
-                  <Input
-                    type="text"
-                    {...register(`locations.${index}.value`)}
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => removeLocation(index)}
-                    className="font-medium w-40"
-                    variant={'outline'}
-                    disabled={locationFields.length === 1}
-                  >
-                    <X className="h-4 w-4 mr-2" /> Remove
-                  </Button>
-                </div>
-                {errors.locations?.[index]?.value && (
-                  <p className="text-red-500 text-sm pt-0">
-                    {errors.locations[index].value.message}
-                  </p>
-                )}{' '}
-              </>
-            );
-          })}
-          <Button
-            type="button"
-            onClick={() => addLocation()}
-            className="font-bold capitalize text-sm w-40"
-            variant={'outline'}
-          >
-            <Plus className="h-4 w-4 mr-2" /> Add More
-          </Button>
-        </div>
-
-        <div className="space-y-2 pb-5">
-          <label className="capitalize">
-            Companies Where Services Provided
-          </label>
-          {companyFields.map((field, index) => (
-            <div key={field.id} className="flex gap-1 items-center">
-              <Input type="text" {...register(`companies.${index}.value`)} />
-              <Button
-                type="button"
-                onClick={() => removeCompany(index)}
-                className="font-medium w-40"
-                variant={'outline'}
-                disabled={companyFields.length === 1}
-              >
-                <X className="h-4 w-4 mr-2" /> Remove
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            onClick={() => addCompany()}
-            className="font-bold capitalize text-sm w-40"
-            variant={'outline'}
-          >
-            <Plus className="h-4 w-4 mr-2" /> Add More
-          </Button>
-        </div>
-
-        <div className="space-y-2 pb-5">
-          <label className="capitalize">
-            Sectors
-          </label>
-          <Controller
-            name="geographicalLocation"
-            control={control}
-            render={({ field }) => (
-              <MultiSelect
-                options={GEOGRAPHICAL_LOCATIONS_OPTIONS}
-                onValueChange={val => {
-                  field.onChange(val);
-                }}
-                variant={'inverted'}
-              />
-            )}
-          />
-          {errors.geographicalLocation?.message && (
-            <div className="text-sm text-red-500">
-              {errors.geographicalLocation?.message}
-            </div>
-          )}
-        </div>
-
+        <div />
         <PasswordFieldWithLabel
           id="password"
           label="Password"
@@ -318,34 +150,221 @@ const SignUpSection = () => {
           {...register('password')}
           required
         />
+        <PasswordFieldWithLabel
+          id="confirmPassword"
+          label="Confirm Password"
+          errorText={errors.confirmPassword?.message}
+          {...register('confirmPassword')}
+          removeBottomPadding
+          required
+        />
+      </div>
 
-        <div />
-        <div className="flex flex-col  w-full">
-          <PasswordFieldWithLabel
-            id="confirmPassword"
-            label="Confirm Password"
-            errorText={errors.confirmPassword?.message}
-            {...register('confirmPassword')}
-            removeBottomPadding
-            required
+      <p className="text-xs pt-2">
+        By Signing up, you agree to our{' '}
+        <span className="text-[#2A39C1] cursor-pointer underline">
+          Terms of Service
+        </span>{' '}
+        and{' '}
+        <span className="text-[#2A39C1] cursor-pointer underline">
+          Privacy Policy
+        </span>
+      </p>
+
+      {/* Optional fields toggle */}
+      <button
+        type="button"
+        onClick={() => setShowOptional(!showOptional)}
+        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 mt-4 mb-2 border border-dashed border-gray-300 rounded-md px-4 py-2 w-full justify-center hover:border-gray-400 transition-colors"
+      >
+        {showOptional ? (
+          <Minus className="h-4 w-4" />
+        ) : (
+          <Plus className="h-4 w-4" />
+        )}
+        {showOptional
+          ? 'Hide Additional Information'
+          : 'Add Additional Information (Optional)'}
+      </button>
+
+      {/* Optional fields */}
+      {showOptional && (
+        <div className="grid lg:grid-cols-2 lg:gap-x-4 mt-2">
+          <Controller
+            control={control}
+            name="noOfWorkers"
+            render={({ field }) => (
+              <SelectWithLabel
+                label="Total No. of Workers"
+                name="noOfWorkers"
+                options={TOTAL_NUMBER_OF_WORKERS_OPTIONS}
+                errorText={errors.noOfWorkers?.message}
+                onChange={field.onChange}
+                value={field.value}
+              />
+            )}
           />
 
-          <p className="text-xs pt-2">
-            By Signing up, you agree to our{' '}
-            <span className="text-[#2A39C1] cursor-pointer underline">
-              Terms of Service
-            </span>{' '}
-            and{' '}
-            <span className="text-[#2A39C1] cursor-pointer underline">
-              Privacy Policy
-            </span>
-          </p>
+          <div className="space-y-2 pb-5">
+            <label className="capitalize">Type of Service Provided</label>
+            <Controller
+              name="typeOfServicesProvided"
+              control={control}
+              render={({ field }) => (
+                <MultiSelect
+                  options={TYPES_OF_SERVICES_PROVIDED_OPTIONS}
+                  onValueChange={val => {
+                    field.onChange(val);
+                  }}
+                  variant={'inverted'}
+                />
+              )}
+            />
+            {errors.typeOfServicesProvided?.message && (
+              <div className="text-sm text-red-500">
+                {errors.typeOfServicesProvided?.message}
+              </div>
+            )}
+            {watchTypeOfServicesProvided?.includes('other') && (
+              <InputFieldWithLabel
+                label="Other"
+                required
+                errorText={errors.typeOfServicesProvidedOther?.message}
+                {...register('typeOfServicesProvidedOther')}
+              />
+            )}
+          </div>
+
+          <div className="space-y-2 pb-5">
+            <label className="capitalize">
+              Industries Served Type of Service Provided
+            </label>
+            <Controller
+              name="industriesServed"
+              control={control}
+              render={({ field }) => (
+                <MultiSelect
+                  options={INDUSTRIES_SERVED_OPTIONS}
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  variant={'inverted'}
+                />
+              )}
+            />
+            {errors.industriesServed?.message && (
+              <div className="text-sm text-red-500">
+                {errors.industriesServed?.message}
+              </div>
+            )}
+            {watchIndustriesServed?.includes('other') && (
+              <InputFieldWithLabel
+                label="Other"
+                required
+                errorText={errors.industriesServedOther?.message}
+                {...register('industriesServedOther')}
+              />
+            )}
+          </div>
+
+          <div className="space-y-2 pb-5">
+            <label className="capitalize">
+              Locations Where Services Provided
+            </label>
+            {locationFields.map((field, index) => {
+              return (
+                <>
+                  <div key={field.id} className="flex gap-1 items-center">
+                    <Input
+                      type="text"
+                      {...register(`locations.${index}.value`)}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => removeLocation(index)}
+                      className="font-medium w-40"
+                      variant={'outline'}
+                      disabled={locationFields.length === 1}
+                    >
+                      <X className="h-4 w-4 mr-2" /> Remove
+                    </Button>
+                  </div>
+                  {errors.locations?.[index]?.value && (
+                    <p className="text-red-500 text-sm pt-0">
+                      {errors.locations[index]?.value?.message}
+                    </p>
+                  )}
+                </>
+              );
+            })}
+            <Button
+              type="button"
+              onClick={() => addLocation()}
+              className="font-bold capitalize text-sm w-40"
+              variant={'outline'}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add More
+            </Button>
+          </div>
+
+          <div className="space-y-2 pb-5">
+            <label className="capitalize">
+              Companies Where Services Provided
+            </label>
+            {companyFields.map((field, index) => (
+              <div key={field.id} className="flex gap-1 items-center">
+                <Input
+                  type="text"
+                  {...register(`companies.${index}.value`)}
+                />
+                <Button
+                  type="button"
+                  onClick={() => removeCompany(index)}
+                  className="font-medium w-40"
+                  variant={'outline'}
+                  disabled={companyFields.length === 1}
+                >
+                  <X className="h-4 w-4 mr-2" /> Remove
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              onClick={() => addCompany()}
+              className="font-bold capitalize text-sm w-40"
+              variant={'outline'}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add More
+            </Button>
+          </div>
+
+          <div className="space-y-2 pb-5">
+            <label className="capitalize">Sectors</label>
+            <Controller
+              name="geographicalLocation"
+              control={control}
+              render={({ field }) => (
+                <MultiSelect
+                  options={GEOGRAPHICAL_LOCATIONS_OPTIONS}
+                  onValueChange={val => {
+                    field.onChange(val);
+                  }}
+                  variant={'inverted'}
+                />
+              )}
+            />
+            {errors.geographicalLocation?.message && (
+              <div className="text-sm text-red-500">
+                {errors.geographicalLocation?.message}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
       <div className="pt-5 grid place-content-center">
         <Button
           type="submit"
-          className="w-full lg:w-[390px] "
+          className="w-full lg:w-[390px]"
           disabled={loading}
         >
           {loading && <ButtonSpinner />}

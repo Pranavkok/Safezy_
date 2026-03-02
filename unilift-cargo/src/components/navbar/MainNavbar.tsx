@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,33 +17,30 @@ import { Capacitor } from '@capacitor/core';
 import { searchProductNavbar } from '@/actions/contractor/product';
 import { useQuery } from '@tanstack/react-query';
 import debounce from 'lodash.debounce';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Mic } from 'lucide-react';
 import { usePathname, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const MainNavbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchPopoverOpen, setSearchPopoverOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [pathname, searchParams]);
 
-  // Handle hash changes for anchor navigation
   useEffect(() => {
-    const handleHashChange = () => {
-      setIsSidebarOpen(false);
-    };
-
+    const handleHashChange = () => setIsSidebarOpen(false);
     window.addEventListener('hashchange', handleHashChange);
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Setup React Query for search
   const { data: searchResults = [], refetch } = useQuery({
     queryKey: ['navbarSearch'],
     queryFn: async () => {
@@ -66,10 +63,60 @@ const MainNavbar = () => {
     _debouncedSubmit();
   };
 
-  // Function to close sidebar - can be passed to child components
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
   }, []);
+
+  const startListening = () => {
+    const SpeechRecognitionAPI =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionAPI) {
+      toast.error('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript as string;
+      if (transcript.trim()) handleSearchInput(transcript.trim());
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognition.onerror = (event: any) => {
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        toast.error('Microphone access denied. Please allow mic access in your browser settings.');
+      } else if (event.error === 'service-not-allowed') {
+        toast.error('Speech recognition is not supported in Safari. Please use Chrome.');
+      } else if (event.error === 'network') {
+        toast.error('Speech recognition is blocked by your browser. Please use Chrome.');
+      } else if (event.error !== 'aborted') {
+        toast.error('Speech recognition failed. Please try again.');
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch {
+      setIsListening(false);
+      toast.error('Could not start speech recognition. Please try again.');
+    }
+
+    recognitionRef.current = recognition;
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+  };
 
   return (
     <>
@@ -93,7 +140,7 @@ const MainNavbar = () => {
             <SecondaryLogo className="h-10 mx-auto xl:mx-0" />
           </Link>
 
-          <div className="flex items-center ">
+          <div className="flex items-center">
             {/* Desktop Navigation Items */}
             <div className="hidden xl:flex gap-3 items-center justify-center text-sm">
               <CustomNavigationMenu />
@@ -129,14 +176,12 @@ const MainNavbar = () => {
                               className="flex items-center w-full px-3 py-2 text-sm rounded-md text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                             >
                               <span className="truncate">{result.label}</span>
-
                               <ChevronRight className="w-4 h-4 ml-auto text-gray-400" />
                             </Link>
                           </li>
                         ))}
                       </ul>
 
-                      {/* No results state */}
                       {searchResults.length === 0 && (
                         <div className="px-3 py-2 text-sm text-gray-500 text-center">
                           No results found
@@ -144,7 +189,6 @@ const MainNavbar = () => {
                       )}
                     </div>
 
-                    {/* Optional: Footer with total results */}
                     {searchResults.length > 0 && (
                       <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500 px-3">
                         {searchResults.length} results found
@@ -153,14 +197,52 @@ const MainNavbar = () => {
                   </PopoverContent>
                 </Popover>
 
-                <NavbarSearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-4  bg-white" />
+                <NavbarSearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-4 bg-white" />
               </div>
+
+              {/* Mic button */}
+              <button
+                type="button"
+                onClick={startListening}
+                className="text-white hover:text-white/70 transition-colors cursor-pointer"
+                aria-label="Search by voice"
+              >
+                <Mic className="w-5 h-5" />
+              </button>
 
               <UserMenu />
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Listening modal */}
+      {isListening && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={stopListening} />
+          <div className="relative bg-white rounded-2xl shadow-xl px-12 py-10 flex flex-col items-center gap-5 z-10">
+            <div className="relative flex items-center justify-center">
+              <span className="absolute h-20 w-20 rounded-full bg-primary/20 animate-ping" />
+              <span className="relative h-14 w-14 rounded-full bg-primary flex items-center justify-center">
+                <Mic className="w-7 h-7 text-white" />
+              </span>
+            </div>
+            <p className="text-gray-700 font-semibold text-lg tracking-wide">
+              Speak, I am listening...
+            </p>
+            <p className="text-gray-400 text-sm -mt-2">
+              Stops automatically after a short pause
+            </p>
+            <button
+              type="button"
+              onClick={stopListening}
+              className="text-sm text-gray-400 hover:text-gray-600 transition-colors mt-1"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* For Mobile devices */}
       {Capacitor.isNativePlatform() ? (
@@ -183,7 +265,6 @@ const MainNavbar = () => {
         </aside>
       )}
 
-      {/* Sidebar Overlay */}
       <Overlay
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
