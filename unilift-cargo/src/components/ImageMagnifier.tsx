@@ -22,24 +22,30 @@ const ImageMagnifier: React.FC<ImageMagnifierProps> = ({
   return (
     <div
       style={{ position: 'relative', width: '100%', height: '100%' }}
-      onMouseEnter={(e) => {
+      onMouseEnter={e => {
         const { width, height } = e.currentTarget.getBoundingClientRect();
         setSize([width, height]);
         setShowMagnifier(true);
       }}
       onMouseLeave={() => setShowMagnifier(false)}
-      onMouseMove={(e) => {
+      onMouseMove={e => {
         const { top, left } = e.currentTarget.getBoundingClientRect();
-        setXY([
-          e.clientX - left,
-          e.clientY - top
-        ]);
+        setXY([e.clientX - left, e.clientY - top]);
       }}
+      onContextMenu={e => e.preventDefault()}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
-        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+        draggable={false}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          display: 'block',
+          userSelect: 'none'
+        }}
       />
       {showMagnifier && (
         <div
@@ -57,7 +63,7 @@ const ImageMagnifier: React.FC<ImageMagnifierProps> = ({
             backgroundRepeat: 'no-repeat',
             backgroundSize: `${imgWidth * zoomLevel}px ${imgHeight * zoomLevel}px`,
             backgroundPosition: `${-x * zoomLevel + magnifierSize / 2}px ${-y * zoomLevel + magnifierSize / 2}px`,
-            zIndex: 10,
+            zIndex: 10
           }}
         />
       )}

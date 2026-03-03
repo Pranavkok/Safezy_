@@ -47,13 +47,17 @@ const ProductItemSection: React.FC<ProductItemPropsType> = ({ product }) => {
       )}
 
       {/* Product Image */}
-      <div className="relative w-full h-40 sm:h-56 xl:h-52 2xl:h-56 bg-white">
+      <div
+        className="relative w-full h-40 sm:h-56 xl:h-52 2xl:h-56 bg-white"
+        onContextMenu={e => e.preventDefault()}
+      >
         <Image
           src={image}
           alt={ppe_name}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           fill
-          className="object-contain object-center rounded"
+          className="object-contain object-center rounded select-none pointer-events-none"
+          draggable={false}
           priority
         />
       </div>
