@@ -1,6 +1,6 @@
 'use server';
 
-import xlsx from 'node-xlsx';
+import ExcelJS from 'exceljs';
 import { fetchAllContractors } from '../admin/contractor';
 
 export async function generateExcel() {
@@ -22,18 +22,22 @@ export async function generateExcel() {
     total_amount: contractor.total_amount
   }));
 
-  const data = [
-    [
-      'Customer Name',
-      'Email',
-      'Contact Number',
-      'Company Name',
-      'Total Number Of Workers',
-      'Total Worksite',
-      'Total Orders',
-      'Total Value Of Orders'
-    ],
-    ...contractorDetails.map(row => [
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Customers');
+
+  sheet.addRow([
+    'Customer Name',
+    'Email',
+    'Contact Number',
+    'Company Name',
+    'Total Number Of Workers',
+    'Total Worksite',
+    'Total Orders',
+    'Total Value Of Orders'
+  ]);
+
+  contractorDetails.forEach(row => {
+    sheet.addRow([
       row.customer_name,
       row.email,
       row.contact_number,
@@ -42,12 +46,11 @@ export async function generateExcel() {
       row.total_worksite,
       row.total_orders,
       row.total_amount
-    ])
-  ];
+    ]);
+  });
 
-  const buffer = xlsx.build([{ name: 'Customers', data, options: {} }]);
-
-  const base64Data = buffer.toString('base64');
+  const buffer = await workbook.xlsx.writeBuffer();
+  const base64Data = Buffer.from(buffer).toString('base64');
 
   return {
     fileName: 'customers.xlsx',

@@ -57,10 +57,11 @@ export function ToolboxTalkListingTable({
       <DataTableToolbar table={table} filterFields={filterFields}>
         <ToolboxTalkSugggestionModal />
         <Button
+          size="sm"
           onClick={() => router.push(AppRoutes.ADMIN_EHS_TOOLBOX_TALK_ADD)}
         >
-          <Plus className=" w-5 h-5 sm:mr-2" />
-          <span className="">Add New Talk</span>
+          <Plus className="w-4 h-4 sm:mr-1" />
+          <span className="hidden sm:inline">Add New Talk</span>
         </Button>
       </DataTableToolbar>
     </DataTable>

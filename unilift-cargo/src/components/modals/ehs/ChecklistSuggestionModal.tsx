@@ -31,8 +31,8 @@ const ChecklistSuggestionModal = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="cursor-pointer" onClick={() => setIsOpen(true)}>
-          Checklist Suggestions
+        <Button size="sm" className="cursor-pointer" onClick={() => setIsOpen(true)}>
+          Suggestions
         </Button>
       </DialogTrigger>
       <DialogContent

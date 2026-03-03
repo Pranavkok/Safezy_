@@ -21,6 +21,15 @@ export const ERROR_MESSAGES = {
   FAILED_PARSING_CSV_DATA: 'Failed to parse CSV file',
   DATA_NOT_FOUND: 'No valid employee data found',
 
+  // Bulk Upload
+  BULK_UPLOAD_NO_ZIP: 'Please upload a valid ZIP file',
+  BULK_UPLOAD_ZIP_TOO_LARGE: 'ZIP file exceeds the 100MB limit',
+  BULK_UPLOAD_NO_EXCEL: 'No Excel (.xlsx) file found in the ZIP',
+  BULK_UPLOAD_MULTIPLE_EXCEL: 'ZIP must contain exactly one Excel (.xlsx) file',
+  BULK_UPLOAD_INVALID_HEADERS: 'Excel headers do not match the expected template format',
+  BULK_UPLOAD_NO_DATA: 'No product rows found in the Excel file',
+  BULK_UPLOAD_FAILED: 'Bulk upload failed. Please try again',
+
   // Product
   PRODUCT_ID_NOT_FOUND: 'Please provide Product ID to update the product',
   PRODUCT_NOT_ADDED: 'Failed to add product details. Please try again',
@@ -513,7 +522,11 @@ export const SUCCESS_MESSAGES = {
   SIGNUP_SUCCESS_EMAIL: 'Signup email sent successfully',
   CONTACT_SUCCESS_EMAIL: 'Contact email sent successfully',
 
-  PRODUCT_IMAGE_DELETED: 'Product image deleted successfully'
+  PRODUCT_IMAGE_DELETED: 'Product image deleted successfully',
+
+  // Bulk Upload
+  BULK_UPLOAD_COMPLETE: 'Bulk upload completed',
+  BULK_UPLOAD_TEMPLATE_DOWNLOADED: 'Template downloaded successfully'
 };
 
 type AppRole = Database['public']['Enums']['app_role'];

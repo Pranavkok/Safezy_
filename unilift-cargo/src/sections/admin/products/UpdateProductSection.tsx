@@ -46,10 +46,11 @@ const UpdateProductDetailsSection = ({
       productDescription: productDetails.description,
       trainingVideo: productDetails.training_video,
       recommendedUseLife: (productDetails?.use_life || '').toString(),
-      recommendedIndustryUses: productDetails.industry_use as {
-        id: string;
-        size: string;
-      }[],
+      recommendedIndustryUses: ((productDetails.industry_use as unknown[]) || []).map((item, i) =>
+        typeof item === 'string'
+          ? { id: i.toString(), recommendedIndustryUse: item }
+          : (item as { id: string; recommendedIndustryUse: string })
+      ),
       priceWithQty: productDetails.price_tiers.map(
         (priceWithQty: PriceTiersType) => {
           return {
@@ -62,9 +63,9 @@ const UpdateProductDetailsSection = ({
       ),
       leadTimeWithQty: productDetails.lead_time
         ? (productDetails.lead_time as LeadTimeTiersType[]).map(
-            leatTimeWithQty => {
+            (leatTimeWithQty, index) => {
               return {
-                id: leatTimeWithQty.id.toString(),
+                id: leatTimeWithQty.id?.toString() ?? index.toString(),
                 timeInDays: leatTimeWithQty.timeInDays.toString(),
                 qtyFrom: leatTimeWithQty.qtyFrom?.toString(),
                 qtyTo: leatTimeWithQty.qtyTo?.toString()
@@ -72,8 +73,16 @@ const UpdateProductDetailsSection = ({
             }
           )
         : [],
-      sizes: productDetails.size as { id: string; size: string }[],
-      colors: productDetails.color as { id: string; color: string }[],
+      sizes: ((productDetails.size as unknown[]) || []).map((item, i) =>
+        typeof item === 'string'
+          ? { id: item, size: item }
+          : (item as { id: string; size: string })
+      ),
+      colors: ((productDetails.color as unknown[]) || []).map((item, i) =>
+        typeof item === 'string'
+          ? { id: item, color: item }
+          : (item as { id: string; color: string })
+      ),
       gst: productDetails.gst?.toString() ?? undefined,
       hsn_code: productDetails.hsn_code ?? '',
       geographicalLocation: productDetails.geographical_location as string[],

@@ -8,11 +8,12 @@ import { DataTableFilterField } from '@/types/data-table.types';
 import { getProductColumns } from './ProductListingColumn';
 import { useRouter } from 'next/navigation';
 import { SortedProductDataType } from '@/types/product.types';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AppRoutes } from '@/constants/AppRoutes';
-import { Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BulkUploadSection } from '../BulkUploadSection';
 
 export interface ProductsTablePropsType {
   products: {
@@ -26,6 +27,7 @@ export function ProductsTable({ products }: ProductsTablePropsType) {
   const { data = [], pageCount = 1 } = products;
 
   const router = useRouter();
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
   const columns = useMemo(() => getProductColumns(router), [router]);
 
@@ -62,15 +64,30 @@ export function ProductsTable({ products }: ProductsTablePropsType) {
   });
 
   return (
-    <DataTable table={table}>
-      <DataTableToolbar table={table} filterFields={filterFields}>
-        <Link href={AppRoutes.ADMIN_ADD_PRODUCT}>
-          <Button>
-            <Plus className=" w-5 h-5 sm:mr-2" />
-            <span className="hidden sm:block">Add New Product</span>
+    <>
+      <DataTable table={table}>
+        <DataTableToolbar table={table} filterFields={filterFields}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setBulkUploadOpen(true)}
+          >
+            <Upload className="w-5 h-5 sm:mr-2" />
+            <span className="hidden sm:block">Bulk Upload</span>
           </Button>
-        </Link>
-      </DataTableToolbar>
-    </DataTable>
+          <Link href={AppRoutes.ADMIN_ADD_PRODUCT}>
+            <Button>
+              <Plus className="w-5 h-5 sm:mr-2" />
+              <span className="hidden sm:block">Add New Product</span>
+            </Button>
+          </Link>
+        </DataTableToolbar>
+      </DataTable>
+
+      <BulkUploadSection
+        isOpen={bulkUploadOpen}
+        onClose={() => setBulkUploadOpen(false)}
+      />
+    </>
   );
 }

@@ -56,12 +56,13 @@ const EhsChecklistListingSection = () => {
   if (!paginatedTopics.length) {
     return (
       <>
-        <div className="flex flex-col md:flex-row gap-2 justify-between my-5">
+        <div className="flex flex-row flex-wrap gap-2 justify-between my-5">
           <ChecklistSuggestionModal />
           <Button
+            size="sm"
             onClick={() => router.push(AppRoutes.ADMIN_EHS_CHECKLIST_ADD)}
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 mr-1" />
             Add New Checklist Topic
           </Button>
         </div>
@@ -85,7 +86,7 @@ const EhsChecklistListingSection = () => {
   }
   return (
     <div className="w-full px-4 sm:px-6">
-      <div className="flex flex-col md:flex-row  gap-2 justify-between my-5">
+      <div className="flex flex-row flex-wrap  gap-2 justify-between my-5">
         <ChecklistSuggestionModal />
         <Button onClick={() => router.push(AppRoutes.ADMIN_EHS_CHECKLIST_ADD)}>
           <Plus className="w-5 h-5" />

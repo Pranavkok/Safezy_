@@ -29,8 +29,14 @@ const AUTH_PAGES = [
 export async function middleware(request: NextRequest) {
   try {
     const { supabaseResponse, user } = await updateSession(request);
-    const userRole = user ? await getUserRole() : null;
     const { pathname } = request.nextUrl;
+
+    // API routes handle their own auth — skip role-based redirect logic
+    if (pathname.startsWith('/api/')) {
+      return supabaseResponse;
+    }
+
+    const userRole = user ? await getUserRole() : null;
 
     // Handle authentication redirects
     if (user) {

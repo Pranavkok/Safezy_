@@ -48,8 +48,14 @@ const ProductAddToCartSection = ({
     // lead_time
   } = productDetails;
 
-  const productColors = (color as ProductColorType[]) || [];
-  const productSizes = (size as ProductSizeType[]) || [];
+  const productColors: ProductColorType[] = ((color as unknown[]) || []).map(
+    item =>
+      typeof item === 'string' ? { id: item, color: item } : (item as ProductColorType)
+  );
+  const productSizes: ProductSizeType[] = ((size as unknown[]) || []).map(
+    item =>
+      typeof item === 'string' ? { id: item, size: item } : (item as ProductSizeType)
+  );
 
   const { addItemToCart } = useCart();
 

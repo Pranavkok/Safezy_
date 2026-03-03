@@ -60,10 +60,11 @@ export function PrincipleListingTable({
       <DataTableToolbar table={table} filterFields={filterFields}>
         <FirstPrincipleSugggestionModal />
         <Button
+          size="sm"
           onClick={() => router.push(AppRoutes.ADMIN_EHS_FIRST_PRINCIPLES_ADD)}
         >
-          <Plus className=" w-5 h-5 sm:mr-2" />
-          <span className=" hidden sm:block">Add New Principle</span>
+          <Plus className="w-4 h-4 sm:mr-1" />
+          <span className="hidden sm:inline">Add New Principle</span>
         </Button>
       </DataTableToolbar>
     </DataTable>
