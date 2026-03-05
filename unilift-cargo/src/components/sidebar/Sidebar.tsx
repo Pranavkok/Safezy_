@@ -67,15 +67,9 @@ const Sidebar = ({ sidebarMenu }: { sidebarMenu: SidebarMenuType }) => {
           </Link>
 
           {userRole === USER_ROLES.CONTRACTOR && (
-            <div
-              className={
-                Capacitor.isNativePlatform()
-                  ? 'mt-2'
-                  : 'w-10 h-10 mt-5 border border-red-500'
-              }
-            >
+            <Link href={AppRoutes.CONTRACTOR_NOTIFICATION} className="mt-2">
               <ContractorNotificationCount />
-            </div>
+            </Link>
           )}
         </div>
       </nav>

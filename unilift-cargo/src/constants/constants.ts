@@ -132,6 +132,11 @@ export const ERROR_MESSAGES = {
   WORKSITE_INVENTORY_NOT_FETCHED:
     'Worksite wise inventory could not be fetched. Please try again',
 
+  // Wishlist
+  WISHLIST_NOT_FETCHED: 'Failed to fetch wishlist. Please try again',
+  WISHLIST_ITEM_NOT_ADDED: 'Failed to add to wishlist. Please try again',
+  WISHLIST_ITEM_NOT_REMOVED: 'Failed to remove from wishlist. Please try again',
+
   // Cart-Items
   CART_ITEMS_NOT_FETCHED: 'Failed to fetch cart items',
   CART_ITEMS_NOT_ADDED: 'Failed to add cart items',
@@ -399,6 +404,12 @@ export const SUCCESS_MESSAGES = {
 
   //Contact
   CONTACT_ADDED: 'Contact details added successfully',
+
+  // Wishlist
+  WISHLIST_FETCHED: 'Wishlist fetched successfully',
+  WISHLIST_ITEM_ADDED: 'Added to wishlist',
+  WISHLIST_ITEM_REMOVED: 'Removed from wishlist',
+  WISHLIST_ALREADY_ADDED: 'Already in your wishlist',
 
   // Cart-items
   CART_ITEMS_FETCHED: 'Cart items fetched successfully',

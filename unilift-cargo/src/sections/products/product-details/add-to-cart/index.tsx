@@ -24,6 +24,7 @@ import PriceDisplaySection from './PriceDisplaySection';
 import QuantitySection from './QuantitySection';
 import ActionButtons from './ActionButtons';
 import FullScreenComponent from '@/components/FullScreen';
+import WishlistToggleButton from '@/components/WishlistToggleButton';
 
 const ProductAddToCartSection = ({
   productDetails
@@ -136,6 +137,8 @@ const ProductAddToCartSection = ({
             ppeName={ppe_name}
             isOutOfStock={is_out_of_stock || false}
           />
+
+          <WishlistToggleButton productId={productId} showLabel />
 
           <div className="space-y-4">
             <PriceDisplaySection

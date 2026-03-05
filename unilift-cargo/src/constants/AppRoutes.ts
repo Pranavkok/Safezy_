@@ -39,6 +39,7 @@ type AppRoutesType = {
   CONTRACTOR_EQUIPMENT_DETAILS: (id: string) => string;
   CONTRACTOR_ASSIGNMENTS: string;
   CONTRACTOR_NOTIFICATION: string;
+  CONTRACTOR_WISHLIST: string;
   CONTRACTOR_CART: string;
   // Warehouse operator dashboard
   WAREHOUSE_OPERATOR_DASHBOARD: string;
@@ -137,6 +138,7 @@ export const AppRoutes: AppRoutesType = {
   CONTRACTOR_EQUIPMENT_DETAILS: (id: string) => `/contractor/equipments/${id}`,
   CONTRACTOR_ASSIGNMENTS: '/contractor/assignments',
   CONTRACTOR_NOTIFICATION: '/contractor/notifications',
+  CONTRACTOR_WISHLIST: '/contractor/wishlist',
   CONTRACTOR_INVOICE_DOWNLOAD: (id: string) => `/invoice/${id}`,
   CONTRACTOR_CART: '/cart',
 

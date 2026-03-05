@@ -8,6 +8,7 @@ import {
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
+import { notifyWishlistedContractors } from '@/lib/notify-wishlisted-contractors';
 
 // Fetch all products and fetch them by their properties too
 export const fetchSortedProducts = async (
@@ -177,6 +178,16 @@ export const updateProduct = async (
   const supabase = await createClient();
 
   try {
+    // Read current stock status before update — needed for back-in-stock detection
+    const { data: currentProduct } = await supabase
+      .from('product')
+      .select('is_out_of_stock, ppe_name')
+      .eq('id', productId)
+      .single();
+
+    const wasOutOfStock = currentProduct?.is_out_of_stock === true;
+    const isNowInStock = product.isOutOfStock === false;
+
     const updatedProduct = {
       ppe_category: product.category,
       ppe_name: product.productName,
@@ -264,6 +275,14 @@ export const updateProduct = async (
         success: false,
         message: ERROR_MESSAGES.PRICE_TIERS_NOT_ADDED
       };
+    }
+
+    // Fire back-in-stock push to all contractors who wishlisted this product
+    if (wasOutOfStock && isNowInStock) {
+      const name = product.productName || currentProduct?.ppe_name || 'A product';
+      notifyWishlistedContractors(productId, name).catch(err =>
+        console.error('[updateProduct] back-in-stock notify failed:', err)
+      );
     }
 
     revalidatePath('/admin');

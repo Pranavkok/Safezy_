@@ -8,7 +8,8 @@ import {
   HardHat,
   MapPin,
   Users,
-  ClipboardList
+  ClipboardList,
+  Heart
 } from 'lucide-react';
 
 const CONTRACTOR_SIDEBAR_MENU: SidebarMenuType = [
@@ -47,6 +48,12 @@ const CONTRACTOR_SIDEBAR_MENU: SidebarMenuType = [
     title: 'Assignments',
     icon: <ClipboardList size={18} />,
     route: AppRoutes.CONTRACTOR_ASSIGNMENTS
+  },
+  {
+    id: 8,
+    title: 'Wishlist',
+    icon: <Heart size={18} />,
+    route: AppRoutes.CONTRACTOR_WISHLIST
   }
 ] as const;
 

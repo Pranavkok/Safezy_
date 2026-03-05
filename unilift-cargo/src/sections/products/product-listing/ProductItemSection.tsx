@@ -10,6 +10,7 @@ import { ArrowRight } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import WishlistToggleButton from '@/components/WishlistToggleButton';
 
 type ColorType = {
   id: string;
@@ -43,6 +44,12 @@ const ProductItemSection: React.FC<ProductItemPropsType> = ({ product }) => {
       {product.is_out_of_stock && (
         <div className="absolute top-2 left-2 bg-red-600 text-white font-bold text-sm px-3 py-1 rounded-md z-30 shadow-lg opacity-100 backdrop-blur-md mb-2">
           Out of Stock
+        </div>
+      )}
+
+      {id && (
+        <div className="absolute top-2 right-2 z-30">
+          <WishlistToggleButton productId={id} />
         </div>
       )}
 

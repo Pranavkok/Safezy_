@@ -1644,6 +1644,42 @@ export type Database = {
           },
         ]
       }
+      wishlist: {
+        Row: {
+          id: string
+          user_id: string
+          product_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          product_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          product_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlist_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1730,6 +1766,7 @@ export type Database = {
         | "portal_checklist"
         | "order_placed"
         | "order_delivered"
+        | "wishlist_back_in_stock"
       orderStatus:
         | "Processing"
         | "Returned"
@@ -1883,6 +1920,7 @@ export const Constants = {
         "portal_checklist",
         "order_placed",
         "order_delivered",
+        "wishlist_back_in_stock",
       ],
       orderStatus: [
         "Processing",

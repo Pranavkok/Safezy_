@@ -3,6 +3,7 @@ import NavigationBreadcrumbs from '@/components/NavigationBreadcrumbs';
 import { AppRoutes } from '@/constants/AppRoutes';
 import Link from 'next/link';
 import ContractorNotificationCount from '@/components/ContractorNotificationCount';
+import WishlistCount from '@/components/WishlistCount';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
 import { BreadcrumbOptionsType } from '@/types/global.types';
 
@@ -19,12 +20,22 @@ const ContractorTopbarLayout = ({
   return (
     <>
       <PushNotificationSetup />
+      {/* Notification bell */}
       <div className="hidden lg:block absolute w-10 h-10 -top-4 -right-4 bg-gray-100 rounded-full">
         <Link
           href={AppRoutes.CONTRACTOR_NOTIFICATION}
           className="border-primary border rounded-full h-9 w-9 flex justify-center items-center cursor-pointer hover:bg-gray-50"
         >
           <ContractorNotificationCount />
+        </Link>
+      </div>
+      {/* Wishlist heart icon */}
+      <div className="hidden lg:block absolute w-10 h-10 -top-4 right-10 bg-gray-100 rounded-full">
+        <Link
+          href={AppRoutes.CONTRACTOR_WISHLIST}
+          className="border-primary border rounded-full h-9 w-9 flex justify-center items-center cursor-pointer hover:bg-gray-50"
+        >
+          <WishlistCount />
         </Link>
       </div>
       <div className="px-4 flex flex-col justify-center bg-background mb-4 h-14 lg:h-16 rounded ">
