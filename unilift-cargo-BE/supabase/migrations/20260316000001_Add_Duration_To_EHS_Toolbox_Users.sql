@@ -1,0 +1,2 @@
+ALTER TABLE ehs_toolbox_users
+ADD COLUMN IF NOT EXISTS duration_seconds INTEGER DEFAULT NULL;

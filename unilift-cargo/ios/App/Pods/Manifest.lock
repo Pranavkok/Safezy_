@@ -1,0 +1,64 @@
+PODS:
+  - Capacitor (6.2.0):
+    - CapacitorCordova
+  - CapacitorApp (7.0.0):
+    - Capacitor
+  - CapacitorCordova (6.2.0)
+  - CapacitorDevice (7.0.0):
+    - Capacitor
+  - CapacitorKeyboard (7.0.0):
+    - Capacitor
+  - CapacitorScreenOrientation (7.0.0):
+    - Capacitor
+  - CapacitorSplashScreen (6.0.3):
+    - Capacitor
+  - CapacitorStatusBar (7.0.0):
+    - Capacitor
+  - CapacitorTextZoom (7.0.0):
+    - Capacitor
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorDevice (from `../../node_modules/@capacitor/device`)"
+  - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
+  - "CapacitorScreenOrientation (from `../../node_modules/@capacitor/screen-orientation`)"
+  - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "CapacitorTextZoom (from `../../node_modules/@capacitor/text-zoom`)"
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorDevice:
+    :path: "../../node_modules/@capacitor/device"
+  CapacitorKeyboard:
+    :path: "../../node_modules/@capacitor/keyboard"
+  CapacitorScreenOrientation:
+    :path: "../../node_modules/@capacitor/screen-orientation"
+  CapacitorSplashScreen:
+    :path: "../../node_modules/@capacitor/splash-screen"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
+  CapacitorTextZoom:
+    :path: "../../node_modules/@capacitor/text-zoom"
+
+SPEC CHECKSUMS:
+  Capacitor: 05d35014f4425b0740fc8776481f6a369ad071bf
+  CapacitorApp: 9cb31064a6c6bb2b1438583733a7bf45557fc1da
+  CapacitorCordova: b33e7f4aa4ed105dd43283acdd940964374a87d9
+  CapacitorDevice: 069faf433b3a99c3d5f0e500fbe634f60a8c6a84
+  CapacitorKeyboard: 4db71e694e7afb5d7c0be09b05495c19f7d6c914
+  CapacitorScreenOrientation: 45e36e1121cdba1634eb12077c5e99391055116f
+  CapacitorSplashScreen: fd8bf1bf9081d9aa8817b7cd37d740d1bdaf2fb2
+  CapacitorStatusBar: a8c4c83ed2e973bdafb979e80e4b00d027832cb7
+  CapacitorTextZoom: 254c75dffb54d34d582a4f14cc7ba432fcfb5cad
+
+PODFILE CHECKSUM: b51368bb0cfc974b435ae6561b3d04fb15334b20
+
+COCOAPODS: 1.16.2
