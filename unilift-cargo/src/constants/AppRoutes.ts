@@ -88,6 +88,9 @@ type AppRoutesType = {
   EHS_INCIDENT_ANALYSIS_ADD: string;
   EHS_INCIDENT_ANALYSIS_UPDATE: (id: number) => string;
   EHS_INCIDENT_ANALYSIS_REPORT: (id: number) => string;
+  EHS_UA_UC_NEAR_MISS_LISTING: string;
+  EHS_UA_UC_NEAR_MISS_ADD: string;
+  EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
 
   // BLOGS
   ADMIN_ADD_BLOG: string;
@@ -194,6 +197,9 @@ export const AppRoutes: AppRoutesType = {
     `/ehs/incident-analysis/update/${id}`,
   EHS_INCIDENT_ANALYSIS_REPORT: (id: number) =>
     `/ehs/incident-analysis/report/${id}`,
+  EHS_UA_UC_NEAR_MISS_LISTING: '/ehs/ua-uc-near-miss',
+  EHS_UA_UC_NEAR_MISS_ADD: '/ehs/ua-uc-near-miss/add',
+  EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => `/ehs/ua-uc-near-miss/${id}`,
 
   // blogs
   ADMIN_ADD_BLOG: '/admin/blog/add',

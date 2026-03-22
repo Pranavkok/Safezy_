@@ -127,6 +127,11 @@ export const SIDEBAR_MENU_ITEMS: NavigationMenuType[] = [
         route: AppRoutes.EHS_INCIDENT_ANALYSIS_ADD
       },
       {
+        id: 'ehs-ua-uc-near-miss',
+        title: 'UA / UC / Near Miss',
+        route: AppRoutes.EHS_UA_UC_NEAR_MISS_LISTING
+      },
+      {
         id: 'ehs-news',
         title: 'EHS News & Update',
         route: '/#ehs-news'

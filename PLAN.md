@@ -3,7 +3,7 @@
 ## Overview
 
 A single unified reporting module for **Unsafe Act (UA)**, **Unsafe Condition (UC)**, and **Near Miss** observations.
-The user selects the observation type, uploads an image, and AI (Gemini) auto-analyzes the image to pre-fill the report fields.
+The user selects the observation type, uploads an **image, video, or voice note**, and AI (Gemini) auto-analyzes the media to pre-fill the report fields.
 Reports have an **Open / Closed** status with action tracking.
 
 ---
@@ -40,8 +40,12 @@ Reports have an **Open / Closed** status with action tracking.
 │  ○ Unsafe Condition (UC)                                │
 │  ○ Near Miss                                            │
 ├─────────────────────────────────────────────────────────┤
-│ SECTION 3 — Upload Image + AI Analysis                  │
-│  • Upload Image button → triggers Gemini on upload      │
+│ SECTION 3 — Upload Media + AI Analysis                  │
+│  • Upload button (image / video / voice note)           │
+│    – Accepted: image/*, video/*, audio/*                │
+│    – Max size: image 10 MB, video 100 MB, audio 25 MB   │
+│  • Media type badge shown after upload (Image/Video/    │
+│    Voice)                                               │
 │  • What happened / observed  → AI fills (editable)      │
 │  • Equipment involved        → AI fills (editable)      │
 │  • Activity at time          → auto = reporting time    │
@@ -71,7 +75,10 @@ Reports have an **Open / Closed** status with action tracking.
 │    • Severity potential: ○ Low  ○ Medium  ○ High        │
 ├─────────────────────────────────────────────────────────┤
 │ SECTION 5 — Evidence                                    │
-│  • Photo preview (same image used for AI analysis)      │
+│  • Media preview based on type:                         │
+│    – image → <img> thumbnail                            │
+│    – video → <video> player with controls               │
+│    – voice → <audio> player with controls               │
 ├─────────────────────────────────────────────────────────┤
 │ SECTION 6 — Status & Action                             │
 │  Status: ○ Open  ○ Closed                               │
@@ -106,8 +113,9 @@ what_happened         TEXT                          -- AI-generated, editable
 equipment_involved    TEXT                          -- AI-generated, editable
 activity_at_time      TEXT                          -- auto = time of reporting
 
--- Image
-image_url             TEXT                          -- Supabase storage URL
+-- Media
+media_url             TEXT                          -- Supabase storage URL
+media_type            TEXT                          -- 'image' | 'video' | 'voice'
 
 -- Classification: UA (Section 4 — UA)
 ua_classifications    JSONB DEFAULT '[]'            -- array of selected checkboxes
@@ -152,18 +160,28 @@ Then pad to 4 digits: `type_prefix + '-' + year + '-' + (count + 1).toString().p
 ## AI Analysis Flow
 
 ```
-User selects image
+User selects media file (image / video / voice)
        ↓
-Image uploaded to Supabase Storage → image_url saved
+Detect media_type from MIME:
+  image/*  → 'image'
+  video/*  → 'video'
+  audio/*  → 'voice'
+       ↓
+Media uploaded to Supabase Storage → media_url + media_type saved
        ↓
 POST /api/generate-ua-uc-analysis
-  Body: { image_url, observation_type }
+  Body: { media_url, media_type, observation_type }
        ↓
-Fetch image → base64 encode
+Fetch media → base64 encode
        ↓
-Gemini prompt (tailored by observation_type):
-  "You are an EHS expert. Analyze this image and identify:
-   1. what_happened: What unsafe act/condition/near miss is visible?
+Build Gemini inlineData part:
+  image → { mimeType: 'image/jpeg', data: base64 }
+  video → { mimeType: 'video/mp4',  data: base64 }
+  voice → { mimeType: 'audio/mpeg', data: base64 }
+       ↓
+Gemini prompt (tailored by observation_type + media_type):
+  "You are an EHS expert. Analyze this [image/video/voice note] and identify:
+   1. what_happened: What unsafe act/condition/near miss is visible/described?
    2. equipment_involved: What equipment or tools are involved?"
        ↓
 Returns JSON: { what_happened, equipment_involved }
@@ -218,7 +236,8 @@ export type UaUcNearMissRecord = {
   what_happened: string | null;
   equipment_involved: string | null;
   activity_at_time: string | null;
-  image_url: string | null;
+  media_url: string | null;
+  media_type: 'image' | 'video' | 'voice' | null;
   ua_classifications: string[];
   ua_other: string | null;
   uc_classifications: string[];
@@ -233,6 +252,8 @@ export type UaUcNearMissRecord = {
   created_at: string;
   updated_at: string;
 };
+
+export type MediaType = 'image' | 'video' | 'voice';
 
 export type UaUcAiAnalysisResponse = {
   what_happened: string;
@@ -255,8 +276,9 @@ export const UaUcNearMissSchema = z.object({
   location_department: z.string().min(2, 'Location is required'),
   observation_type: z.enum(['UA', 'UC', 'NearMiss']),
 
-  // Image
-  image: z.instanceof(File).optional(),
+  // Media (image / video / voice)
+  media: z.instanceof(File).optional(),
+  media_type: z.enum(['image', 'video', 'voice']).optional(),
 
   // AI fields (editable by user after AI fills them)
   what_happened: z.string().min(5, 'Required').optional(),
@@ -307,15 +329,23 @@ export const UaUcNearMissSchema = z.object({
 `src/app/api/generate-ua-uc-analysis/route.ts`
 
 **What it does:**
-1. Receives `{ image_url, observation_type }` in POST body
-2. Fetches image from Supabase storage → base64 encode
-3. Calls Gemini with a tailored prompt based on `observation_type`
+1. Receives `{ media_url, media_type, observation_type }` in POST body
+2. Fetches media from Supabase storage → processes based on `media_type`:
+   - **image**: base64 encode → inline Gemini `inlineData` part
+   - **video**: base64 encode → inline Gemini `inlineData` part (use `video/mp4` or detected MIME)
+   - **voice**: base64 encode → inline Gemini `inlineData` part (use `audio/mpeg` or detected MIME) — Gemini transcribes + analyzes audio
+3. Calls Gemini with a prompt tailored by **both** `observation_type` and `media_type`
 4. Returns `{ what_happened, equipment_involved }`
 
-**Prompt strategy by type:**
-- **UA**: "Identify the unsafe human behavior or action visible in this image. What rule or safety standard is being violated?"
-- **UC**: "Identify the unsafe physical condition or hazard visible in this image. What environmental or equipment risk is present?"
-- **Near Miss**: "Describe the near miss situation visible in this image. What almost happened and what is the potential injury?"
+**Prompt strategy by observation type:**
+- **UA**: "Identify the unsafe human behavior or action visible/audible. What rule or safety standard is being violated?"
+- **UC**: "Identify the unsafe physical condition or hazard visible/audible. What environmental or equipment risk is present?"
+- **Near Miss**: "Describe the near miss situation visible/audible. What almost happened and what is the potential injury?"
+
+**Media-type note added to all prompts:**
+- image → "Analyze this image..."
+- video → "Analyze this video clip. Describe what is happening across the footage..."
+- voice → "This is a voice note recorded at a worksite. Transcribe and analyze the described situation..."
 
 **Response JSON structure:**
 ```json
@@ -338,7 +368,8 @@ export const UaUcNearMissSchema = z.object({
 - Get auth user from session
 - Get user profile (name, employee_id)
 - Generate report_no (query count + format)
-- Upload image to Supabase Storage (`ehs-ua-uc-images` bucket)
+- Detect `media_type` from File MIME type
+- Upload media to Supabase Storage (`ehs-ua-uc-media` bucket)
 - Insert row into `ehs_ua_uc_near_miss`
 - `revalidatePath('/contractor/ehs/ua-uc-near-miss')`
 - Return `{ success, message, data: { id, report_no } }`
@@ -420,7 +451,8 @@ UaUcNearMissForm
 │  ✓ Bypassing safety devices                     │
 ├─────────────────────────────────────────────────┤
 │  EVIDENCE                                       │
-│  [Image thumbnail]                              │
+│  [Image thumbnail]  or  [▶ Video player]        │
+│                     or  [🎙 Audio player]        │
 ├─────────────────────────────────────────────────┤
 │  STATUS: ● OPEN — Action needs to be taken      │
 │  (or if CLOSED:)                                │
@@ -446,7 +478,7 @@ Uses `@react-pdf/renderer` (same as `IncidentReportPdf.tsx`).
 3. Type of Observation
 4. Observation Details (AI-analyzed fields)
 5. Classification checklist
-6. Evidence — embedded image (the one used for AI analysis)
+6. Evidence — if image: embed the photo; if video/voice: show media type label + public URL as a link (PDF cannot embed video/audio)
 7. Status section:
    - If Open: "Action Needs to Be Taken" banner
    - If Closed: Action taken, By Whom, Date
@@ -532,14 +564,17 @@ export const OBSERVATION_TYPES = [
 
 | Point | Detail |
 |-------|--------|
-| AI trigger | Fire AI call immediately on image selection (not on form submit) |
+| AI trigger | Fire AI call immediately on media selection (not on form submit) |
 | AI fields editable | `what_happened` and `equipment_involved` are pre-filled but user can edit |
+| Media types accepted | image/*, video/*, audio/* — one file per report |
+| Media size limits | Image: 10 MB, Video: 100 MB, Voice: 25 MB — validate client-side before upload |
+| media_type detection | Derived from `File.type` MIME on the client; stored in DB alongside URL |
 | Date locked | `reported_at` is `DEFAULT now()` in DB — no date picker shown to user |
 | Report No prefix | UA → `UA`, UC → `UC`, Near Miss → `NM` |
-| Image storage bucket | `ehs-ua-uc-images` (create if not exists) |
+| Media storage bucket | `ehs-ua-uc-media` (create if not exists, replace old `ehs-ua-uc-images`) |
 | Status default | All new reports start as `Open` |
 | Close fields | Only shown + validated when status = `Closed` |
-| PDF evidence | Embed the same image uploaded for AI analysis |
+| PDF evidence | Image → embed inline; Video/Voice → show media type + clickable URL |
 | Fast submission | Near Miss form should be completable in <30 seconds — keep it minimal |
 
 ---

@@ -30,6 +30,7 @@ import {
   teamMemberSchema
 } from '@/validations/contractor/add-incident-analysis';
 import { AddToolboxNoteSchema } from '@/validations/contractor/add-toolbox-note';
+import { UaUcNearMissSchema } from '@/validations/contractor/add-ua-uc-near-miss';
 import { z } from 'zod';
 
 export type addToolboxType = Omit<
@@ -252,3 +253,62 @@ export type RootCausePointType = {
 export type RootCausesJsonType = {
   points: RootCausePointType[];
 };
+
+// ─── UA / UC / Near Miss ───────────────────────────────────────────────────
+
+export type ObservationType = 'UA' | 'UC' | 'NearMiss';
+export type ObservationStatus = 'Open' | 'Closed';
+export type NearMissSeverity = 'Low' | 'Medium' | 'High';
+export type MediaType = 'image' | 'video' | 'voice';
+
+export type UaUcNearMissFormType = z.infer<typeof UaUcNearMissSchema>;
+
+export type UaUcNearMissRecord = {
+  id: number;
+  report_no: string;
+  observation_type: ObservationType;
+  reported_at: string;
+  location_department: string;
+  reported_by_user_id: string;
+  reported_by_name: string;
+  employee_id: string;
+  what_happened: string | null;
+  equipment_involved: string | null;
+  activity_at_time: string | null;
+  media_url: string | null;
+  media_type: MediaType | null;
+  ua_classifications: string[];
+  ua_other: string | null;
+  uc_classifications: string[];
+  uc_other: string | null;
+  nm_potential_injury: string | null;
+  nm_what_could_happen: string | null;
+  nm_severity: NearMissSeverity | null;
+  status: ObservationStatus;
+  action_taken: string | null;
+  action_by: string | null;
+  action_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UaUcAiAnalysisResponse = {
+  what_happened: string;
+  equipment_involved: string;
+  action_taken?: string;
+  // UA
+  ua_classifications?: string[];
+  ua_other?: string;
+  // UC
+  uc_classifications?: string[];
+  uc_other?: string;
+  // Near Miss
+  nm_potential_injury?: string;
+  nm_what_could_happen?: string;
+  nm_severity?: 'Low' | 'Medium' | 'High';
+};
+
+export type UaUcNearMissListItem = Pick<
+  UaUcNearMissRecord,
+  'id' | 'report_no' | 'observation_type' | 'status' | 'reported_at' | 'location_department'
+>;
