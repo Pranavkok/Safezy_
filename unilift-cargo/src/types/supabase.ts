@@ -531,6 +531,7 @@ export type Database = {
           process_frequency: string | null
           rca_conclusion: string | null
           regular_process: Database["public"]["Enums"]["confirmation"] | null
+          reported_by_user_id: string | null
           root_causes: Json | null
           severity_level: string | null
           sop_deviation: boolean | null
@@ -592,6 +593,7 @@ export type Database = {
           process_frequency?: string | null
           rca_conclusion?: string | null
           regular_process?: Database["public"]["Enums"]["confirmation"] | null
+          reported_by_user_id?: string | null
           root_causes?: Json | null
           severity_level?: string | null
           sop_deviation?: boolean | null
@@ -1810,7 +1812,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "contractor" | "principle" | "warehouse_operator"
+      app_role: "admin" | "contractor" | "principle" | "warehouse_operator" | "manager" | "safety_officer"
       checklist_options: "Yes" | "No" | "N/A"
       confirmation: "Yes" | "No"
       ehs_suggestion_type: "checklist" | "first_principle" | "toolbox_talk"
@@ -1964,7 +1966,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      app_role: ["admin", "contractor", "principle", "warehouse_operator"],
+      app_role: ["admin", "contractor", "principle", "warehouse_operator", "manager", "safety_officer"],
       checklist_options: ["Yes", "No", "N/A"],
       confirmation: ["Yes", "No"],
       ehs_suggestion_type: ["checklist", "first_principle", "toolbox_talk"],

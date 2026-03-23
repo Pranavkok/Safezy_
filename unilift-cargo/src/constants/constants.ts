@@ -547,11 +547,15 @@ export const USER_ROLES: {
   ADMIN: AppRole;
   PRINCIPAL_EMPLOYER: AppRole;
   WAREHOUSE_OPERATOR: AppRole;
+  MANAGER: AppRole;
+  SAFETY_OFFICER: AppRole;
 } = {
   CONTRACTOR: 'contractor',
   ADMIN: 'admin',
   PRINCIPAL_EMPLOYER: 'principle',
-  WAREHOUSE_OPERATOR: 'warehouse_operator'
+  WAREHOUSE_OPERATOR: 'warehouse_operator',
+  MANAGER: 'manager',
+  SAFETY_OFFICER: 'safety_officer'
 } as const;
 
 export const STATE: {

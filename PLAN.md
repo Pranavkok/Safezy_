@@ -1,588 +1,493 @@
-# UA / UC / Near Miss Reporting Module — Implementation Plan
+# RBAC — Manager & Safety Officer Roles Implementation Plan
 
 ## Overview
 
-A single unified reporting module for **Unsafe Act (UA)**, **Unsafe Condition (UC)**, and **Near Miss** observations.
-The user selects the observation type, uploads an **image, video, or voice note**, and AI (Gemini) auto-analyzes the media to pre-fill the report fields.
-Reports have an **Open / Closed** status with action tracking.
+The client requires two new EHS-focused roles in addition to the existing Admin, Contractor, Principal Employer, and Warehouse Operator roles.
+
+| Role | What They Do |
+|------|--------------|
+| **Manager** | View all EHS reports across the platform. Assign open reports/incidents to Safety Officers for investigation. |
+| **Safety Officer / Supervisor** | View reports assigned to them. Investigate incidents. Close actions by filling investigation details. |
+
+Neither role is involved in orders, products, or e-commerce — their portal is **100% EHS-focused**.
 
 ---
 
-## Architecture Summary
-
-| Layer | Pattern (mirrors Incident Analysis) |
-|-------|--------------------------------------|
-| Database | Single Supabase table `ehs_ua_uc_near_miss` |
-| Migration | New `.sql` file under `unilift-cargo-BE/supabase/migrations/` |
-| Types | Added to `src/types/ehs.types.ts` |
-| Validation | New Zod schema at `src/validations/contractor/add-ua-uc-near-miss.ts` |
-| Server Actions | New file `src/actions/contractor/ua-uc-near-miss.ts` |
-| AI Route | New API route `src/app/api/generate-ua-uc-analysis/route.ts` |
-| UI Form | `src/sections/ehs/ua-uc-near-miss/index.tsx` (single-page form) |
-| Report Viewer | `src/sections/ehs/ua-uc-near-miss/UaUcReportViewer.tsx` |
-| PDF | `src/sections/ehs/ua-uc-near-miss/UaUcReportPdf.tsx` |
-
----
-
-## Form Sections (Single-Page Form)
+## Workflow (End-to-End)
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ SECTION 1 — Basic Information (mostly auto-filled)      │
-│  • Report No        → auto-generated (UA-2026-0001)     │
-│  • Date & Time      → auto (current, locked, no past)   │
-│  • Location / Dept  → text input (only user input here) │
-│  • Reported By      → from auth session (display only)  │
-│  • Employee ID      → from user profile (display only)  │
-├─────────────────────────────────────────────────────────┤
-│ SECTION 2 — Type of Observation (radio, pick one)       │
-│  ○ Unsafe Act (UA)                                      │
-│  ○ Unsafe Condition (UC)                                │
-│  ○ Near Miss                                            │
-├─────────────────────────────────────────────────────────┤
-│ SECTION 3 — Upload Media + AI Analysis                  │
-│  • Upload button (image / video / voice note)           │
-│    – Accepted: image/*, video/*, audio/*                │
-│    – Max size: image 10 MB, video 100 MB, audio 25 MB   │
-│  • Media type badge shown after upload (Image/Video/    │
-│    Voice)                                               │
-│  • What happened / observed  → AI fills (editable)      │
-│  • Equipment involved        → AI fills (editable)      │
-│  • Activity at time          → auto = reporting time    │
-├─────────────────────────────────────────────────────────┤
-│ SECTION 4 — Classification (dynamic by type)            │
-│                                                         │
-│  If UA selected:                                        │
-│    □ Not using PPE                                      │
-│    □ Improper handling of equipment                     │
-│    □ Bypassing safety devices                           │
-│    □ Unsafe lifting / posture                           │
-│    □ Operating without authorization                    │
-│    □ Other: _______                                     │
-│                                                         │
-│  If UC selected:                                        │
-│    □ Oil spill / slippery floor                         │
-│    □ Damaged tools / equipment                          │
-│    □ Poor housekeeping                                  │
-│    □ Exposed wiring                                     │
-│    □ Inadequate guarding                                │
-│    □ Poor lighting / ventilation                        │
-│    □ Other: _______                                     │
-│                                                         │
-│  If Near Miss selected:                                 │
-│    • Potential injury type  (text input)                │
-│    • What could have happened (textarea)                │
-│    • Severity potential: ○ Low  ○ Medium  ○ High        │
-├─────────────────────────────────────────────────────────┤
-│ SECTION 5 — Evidence                                    │
-│  • Media preview based on type:                         │
-│    – image → <img> thumbnail                            │
-│    – video → <video> player with controls               │
-│    – voice → <audio> player with controls               │
-├─────────────────────────────────────────────────────────┤
-│ SECTION 6 — Status & Action                             │
-│  Status: ○ Open  ○ Closed                               │
-│                                                         │
-│  If Closed → show:                                      │
-│    • Action taken   (textarea)                          │
-│    • By Whom        (text input)                        │
-│    • Date           (date picker)                       │
-└─────────────────────────────────────────────────────────┘
+[Field Worker / Contractor]
+  Submits UA/UC/Near Miss or Incident Analysis report
+  → Status: Open
+         ↓
+[Manager]
+  Views the Open report on their dashboard
+  Assigns it to a Safety Officer
+  → Status: Assigned (assigned_to_user_id, assigned_to_name set)
+         ↓
+[Safety Officer]
+  Sees the report in "My Assigned" list
+  Investigates the incident on-site
+  Fills: action_taken, action_by, action_date, investigation_notes
+  Marks it Closed
+  → Status: Closed
 ```
+
+This 3-state status (`Open → Assigned → Closed`) applies to both:
+- `ehs_ua_uc_near_miss` table
+- `ehs_incident_analysis` table
 
 ---
 
-## Database Schema
+## Roles Summary
 
-### Table: `ehs_ua_uc_near_miss`
+### Manager
+- **Can**: View all EHS reports (UA/UC/Near Miss + Incident Analysis), assign reports to Safety Officers, filter/search reports
+- **Cannot**: Submit reports, close reports, edit report content
+
+### Safety Officer
+- **Can**: View reports assigned to them, close reports (fill investigation + action details), mark status as Closed
+- **Cannot**: View reports not assigned to them, submit reports, assign reports to others
+
+---
+
+## What Needs to Be Built — Complete File List
+
+### Phase 1: Core Infrastructure
+
+| # | File | Action | What Changes |
+|---|------|--------|--------------|
+| 1a | `unilift-cargo-BE/supabase/migrations/20260322000001_Add_Manager_Safety_Officer_Roles.sql` | **Create** | Add `manager` and `safety_officer` to `app_role` enum + insert into `user_roles` table |
+| 1b | `unilift-cargo-BE/supabase/migrations/20260322000002_Add_Assignment_Fields.sql` | **Create** | Add `assigned_to_user_id`, `assigned_to_name`, update status to 3-value on both EHS tables |
+| 1c | `unilift-cargo/src/types/supabase.ts` | **Modify** | Add `'manager' \| 'safety_officer'` to `app_role` enum (lines 1813 & 1967) |
+| 1d | `unilift-cargo/src/constants/constants.ts` | **Modify** | Add `MANAGER` and `SAFETY_OFFICER` to `USER_ROLES` constant |
+| 1e | `unilift-cargo/src/constants/AppRoutes.ts` | **Modify** | Add dashboard + EHS routes for both new roles |
+| 1f | `unilift-cargo/src/middleware.ts` | **Modify** | Add `/manager` and `/safety-officer` to protected prefixes, redirect rules, and `hasAccessToPath` |
+
+---
+
+### Phase 2: Admin — Create & Manage Staff Accounts
+
+Admin is the only one who can create Manager and Safety Officer accounts. This requires a new "Staff" section in the Admin panel.
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 2a | `unilift-cargo/src/app/admin/staff/page.tsx` | **Create** | Listing page — shows all managers and safety officers |
+| 2b | `unilift-cargo/src/app/admin/staff/add/page.tsx` | **Create** | Form page — admin creates a new Manager or Safety Officer account |
+| 2c | `unilift-cargo/src/sections/admin/staff/StaffListingSection.tsx` | **Create** | Table component showing staff members (name, email, role, status) |
+| 2d | `unilift-cargo/src/sections/admin/staff/AddStaffSection.tsx` | **Create** | Form: First name, Last name, Email, Password, Role (Manager / Safety Officer), Contact Number |
+| 2e | `unilift-cargo/src/actions/admin/staff.ts` | **Create** | Server actions: `createStaffUser()`, `getStaffList()`, `deactivateStaffUser()` |
+| 2f | `unilift-cargo/src/validations/admin/add-staff.ts` | **Create** | Zod schema for staff creation form |
+| 2g | `unilift-cargo/src/layouts/AdminDashboardLayout.tsx` | **Modify** | Add "Staff" menu item to admin sidebar |
+| 2h | `unilift-cargo/src/constants/AppRoutes.ts` | **Modify** | Add `ADMIN_STAFF_LISTING`, `ADMIN_STAFF_ADD` routes |
+
+---
+
+### Phase 3: Manager Portal
+
+#### 3A — Layout & Navigation
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 3a | `unilift-cargo/src/layouts/ManagerDashboardLayout.tsx` | **Create** | Manager sidebar with: Dashboard, EHS Reports (submenu: UA/UC/Near Miss, Incident Analysis) |
+| 3b | `unilift-cargo/src/app/manager/layout.tsx` | **Create** | Next.js layout file wrapping all `/manager/*` pages with `ManagerDashboardLayout` |
+
+#### 3B — Manager Dashboard
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 3c | `unilift-cargo/src/app/manager/dashboard/page.tsx` | **Create** | Dashboard page using `ManagerDashboardSection` |
+| 3d | `unilift-cargo/src/sections/manager/ManagerDashboardSection.tsx` | **Create** | Stats cards: Total Open, Total Assigned, Total Closed (for both report types). Quick links to each report listing. |
+
+#### 3C — UA/UC/Near Miss (Manager View)
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 3e | `unilift-cargo/src/app/manager/ehs/ua-uc-near-miss/page.tsx` | **Create** | Listing page — all UA/UC/Near Miss reports |
+| 3f | `unilift-cargo/src/app/manager/ehs/ua-uc-near-miss/[id]/page.tsx` | **Create** | Detail view + assign action panel |
+| 3g | `unilift-cargo/src/sections/manager/ehs/ManagerUaUcListingSection.tsx` | **Create** | Table with all reports. Columns: Report No, Type, Location, Submitted By, Date, Status badge, Assigned To. Filters: Type (UA/UC/NM), Status (All/Open/Assigned/Closed). |
+| 3h | `unilift-cargo/src/sections/manager/ehs/ManagerUaUcDetailSection.tsx` | **Create** | Full report view (read-only) + "Assign to Safety Officer" panel at the bottom. Manager picks a Safety Officer from a dropdown (fetches all safety_officer users), clicks "Assign". |
+| 3i | `unilift-cargo/src/actions/manager/ehs.ts` | **Create** | `assignUaUcReport(reportId, safetyOfficerId, safetyOfficerName)`, `getAllUaUcReports()`, `getAllIncidentReports()`, `getSafetyOfficersList()` |
+
+#### 3D — Incident Analysis (Manager View)
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 3j | `unilift-cargo/src/app/manager/ehs/incident-analysis/page.tsx` | **Create** | Listing page — all Incident Analysis reports |
+| 3k | `unilift-cargo/src/app/manager/ehs/incident-analysis/[id]/page.tsx` | **Create** | Detail view + assign action panel |
+| 3l | `unilift-cargo/src/sections/manager/ehs/ManagerIncidentListingSection.tsx` | **Create** | Table with all incidents. Columns: Report ID, Incident Type, Location, Date, Status, Assigned To. |
+| 3m | `unilift-cargo/src/sections/manager/ehs/ManagerIncidentDetailSection.tsx` | **Create** | Full incident report view (read-only) + assign panel. Same pattern as UA/UC. |
+
+---
+
+### Phase 4: Safety Officer Portal
+
+#### 4A — Layout & Navigation
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 4a | `unilift-cargo/src/layouts/SafetyOfficerDashboardLayout.tsx` | **Create** | Safety Officer sidebar with: Dashboard, My Assignments (submenu: UA/UC/Near Miss, Incident Analysis) |
+| 4b | `unilift-cargo/src/app/safety-officer/layout.tsx` | **Create** | Next.js layout file wrapping all `/safety-officer/*` pages |
+
+#### 4B — Safety Officer Dashboard
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 4c | `unilift-cargo/src/app/safety-officer/dashboard/page.tsx` | **Create** | Dashboard page |
+| 4d | `unilift-cargo/src/sections/safety-officer/SafetyOfficerDashboardSection.tsx` | **Create** | Stats: My Open Assignments, My Closed Reports. Lists the most recent assigned items with a "View" button. |
+
+#### 4C — UA/UC/Near Miss (Safety Officer View)
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 4e | `unilift-cargo/src/app/safety-officer/ehs/ua-uc-near-miss/page.tsx` | **Create** | Listing — only reports assigned to this safety officer |
+| 4f | `unilift-cargo/src/app/safety-officer/ehs/ua-uc-near-miss/[id]/page.tsx` | **Create** | Detail view + close action form |
+| 4g | `unilift-cargo/src/sections/safety-officer/ehs/SoUaUcListingSection.tsx` | **Create** | Table of assigned reports. Columns: Report No, Type, Location, Date, Status. Filter by Status. |
+| 4h | `unilift-cargo/src/sections/safety-officer/ehs/SoUaUcDetailSection.tsx` | **Create** | Full report view (read-only) + "Close Report" panel. Form fields: Action Taken (textarea), By Whom (pre-filled with officer's name, editable), Investigation Notes (textarea), Date. Submit → status becomes Closed. |
+| 4i | `unilift-cargo/src/actions/safety-officer/ehs.ts` | **Create** | `getMyAssignedUaUcReports()`, `closeUaUcReport(id, closeData)`, `getMyAssignedIncidents()`, `closeIncidentReport(id, closeData)` |
+
+#### 4D — Incident Analysis (Safety Officer View)
+
+| # | File | Action | What It Does |
+|---|------|--------|--------------|
+| 4j | `unilift-cargo/src/app/safety-officer/ehs/incident-analysis/page.tsx` | **Create** | Listing — only incidents assigned to this safety officer |
+| 4k | `unilift-cargo/src/app/safety-officer/ehs/incident-analysis/[id]/page.tsx` | **Create** | Detail view + close action form |
+| 4l | `unilift-cargo/src/sections/safety-officer/ehs/SoIncidentListingSection.tsx` | **Create** | Table of assigned incidents |
+| 4m | `unilift-cargo/src/sections/safety-officer/ehs/SoIncidentDetailSection.tsx` | **Create** | Full incident view (read-only) + close form. Same pattern as UA/UC. |
+
+---
+
+## Database Changes (Detailed)
+
+### Migration 1 — New Enum Values & Role Rows
+**File:** `20260322000001_Add_Manager_Safety_Officer_Roles.sql`
 
 ```sql
-id                    BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY
-report_no             TEXT NOT NULL UNIQUE          -- e.g. UA-2026-0001
-observation_type      TEXT NOT NULL                 -- 'UA' | 'UC' | 'NearMiss'
-reported_at           TIMESTAMPTZ NOT NULL DEFAULT now()
-location_department   TEXT NOT NULL
+ALTER TYPE "app_role" ADD VALUE IF NOT EXISTS 'manager';
+ALTER TYPE "app_role" ADD VALUE IF NOT EXISTS 'safety_officer';
 
--- Auth
-reported_by_user_id   UUID REFERENCES auth.users(id)
-reported_by_name      TEXT                          -- snapshot from user profile
-employee_id           TEXT                          -- snapshot from user profile
-
--- AI-analyzed fields (Section 3)
-what_happened         TEXT                          -- AI-generated, editable
-equipment_involved    TEXT                          -- AI-generated, editable
-activity_at_time      TEXT                          -- auto = time of reporting
-
--- Media
-media_url             TEXT                          -- Supabase storage URL
-media_type            TEXT                          -- 'image' | 'video' | 'voice'
-
--- Classification: UA (Section 4 — UA)
-ua_classifications    JSONB DEFAULT '[]'            -- array of selected checkboxes
-ua_other              TEXT                          -- free text if "Other" checked
-
--- Classification: UC (Section 4 — UC)
-uc_classifications    JSONB DEFAULT '[]'            -- array of selected checkboxes
-uc_other              TEXT                          -- free text if "Other" checked
-
--- Classification: Near Miss (Section 4 — NearMiss)
-nm_potential_injury   TEXT
-nm_what_could_happen  TEXT
-nm_severity           TEXT                          -- 'Low' | 'Medium' | 'High'
-
--- Status & Action (Section 6)
-status                TEXT NOT NULL DEFAULT 'Open'  -- 'Open' | 'Closed'
-action_taken          TEXT
-action_by             TEXT
-action_date           DATE
-
-created_at            TIMESTAMPTZ DEFAULT now()
-updated_at            TIMESTAMPTZ DEFAULT now()
+INSERT INTO public.user_roles ("role")
+VALUES ('manager'), ('safety_officer');
 ```
 
 ---
 
-## Report No Auto-Generation Logic
+### Migration 2 — Assignment Fields on EHS Tables
+**File:** `20260322000002_Add_Assignment_Fields.sql`
 
-Format: `{TYPE}-{YEAR}-{4-digit-sequence}`
-Examples: `UA-2026-0001`, `UC-2026-0023`, `NM-2026-0005`
-
-Generated in the server action before insert using:
+#### On `ehs_ua_uc_near_miss`:
 ```sql
-SELECT COUNT(*) FROM ehs_ua_uc_near_miss
-WHERE observation_type = $1
-AND EXTRACT(YEAR FROM reported_at) = EXTRACT(YEAR FROM now())
-```
-Then pad to 4 digits: `type_prefix + '-' + year + '-' + (count + 1).toString().padStart(4, '0')`
+-- Add assignment fields
+ALTER TABLE ehs_ua_uc_near_miss
+  ADD COLUMN assigned_to_user_id UUID REFERENCES auth.users(id),
+  ADD COLUMN assigned_to_name    TEXT;
 
----
-
-## AI Analysis Flow
-
-```
-User selects media file (image / video / voice)
-       ↓
-Detect media_type from MIME:
-  image/*  → 'image'
-  video/*  → 'video'
-  audio/*  → 'voice'
-       ↓
-Media uploaded to Supabase Storage → media_url + media_type saved
-       ↓
-POST /api/generate-ua-uc-analysis
-  Body: { media_url, media_type, observation_type }
-       ↓
-Fetch media → base64 encode
-       ↓
-Build Gemini inlineData part:
-  image → { mimeType: 'image/jpeg', data: base64 }
-  video → { mimeType: 'video/mp4',  data: base64 }
-  voice → { mimeType: 'audio/mpeg', data: base64 }
-       ↓
-Gemini prompt (tailored by observation_type + media_type):
-  "You are an EHS expert. Analyze this [image/video/voice note] and identify:
-   1. what_happened: What unsafe act/condition/near miss is visible/described?
-   2. equipment_involved: What equipment or tools are involved?"
-       ↓
-Returns JSON: { what_happened, equipment_involved }
-       ↓
-Form fields auto-filled (user can edit before submitting)
+-- Status now has 3 valid values: 'Open' | 'Assigned' | 'Closed'
+-- No enum change needed — it's already a TEXT column with CHECK constraint
+-- Update the check constraint:
+ALTER TABLE ehs_ua_uc_near_miss
+  DROP CONSTRAINT IF EXISTS ehs_ua_uc_near_miss_status_check,
+  ADD CONSTRAINT ehs_ua_uc_near_miss_status_check
+    CHECK (status IN ('Open', 'Assigned', 'Closed'));
 ```
 
----
+#### On `ehs_incident_analysis`:
+```sql
+-- Add assignment fields (check actual column names first)
+ALTER TABLE ehs_incident_analysis
+  ADD COLUMN IF NOT EXISTS assigned_to_user_id UUID REFERENCES auth.users(id),
+  ADD COLUMN IF NOT EXISTS assigned_to_name    TEXT;
 
-## Step-by-Step Implementation
+-- Update status to allow 'Assigned' (if status is a text column)
+-- Check existing constraint name before running
+```
 
----
-
-### STEP 1 — Database Migration
-
-**File to create:**
-`unilift-cargo-BE/supabase/migrations/20260320000001_Create_UA_UC_Near_Miss_Table.sql`
-
-**What to write:**
-- `CREATE TABLE ehs_ua_uc_near_miss` with all columns defined above
-- `CREATE INDEX` on `observation_type`, `status`, `reported_by_user_id`
-- Enable RLS: `ALTER TABLE ehs_ua_uc_near_miss ENABLE ROW LEVEL SECURITY`
-- RLS policy: authenticated users can insert/select their own rows
+> **NOTE:** Check `ehs_incident_analysis` schema before writing migration 2. Confirm column names for status and whether a check constraint already exists.
 
 ---
 
-### STEP 2 — TypeScript Types
+## Type Updates (Detailed)
 
-**File to modify:**
-`src/types/ehs.types.ts`
+### `src/types/supabase.ts`
+Two places to update:
 
-**What to add:**
 ```typescript
-// Import from the new validation schema (after step 3)
-import { UaUcNearMissSchema, UaUcNearMissCloseSchema } from '@/validations/contractor/add-ua-uc-near-miss';
+// Line ~1813
+app_role: "admin" | "contractor" | "principle" | "warehouse_operator" | "manager" | "safety_officer"
 
-export type ObservationType = 'UA' | 'UC' | 'NearMiss';
-export type ObservationStatus = 'Open' | 'Closed';
-export type NearMissSeverity = 'Low' | 'Medium' | 'High';
+// Line ~1967
+app_role: ["admin", "contractor", "principle", "warehouse_operator", "manager", "safety_officer"],
+```
 
-export type UaUcNearMissFormType = z.infer<typeof UaUcNearMissSchema>;
-export type UaUcNearMissCloseType = z.infer<typeof UaUcNearMissCloseSchema>;
+### `src/constants/constants.ts`
+```typescript
+export const USER_ROLES: {
+  CONTRACTOR: AppRole;
+  ADMIN: AppRole;
+  PRINCIPAL_EMPLOYER: AppRole;
+  WAREHOUSE_OPERATOR: AppRole;
+  MANAGER: AppRole;
+  SAFETY_OFFICER: AppRole;
+} = {
+  CONTRACTOR: 'contractor',
+  ADMIN: 'admin',
+  PRINCIPAL_EMPLOYER: 'principle',
+  WAREHOUSE_OPERATOR: 'warehouse_operator',
+  MANAGER: 'manager',
+  SAFETY_OFFICER: 'safety_officer'
+} as const;
+```
 
-export type UaUcNearMissRecord = {
-  id: number;
-  report_no: string;
-  observation_type: ObservationType;
-  reported_at: string;
-  location_department: string;
-  reported_by_name: string;
-  employee_id: string;
-  what_happened: string | null;
-  equipment_involved: string | null;
-  activity_at_time: string | null;
-  media_url: string | null;
-  media_type: 'image' | 'video' | 'voice' | null;
-  ua_classifications: string[];
-  ua_other: string | null;
-  uc_classifications: string[];
-  uc_other: string | null;
-  nm_potential_injury: string | null;
-  nm_what_could_happen: string | null;
-  nm_severity: NearMissSeverity | null;
-  status: ObservationStatus;
-  action_taken: string | null;
-  action_by: string | null;
-  action_date: string | null;
-  created_at: string;
-  updated_at: string;
+---
+
+## AppRoutes Additions
+
+```typescript
+// In AppRoutesType and AppRoutes object:
+
+// Manager routes
+MANAGER_DASHBOARD: string;
+MANAGER_EHS_UA_UC_NEAR_MISS_LISTING: string;
+MANAGER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
+MANAGER_EHS_INCIDENT_ANALYSIS_LISTING: string;
+MANAGER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => string;
+
+// Safety Officer routes
+SAFETY_OFFICER_DASHBOARD: string;
+SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING: string;
+SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
+SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING: string;
+SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => string;
+
+// Admin staff routes
+ADMIN_STAFF_LISTING: string;
+ADMIN_STAFF_ADD: string;
+```
+
+---
+
+## Middleware Changes
+
+### New protected prefixes:
+```typescript
+const PROTECTED_PATH_PREFIXES = [
+  '/admin',
+  '/contractor',
+  '/warehouse-operator',
+  '/principal-employer',
+  '/manager',          // NEW
+  '/safety-officer'    // NEW
+];
+```
+
+### New redirect paths:
+```typescript
+const ROLE_REDIRECT_PATHS: Record<string, string> = {
+  [USER_ROLES.ADMIN]: AppRoutes.ADMIN_DASHBOARD,
+  [USER_ROLES.CONTRACTOR]: AppRoutes.HOME,
+  [USER_ROLES.WAREHOUSE_OPERATOR]: AppRoutes.WAREHOUSE_OPERATOR_DASHBOARD,
+  [USER_ROLES.PRINCIPAL_EMPLOYER]: AppRoutes.PRINCIPAL_EMPLOYER_DASHBOARD,
+  [USER_ROLES.MANAGER]: AppRoutes.MANAGER_DASHBOARD,           // NEW
+  [USER_ROLES.SAFETY_OFFICER]: AppRoutes.SAFETY_OFFICER_DASHBOARD  // NEW
 };
+```
 
-export type MediaType = 'image' | 'video' | 'voice';
+### New strict-redirect rules (mirror the existing Admin/WO/PE pattern):
+```typescript
+// Add to the existing OR block:
+(userRole === USER_ROLES.MANAGER && !pathname.startsWith('/manager')) ||
+(userRole === USER_ROLES.SAFETY_OFFICER && !pathname.startsWith('/safety-officer'))
+```
 
-export type UaUcAiAnalysisResponse = {
-  what_happened: string;
-  equipment_involved: string;
-};
+### Update `hasAccessToPath`:
+```typescript
+if (pathname.startsWith('/manager') && role !== USER_ROLES.MANAGER) return false;
+if (pathname.startsWith('/safety-officer') && role !== USER_ROLES.SAFETY_OFFICER) return false;
 ```
 
 ---
 
-### STEP 3 — Zod Validation Schema
+## Server Actions (Detailed)
 
-**File to create:**
-`src/validations/contractor/add-ua-uc-near-miss.ts`
-
-**Schemas to define:**
+### `src/actions/admin/staff.ts`
 
 ```typescript
-// UaUcNearMissSchema — full form submission
-export const UaUcNearMissSchema = z.object({
-  location_department: z.string().min(2, 'Location is required'),
-  observation_type: z.enum(['UA', 'UC', 'NearMiss']),
+// Create a Manager or Safety Officer account
+createStaffUser(data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  contactNumber: string;
+  role: 'manager' | 'safety_officer';
+}): Promise<{ success: boolean; message: string }>
 
-  // Media (image / video / voice)
-  media: z.instanceof(File).optional(),
-  media_type: z.enum(['image', 'video', 'voice']).optional(),
+// The function:
+// 1. supabase.auth.signUp({ email, password })
+// 2. Get role ID from user_roles table
+// 3. Insert into users table with role_id, name, email, contact
+// 4. Return result
 
-  // AI fields (editable by user after AI fills them)
-  what_happened: z.string().min(5, 'Required').optional(),
-  equipment_involved: z.string().optional(),
-  activity_at_time: z.string().optional(),
+// Get all staff (managers + safety officers)
+getStaffList(): Promise<StaffMember[]>
 
-  // UA classification
-  ua_classifications: z.array(z.string()).optional(),
-  ua_other: z.string().optional(),
-
-  // UC classification
-  uc_classifications: z.array(z.string()).optional(),
-  uc_other: z.string().optional(),
-
-  // Near Miss classification
-  nm_potential_injury: z.string().optional(),
-  nm_what_could_happen: z.string().optional(),
-  nm_severity: z.enum(['Low', 'Medium', 'High']).optional(),
-
-  // Status
-  status: z.enum(['Open', 'Closed']),
-
-  // Close fields (required only when status = Closed)
-  action_taken: z.string().optional(),
-  action_by: z.string().optional(),
-  action_date: z.string().optional(),
-}).superRefine((data, ctx) => {
-  // Validate classification based on type
-  if (data.observation_type === 'NearMiss') {
-    if (!data.nm_potential_injury) ctx.addIssue({ ... });
-    if (!data.nm_what_could_happen) ctx.addIssue({ ... });
-    if (!data.nm_severity) ctx.addIssue({ ... });
-  }
-  // Validate close fields
-  if (data.status === 'Closed') {
-    if (!data.action_taken) ctx.addIssue({ ... });
-    if (!data.action_by) ctx.addIssue({ ... });
-    if (!data.action_date) ctx.addIssue({ ... });
-  }
-});
+// Deactivate a staff account
+deactivateStaffUser(userId: number): Promise<{ success: boolean; message: string }>
 ```
 
----
-
-### STEP 4 — AI API Route
-
-**File to create:**
-`src/app/api/generate-ua-uc-analysis/route.ts`
-
-**What it does:**
-1. Receives `{ media_url, media_type, observation_type }` in POST body
-2. Fetches media from Supabase storage → processes based on `media_type`:
-   - **image**: base64 encode → inline Gemini `inlineData` part
-   - **video**: base64 encode → inline Gemini `inlineData` part (use `video/mp4` or detected MIME)
-   - **voice**: base64 encode → inline Gemini `inlineData` part (use `audio/mpeg` or detected MIME) — Gemini transcribes + analyzes audio
-3. Calls Gemini with a prompt tailored by **both** `observation_type` and `media_type`
-4. Returns `{ what_happened, equipment_involved }`
-
-**Prompt strategy by observation type:**
-- **UA**: "Identify the unsafe human behavior or action visible/audible. What rule or safety standard is being violated?"
-- **UC**: "Identify the unsafe physical condition or hazard visible/audible. What environmental or equipment risk is present?"
-- **Near Miss**: "Describe the near miss situation visible/audible. What almost happened and what is the potential injury?"
-
-**Media-type note added to all prompts:**
-- image → "Analyze this image..."
-- video → "Analyze this video clip. Describe what is happening across the footage..."
-- voice → "This is a voice note recorded at a worksite. Transcribe and analyze the described situation..."
-
-**Response JSON structure:**
-```json
-{
-  "what_happened": "Worker observed not wearing helmet while operating machinery",
-  "equipment_involved": "Lathe machine, safety helmet"
-}
-```
-
----
-
-### STEP 5 — Server Actions
-
-**File to create:**
-`src/actions/contractor/ua-uc-near-miss.ts`
-
-**Functions to write:**
-
-#### `submitUaUcReport(formData: UaUcNearMissFormType)`
-- Get auth user from session
-- Get user profile (name, employee_id)
-- Generate report_no (query count + format)
-- Detect `media_type` from File MIME type
-- Upload media to Supabase Storage (`ehs-ua-uc-media` bucket)
-- Insert row into `ehs_ua_uc_near_miss`
-- `revalidatePath('/contractor/ehs/ua-uc-near-miss')`
-- Return `{ success, message, data: { id, report_no } }`
-
-#### `updateReportStatus(id: number, status: 'Open' | 'Closed', closeData?)`
-- Update `status`, `action_taken`, `action_by`, `action_date`
-- `revalidatePath`
-- Return `{ success, message }`
-
-#### `getUaUcReportById(id: number)`
-- Fetch single report from `ehs_ua_uc_near_miss` by id
-- Return full `UaUcNearMissRecord`
-
-#### `getUaUcReportsList()`
-- Fetch all reports for the current contractor
-- Return list with `id, report_no, observation_type, status, reported_at, location_department`
-
----
-
-### STEP 6 — Form UI Component
-
-**File to create:**
-`src/sections/ehs/ua-uc-near-miss/index.tsx`
-
-**Component: `UaUcNearMissForm`**
-
-This is a **single-page form** (no stepper needed — keep it fast, especially for Near Miss under 30 seconds).
-
-```
-UaUcNearMissForm
-├── Section1_BasicInfo        (auto-display fields, 1 text input)
-├── Section2_TypeSelector     (radio group: UA / UC / Near Miss)
-├── Section3_ImageAndAI       (image upload + AI result display)
-├── Section4_Classification   (conditional render based on type)
-├── Section5_Evidence         (image preview)
-└── Section6_StatusAndAction  (Open/Closed + conditional close fields)
-```
-
-**Key behaviors:**
-- On image upload → immediately call `/api/generate-ua-uc-analysis` → fill `what_happened` and `equipment_involved`
-- Show loading spinner on AI fields while analyzing
-- Classification section re-renders when observation_type radio changes
-- Close fields appear/disappear based on status radio
-- On submit → call `submitUaUcReport()` server action → show toast → redirect to report view
-
-**Libraries to use (same as existing):**
-- `react-hook-form` + `zodResolver`
-- `@/components/ui` (Input, Textarea, Button, Card, Label)
-- `react-hot-toast` for notifications
-- `useRouter` for post-submit navigation
-
----
-
-### STEP 7 — Report Viewer
-
-**File to create:**
-`src/sections/ehs/ua-uc-near-miss/UaUcReportViewer.tsx`
-
-**Displays the submitted report as a formatted card/page:**
-
-```
-┌─────────────────────────────────────────────────┐
-│  [Logo]   UA/UC/Near Miss Report                │
-│  Report No: UA-2026-0001    Date: 20 Mar 2026   │
-├─────────────────────────────────────────────────┤
-│  BASIC INFORMATION                              │
-│  Location/Dept: Warehouse B                     │
-│  Reported By:   John Doe (EMP-1042)             │
-├─────────────────────────────────────────────────┤
-│  TYPE OF OBSERVATION: Unsafe Act (UA)           │
-├─────────────────────────────────────────────────┤
-│  OBSERVATION DETAILS                            │
-│  What happened: Worker not wearing helmet...    │
-│  Equipment:     Lathe machine, helmet           │
-│  Activity time: 14:32                           │
-├─────────────────────────────────────────────────┤
-│  CLASSIFICATION                                 │
-│  ✓ Not using PPE                                │
-│  ✓ Bypassing safety devices                     │
-├─────────────────────────────────────────────────┤
-│  EVIDENCE                                       │
-│  [Image thumbnail]  or  [▶ Video player]        │
-│                     or  [🎙 Audio player]        │
-├─────────────────────────────────────────────────┤
-│  STATUS: ● OPEN — Action needs to be taken      │
-│  (or if CLOSED:)                                │
-│  STATUS: ● CLOSED                               │
-│  Action: Safety briefing conducted              │
-│  By:     Site Manager                           │
-│  Date:   21 Mar 2026                            │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-### STEP 8 — PDF Report
-
-**File to create:**
-`src/sections/ehs/ua-uc-near-miss/UaUcReportPdf.tsx`
-
-Uses `@react-pdf/renderer` (same as `IncidentReportPdf.tsx`).
-
-**PDF sections:**
-1. Header with company logo + report title + report number
-2. Basic Information table
-3. Type of Observation
-4. Observation Details (AI-analyzed fields)
-5. Classification checklist
-6. Evidence — if image: embed the photo; if video/voice: show media type label + public URL as a link (PDF cannot embed video/audio)
-7. Status section:
-   - If Open: "Action Needs to Be Taken" banner
-   - If Closed: Action taken, By Whom, Date
-
-**Download button:** `UaUcReportDownloadButton.tsx` (mirrors `IncidentReportDownloadButton.tsx`)
-
----
-
-### STEP 9 — Listing Page
-
-**File to create:**
-`src/sections/ehs/ua-uc-near-miss/UaUcNearMissListingSection.tsx`
-
-**Displays table of all submitted reports with:**
-- Report No, Type badge (UA/UC/NM), Location, Date, Status badge (Open=red, Closed=green)
-- Filter by type (All / UA / UC / Near Miss)
-- Filter by status (All / Open / Closed)
-- Click row → go to report viewer
-
----
-
-### STEP 10 — Navigation & Routing
-
-**Files to modify:**
-
-1. **EHS nav menu** — add "UA / UC / Near Miss" entry
-2. **Next.js app routes** — create page files:
-   - `src/app/(contractor)/ehs/ua-uc-near-miss/page.tsx` — listing page
-   - `src/app/(contractor)/ehs/ua-uc-near-miss/add/page.tsx` — new report form
-   - `src/app/(contractor)/ehs/ua-uc-near-miss/[id]/page.tsx` — report viewer
-
----
-
-## File Creation Order (Do NOT skip steps)
-
-```
-Step 1  →  Migration SQL file
-Step 2  →  Types in ehs.types.ts
-Step 3  →  Zod validation schema
-Step 4  →  AI API route
-Step 5  →  Server actions
-Step 6  →  Form UI (index.tsx)
-Step 7  →  Report viewer
-Step 8  →  PDF component + download button
-Step 9  →  Listing section
-Step 10 →  Routes + navigation
-```
-
----
-
-## Constants to Define
+### `src/actions/manager/ehs.ts`
 
 ```typescript
-export const UA_CLASSIFICATIONS = [
-  'Not using PPE',
-  'Improper handling of equipment',
-  'Bypassing safety devices',
-  'Unsafe lifting / posture',
-  'Operating without authorization',
-];
+// Get all UA/UC/Near Miss reports (all statuses, all users)
+getAllUaUcReports(filters?: { type?: ObservationType; status?: string }): Promise<UaUcNearMissRecord[]>
 
-export const UC_CLASSIFICATIONS = [
-  'Oil spill / slippery floor',
-  'Damaged tools / equipment',
-  'Poor housekeeping',
-  'Exposed wiring',
-  'Inadequate guarding',
-  'Poor lighting / ventilation',
-];
+// Assign a UA/UC report to a safety officer
+assignUaUcReport(reportId: number, safetyOfficerId: string, safetyOfficerName: string): Promise<{ success: boolean; message: string }>
+// → Sets assigned_to_user_id, assigned_to_name, status = 'Assigned'
 
-export const NEAR_MISS_SEVERITY = ['Low', 'Medium', 'High'];
+// Get all Incident Analysis reports
+getAllIncidentReports(filters?: { status?: string }): Promise<IncidentAnalysisRecord[]>
 
-export const OBSERVATION_TYPES = [
-  { value: 'UA', label: 'Unsafe Act (UA)' },
-  { value: 'UC', label: 'Unsafe Condition (UC)' },
-  { value: 'NearMiss', label: 'Near Miss' },
-];
+// Assign an incident to a safety officer
+assignIncidentReport(reportId: number, safetyOfficerId: string, safetyOfficerName: string): Promise<{ success: boolean; message: string }>
+
+// Get dropdown list of all safety officers (for the assign panel)
+getSafetyOfficersList(): Promise<{ id: string; name: string }[]>
+```
+
+### `src/actions/safety-officer/ehs.ts`
+
+```typescript
+// Get only reports assigned to the current safety officer
+getMyAssignedUaUcReports(): Promise<UaUcNearMissRecord[]>
+
+// Close a UA/UC report
+closeUaUcReport(reportId: number, closeData: {
+  action_taken: string;
+  action_by: string;
+  action_date: string;
+  investigation_notes?: string;
+}): Promise<{ success: boolean; message: string }>
+// → Sets status = 'Closed', fills action fields
+
+// Get only incidents assigned to the current safety officer
+getMyAssignedIncidents(): Promise<IncidentAnalysisRecord[]>
+
+// Close an incident
+closeIncidentReport(reportId: number, closeData: { ... }): Promise<{ success: boolean; message: string }>
 ```
 
 ---
 
-## Key Technical Notes
+## Sidebar Menus
 
-| Point | Detail |
-|-------|--------|
-| AI trigger | Fire AI call immediately on media selection (not on form submit) |
-| AI fields editable | `what_happened` and `equipment_involved` are pre-filled but user can edit |
-| Media types accepted | image/*, video/*, audio/* — one file per report |
-| Media size limits | Image: 10 MB, Video: 100 MB, Voice: 25 MB — validate client-side before upload |
-| media_type detection | Derived from `File.type` MIME on the client; stored in DB alongside URL |
-| Date locked | `reported_at` is `DEFAULT now()` in DB — no date picker shown to user |
-| Report No prefix | UA → `UA`, UC → `UC`, Near Miss → `NM` |
-| Media storage bucket | `ehs-ua-uc-media` (create if not exists, replace old `ehs-ua-uc-images`) |
-| Status default | All new reports start as `Open` |
-| Close fields | Only shown + validated when status = `Closed` |
-| PDF evidence | Image → embed inline; Video/Voice → show media type + clickable URL |
-| Fast submission | Near Miss form should be completable in <30 seconds — keep it minimal |
+### Manager Sidebar
+```
+Dashboard
+EHS Reports
+  ├── UA / UC / Near Miss
+  └── Incident Analysis
+```
+
+### Safety Officer Sidebar
+```
+Dashboard
+My Assignments
+  ├── UA / UC / Near Miss
+  └── Incident Analysis
+```
+
+### Admin Sidebar (addition)
+```
+Dashboard
+Customers
+Orders
+Products
+Warehouse
+Complaints
+Staff          ← NEW (manages Managers & Safety Officers)
+EHS
+Blogs
+```
 
 ---
 
-## What NOT to Build (Out of Scope)
+## UI Patterns to Follow
 
-- No stepper / multi-page form (single page only)
-- No separate forms for UA, UC, Near Miss (it's ONE unified form)
-- No approval workflow
-- No email notifications (unless already in project pattern)
-- No analytics dashboard (out of scope for this phase)
+All new UI should mirror the existing patterns in the codebase:
+
+| Pattern | Mirror From |
+|---------|-------------|
+| Sidebar layout | `AdminDashboardLayout.tsx` |
+| Listing table | `/admin/contractors/page.tsx` section |
+| Detail view | `/ehs/ua-uc-near-miss/[id]` section |
+| Form with server action | `AddStaffSection` → mirror `AddWarehouseOperatorSection` |
+| Status badges | Use existing badge patterns (Open = amber/red, Assigned = blue, Closed = green) |
+| Toast notifications | `react-hot-toast` (already in project) |
+| Form validation | `react-hook-form` + `zodResolver` |
+
+---
+
+## Implementation Order (Do NOT Skip Steps)
+
+```
+Phase 1 — Foundation (must be done first, everything depends on this)
+  Step 1a  →  Migration: Add enum values + user_roles rows
+  Step 1b  →  Migration: Add assigned_to fields + update status constraints
+  Step 1c  →  Update supabase.ts types
+  Step 1d  →  Update constants.ts USER_ROLES
+  Step 1e  →  Update AppRoutes.ts
+  Step 1f  →  Update middleware.ts
+
+Phase 2 — Admin Creates Staff (needed before Manager/SO can log in)
+  Step 2a  →  Server action: createStaffUser, getStaffList
+  Step 2b  →  Zod schema: add-staff.ts
+  Step 2c  →  Admin Staff listing page + section
+  Step 2d  →  Admin Add Staff page + section
+  Step 2e  →  Admin sidebar: add Staff menu item
+
+Phase 3 — Manager Portal
+  Step 3a  →  ManagerDashboardLayout.tsx
+  Step 3b  →  /manager/layout.tsx
+  Step 3c  →  Server actions: getAllUaUcReports, assignUaUcReport, getSafetyOfficersList
+  Step 3d  →  Manager dashboard page + section (stats)
+  Step 3e  →  Manager UA/UC/Near Miss listing page + section
+  Step 3f  →  Manager UA/UC/Near Miss detail page + section (with assign panel)
+  Step 3g  →  Server actions: getAllIncidentReports, assignIncidentReport
+  Step 3h  →  Manager Incident Analysis listing page + section
+  Step 3i  →  Manager Incident Analysis detail page + section (with assign panel)
+
+Phase 4 — Safety Officer Portal
+  Step 4a  →  SafetyOfficerDashboardLayout.tsx
+  Step 4b  →  /safety-officer/layout.tsx
+  Step 4c  →  Server actions: getMyAssignedUaUcReports, closeUaUcReport
+  Step 4d  →  Safety Officer dashboard page + section
+  Step 4e  →  Safety Officer UA/UC listing page + section
+  Step 4f  →  Safety Officer UA/UC detail page + section (with close panel)
+  Step 4g  →  Server actions: getMyAssignedIncidents, closeIncidentReport
+  Step 4h  →  Safety Officer Incident Analysis listing page + section
+  Step 4i  →  Safety Officer Incident Analysis detail page + section (with close panel)
+```
+
+---
+
+## Dependencies / Pre-Conditions
+
+| Dependency | Status | Notes |
+|------------|--------|-------|
+| UA/UC/Near Miss module (`ehs_ua_uc_near_miss` table) | In Progress | Must be completed first — Migration 2 (assignment fields) adds onto this table |
+| Incident Analysis table (`ehs_incident_analysis`) | Done | Need to check existing schema before writing Migration 2 |
+| `users` table structure | Done | Manager/Safety Officer profiles will be inserted here same as existing roles |
+| Admin panel exists | Done | Only adding a new "Staff" menu item + pages |
+
+---
+
+## Out of Scope
+
+- Manager or Safety Officer cannot self-register — only Admin creates their accounts
+- No email notifications when a report is assigned (not in existing pattern)
+- No chat or comments between Manager and Safety Officer
+- No mobile app changes
+- No analytics or charts beyond basic stats cards on dashboards
+- Manager cannot edit report content — read-only access only
+- Safety Officer cannot reassign to another Safety Officer — only Manager can assign

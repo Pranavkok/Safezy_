@@ -11,6 +11,7 @@ import {
   AddPreIncidentOperationDetailsType,
   AddWitnessDetailsType,
   ContributingFactorsType,
+  IncidentAnalysisListItem,
   IncidentPage1Type,
   IncidentPage2Type,
   RootCausesJsonType
@@ -72,9 +73,11 @@ export const addIncidentTitle = async (
   const supabase = await createClient();
 
   try {
+    const authId = await getAuthId();
+
     const { data, error } = await supabase
       .from('ehs_incident_analysis')
-      .insert({ title: incidentTitle.title })
+      .insert({ title: incidentTitle.title, reported_by_user_id: authId ?? undefined })
       .select('id')
       .single();
 
@@ -362,7 +365,6 @@ export const addInvestigationChecklist = async (
   const data = {
     evidence_employee_list: checklistDetails.interviews,
     updated_at: new Date().toISOString(),
-    is_completed: true,
     ...(correctives ? { corrective_actions: correctives } : {}),
     ...(preventives ? { preventive_actions: preventives } : {}),
     ...(viva_analysis ? { viva_analysis: viva_analysis } : {}),
@@ -491,10 +493,11 @@ export const savePage1 = async (
         return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
       }
     } else {
-      // INSERT new record
+      // INSERT new record — include reported_by_user_id so the listing can filter by user
+      const authId = await getAuthId();
       const { data: inserted, error } = await supabase
         .from('ehs_incident_analysis')
-        .insert(payload)
+        .insert({ ...payload, reported_by_user_id: authId ?? undefined })
         .select('id')
         .single();
       if (error || !inserted) {
@@ -564,7 +567,6 @@ export const savePage2 = async (
       impact_description: data.impact_description,
       worst_case_potential: data.worst_case_potential,
       immediate_actions: data.immediate_actions,
-      is_completed: true,
       updated_at: new Date().toISOString(),
       ...(correctives ? { corrective_actions: correctives } : {}),
       ...(preventives ? { preventive_actions: preventives } : {}),
@@ -676,5 +678,42 @@ export const addIncidentWitnessDetails = async (
       success: false,
       message: ERROR_MESSAGES.UNEXPECTED_ERROR
     };
+  }
+};
+
+// ─── getIncidentAnalysisList ──────────────────────────────────────────────────
+
+export const getIncidentAnalysisList = async (): Promise<{
+  success: boolean;
+  message: string;
+  data?: IncidentAnalysisListItem[];
+}> => {
+  const supabase = await createClient();
+
+  try {
+    const authId = await getAuthId();
+    if (!authId) {
+      return { success: false, message: 'You must be logged in to view reports' };
+    }
+
+    const { data, error } = await supabase
+      .from('ehs_incident_analysis')
+      .select('id, title, incident_type, severity_level, location, date, is_completed, assigned_to_user_id, created_at')
+      .eq('reported_by_user_id', authId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[getIncidentAnalysisList] error:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    return {
+      success: true,
+      message: 'Reports fetched successfully',
+      data: (data ?? []) as IncidentAnalysisListItem[]
+    };
+  } catch (error) {
+    console.error('[getIncidentAnalysisList] unexpected error:', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
   }
 };

@@ -8,14 +8,18 @@ const ROLE_REDIRECT_PATHS: Record<string, string> = {
   [USER_ROLES.ADMIN]: AppRoutes.ADMIN_DASHBOARD,
   [USER_ROLES.CONTRACTOR]: AppRoutes.HOME,
   [USER_ROLES.WAREHOUSE_OPERATOR]: AppRoutes.WAREHOUSE_OPERATOR_DASHBOARD,
-  [USER_ROLES.PRINCIPAL_EMPLOYER]: AppRoutes.PRINCIPAL_EMPLOYER_DASHBOARD
+  [USER_ROLES.PRINCIPAL_EMPLOYER]: AppRoutes.PRINCIPAL_EMPLOYER_DASHBOARD,
+  [USER_ROLES.MANAGER]: AppRoutes.MANAGER_DASHBOARD,
+  [USER_ROLES.SAFETY_OFFICER]: AppRoutes.SAFETY_OFFICER_DASHBOARD
 };
 
 const PROTECTED_PATH_PREFIXES = [
   '/admin',
   '/contractor',
   '/warehouse-operator',
-  '/principal-employer'
+  '/principal-employer',
+  '/manager',
+  '/safety-officer'
 ];
 
 const AUTH_PAGES = [
@@ -31,8 +35,8 @@ export async function middleware(request: NextRequest) {
     const { supabaseResponse, user } = await updateSession(request);
     const { pathname } = request.nextUrl;
 
-    // API routes handle their own auth — skip role-based redirect logic
-    if (pathname.startsWith('/api/')) {
+    // API routes and Server Actions handle their own auth — skip role-based redirect logic
+    if (pathname.startsWith('/api/') || request.headers.get('next-action')) {
       return supabaseResponse;
     }
 
@@ -53,7 +57,7 @@ export async function middleware(request: NextRequest) {
         return redirectTo(ROLE_REDIRECT_PATHS[userRole], request.url);
       }
 
-      // Admin-specific redirect rules
+      // Role-specific redirect rules (force each role to their own portal)
       if (
         (userRole === USER_ROLES.ADMIN &&
           !pathname.startsWith('/admin') &&
@@ -61,7 +65,11 @@ export async function middleware(request: NextRequest) {
         (userRole === USER_ROLES.WAREHOUSE_OPERATOR &&
           !pathname.startsWith('/warehouse-operator')) ||
         (userRole === USER_ROLES.PRINCIPAL_EMPLOYER &&
-          !pathname.startsWith('/principal-employer'))
+          !pathname.startsWith('/principal-employer')) ||
+        (userRole === USER_ROLES.MANAGER &&
+          !pathname.startsWith('/manager')) ||
+        (userRole === USER_ROLES.SAFETY_OFFICER &&
+          !pathname.startsWith('/safety-officer'))
       ) {
         const dashboardPath = ROLE_REDIRECT_PATHS[userRole];
         return redirectTo(dashboardPath, request.url);
@@ -109,6 +117,13 @@ function hasAccessToPath(pathname: string, role: string): boolean {
   if (
     pathname.startsWith('/principal-employer') &&
     role !== USER_ROLES.PRINCIPAL_EMPLOYER
+  )
+    return false;
+  if (pathname.startsWith('/manager') && role !== USER_ROLES.MANAGER)
+    return false;
+  if (
+    pathname.startsWith('/safety-officer') &&
+    role !== USER_ROLES.SAFETY_OFFICER
   )
     return false;
   return true;

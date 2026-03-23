@@ -1,6 +1,7 @@
 import { getIncidentDetailsById } from '@/actions/contractor/incident-analysis';
+import { AppRoutes } from '@/constants/AppRoutes';
 import IncidentReportStepper from '@/sections/ehs/incident-analysis';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import React from 'react';
 
 export const metadata = {
@@ -21,6 +22,11 @@ const ContractorIncidentAnalysisUpdatePage = async ({
 
   if (!success || !incidentDetails) {
     notFound();
+  }
+
+  const isOpen = !incidentDetails.is_completed && !incidentDetails.assigned_to_user_id;
+  if (!isOpen) {
+    redirect(AppRoutes.EHS_INCIDENT_ANALYSIS_REPORT(incidentId));
   }
 
   return <IncidentReportStepper incidentDetails={incidentDetails} />;

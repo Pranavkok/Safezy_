@@ -85,6 +85,7 @@ type AppRoutesType = {
   ADMIN_EHS_FIRST_PRINCIPLES_UPDATE: (id: number) => string;
   EHS_FIRST_PRINCIPLES: string;
   EHS_FIRST_PRINCIPLES_DETAILS: (id: number) => string;
+  EHS_INCIDENT_ANALYSIS_LISTING: string;
   EHS_INCIDENT_ANALYSIS_ADD: string;
   EHS_INCIDENT_ANALYSIS_UPDATE: (id: number) => string;
   EHS_INCIDENT_ANALYSIS_REPORT: (id: number) => string;
@@ -96,6 +97,30 @@ type AppRoutesType = {
   ADMIN_ADD_BLOG: string;
   ADMIN_UPDATE_BLOG: (id: number) => string;
   BLOG_DETAILS: (id: number) => string;
+
+  // Admin Staff Management
+  ADMIN_STAFF_LISTING: string;
+  ADMIN_STAFF_ADD: string;
+
+  // Admin EHS — UA/UC & Incident Analysis
+  ADMIN_EHS_UA_UC_NEAR_MISS_LISTING: string;
+  ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
+  ADMIN_EHS_INCIDENT_ANALYSIS_LISTING: string;
+  ADMIN_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => string;
+
+  // Manager Panel routes
+  MANAGER_DASHBOARD: string;
+  MANAGER_EHS_UA_UC_NEAR_MISS_LISTING: string;
+  MANAGER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
+  MANAGER_EHS_INCIDENT_ANALYSIS_LISTING: string;
+  MANAGER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => string;
+
+  // Safety Officer Panel routes
+  SAFETY_OFFICER_DASHBOARD: string;
+  SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING: string;
+  SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
+  SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING: string;
+  SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => string;
 };
 
 // Define the AppRoutes object with types
@@ -192,6 +217,7 @@ export const AppRoutes: AppRoutesType = {
     `/admin/ehs/first-principles/update/${id}`,
   EHS_FIRST_PRINCIPLES: '/ehs/first-principles',
   EHS_FIRST_PRINCIPLES_DETAILS: (id: number) => `/ehs/first-principles/${id}`,
+  EHS_INCIDENT_ANALYSIS_LISTING: '/ehs/incident-analysis',
   EHS_INCIDENT_ANALYSIS_ADD: '/ehs/incident-analysis/add',
   EHS_INCIDENT_ANALYSIS_UPDATE: (id: number) =>
     `/ehs/incident-analysis/update/${id}`,
@@ -204,7 +230,31 @@ export const AppRoutes: AppRoutesType = {
   // blogs
   ADMIN_ADD_BLOG: '/admin/blog/add',
   ADMIN_UPDATE_BLOG: (id: number) => `/admin/blog/update/${id}`,
-  BLOG_DETAILS: (id: number) => `/blog/${id}`
+  BLOG_DETAILS: (id: number) => `/blog/${id}`,
+
+  // Admin Staff Management
+  ADMIN_STAFF_LISTING: '/admin/staff',
+  ADMIN_STAFF_ADD: '/admin/staff/add',
+
+  // Admin EHS — UA/UC & Incident Analysis
+  ADMIN_EHS_UA_UC_NEAR_MISS_LISTING: '/admin/ehs/ua-uc-near-miss',
+  ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => `/admin/ehs/ua-uc-near-miss/${id}`,
+  ADMIN_EHS_INCIDENT_ANALYSIS_LISTING: '/admin/ehs/incident-analysis',
+  ADMIN_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => `/admin/ehs/incident-analysis/${id}`,
+
+  // Manager Panel
+  MANAGER_DASHBOARD: '/manager/dashboard',
+  MANAGER_EHS_UA_UC_NEAR_MISS_LISTING: '/manager/ehs/ua-uc-near-miss',
+  MANAGER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => `/manager/ehs/ua-uc-near-miss/${id}`,
+  MANAGER_EHS_INCIDENT_ANALYSIS_LISTING: '/manager/ehs/incident-analysis',
+  MANAGER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => `/manager/ehs/incident-analysis/${id}`,
+
+  // Safety Officer Panel
+  SAFETY_OFFICER_DASHBOARD: '/safety-officer/dashboard',
+  SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING: '/safety-officer/ehs/ua-uc-near-miss',
+  SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => `/safety-officer/ehs/ua-uc-near-miss/${id}`,
+  SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING: '/safety-officer/ehs/incident-analysis',
+  SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => `/safety-officer/ehs/incident-analysis/${id}`
 };
 
 export const guestRoutes: string[] = [

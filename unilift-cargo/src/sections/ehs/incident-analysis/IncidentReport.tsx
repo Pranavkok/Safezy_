@@ -1,29 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { IncidentAnalysisWithImageType } from '@/types/index.types';
-import { Loader } from 'lucide-react';
 import dynamic from 'next/dynamic';
-
-// Loading component extracted to avoid duplication
-const LoadingDisplay = () => (
-  <div className="w-full h-[600px] md:h-[800px] flex items-center justify-center bg-gray-100 rounded-lg">
-    <div className="flex flex-col items-center">
-      <Loader size={40} className="animate-spin text-primary mb-4" />
-      <p className="text-gray-600">Loading PDF viewer...</p>
-    </div>
-  </div>
-);
-
-// Dynamically import the PDF components
-const PDFViewer = dynamic(
-  () =>
-    import('./Incident-report/IncidentReportViewer').then(mod => mod.default),
-  {
-    ssr: false,
-    loading: () => <LoadingDisplay />
-  }
-);
+import Link from 'next/link';
+import { Pencil } from 'lucide-react';
+import IncidentReportHtmlViewer from './Incident-report/IncidentReportHtmlViewer';
+import { AppRoutes } from '@/constants/AppRoutes';
 
 const PDFDownloadButton = dynamic(
   () =>
@@ -36,31 +19,38 @@ const PDFDownloadButton = dynamic(
 );
 
 const IncidentReport = ({
-  incidentDetails
+  incidentDetails,
+  canEdit = false,
+  hideActions = false
 }: {
   incidentDetails: IncidentAnalysisWithImageType;
+  canEdit?: boolean;
+  hideActions?: boolean;
 }) => {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   return (
     <div className="w-full max-w-screen-lg mx-auto p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <h2 className="text-2xl font-bold text-primary">
           Incident Investigation Report
         </h2>
-        <PDFDownloadButton incidentDetails={incidentDetails} />
+        {!hideActions && (
+          <div className="flex items-center gap-3">
+            {canEdit && (
+              <Link
+                href={AppRoutes.EHS_INCIDENT_ANALYSIS_UPDATE(incidentDetails.id)}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition-colors"
+              >
+                <Pencil size={14} />
+                Edit Report
+              </Link>
+            )}
+            <PDFDownloadButton incidentDetails={incidentDetails} />
+          </div>
+        )}
       </div>
 
       <div className="mb-8 border border-gray-200 rounded-lg overflow-hidden">
-        {isClient ? (
-          <PDFViewer incidentDetails={incidentDetails} />
-        ) : (
-          <LoadingDisplay />
-        )}
+        <IncidentReportHtmlViewer incidentDetails={incidentDetails} />
       </div>
     </div>
   );

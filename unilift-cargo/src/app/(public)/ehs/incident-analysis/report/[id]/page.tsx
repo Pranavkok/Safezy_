@@ -21,7 +21,10 @@ const IncidentReportPage = async ({ params }: { params: { id: number } }) => {
   if (!success || !incidentDetails) {
     notFound();
   }
-  return <IncidentReport incidentDetails={incidentDetails} />;
+
+  const isOpen = !incidentDetails.is_completed && !incidentDetails.assigned_to_user_id;
+
+  return <IncidentReport incidentDetails={incidentDetails} canEdit={isOpen} />;
 };
 
 export default IncidentReportPage;

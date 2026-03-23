@@ -257,7 +257,7 @@ export type RootCausesJsonType = {
 // ─── UA / UC / Near Miss ───────────────────────────────────────────────────
 
 export type ObservationType = 'UA' | 'UC' | 'NearMiss';
-export type ObservationStatus = 'Open' | 'Closed';
+export type ObservationStatus = 'Open' | 'Assigned' | 'Closed';
 export type NearMissSeverity = 'Low' | 'Medium' | 'High';
 export type MediaType = 'image' | 'video' | 'voice';
 
@@ -281,6 +281,8 @@ export type UaUcNearMissRecord = {
   ua_other: string | null;
   uc_classifications: string[];
   uc_other: string | null;
+  uc_severity: 'Low' | 'Medium' | 'High' | null;
+  uc_temporary_controls: string | null;
   nm_potential_injury: string | null;
   nm_what_could_happen: string | null;
   nm_severity: NearMissSeverity | null;
@@ -288,6 +290,8 @@ export type UaUcNearMissRecord = {
   action_taken: string | null;
   action_by: string | null;
   action_date: string | null;
+  assigned_to_user_id: string | null;
+  assigned_to_name: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -302,6 +306,8 @@ export type UaUcAiAnalysisResponse = {
   // UC
   uc_classifications?: string[];
   uc_other?: string;
+  uc_severity?: 'Low' | 'Medium' | 'High';
+  uc_temporary_controls?: string;
   // Near Miss
   nm_potential_injury?: string;
   nm_what_could_happen?: string;
@@ -312,3 +318,19 @@ export type UaUcNearMissListItem = Pick<
   UaUcNearMissRecord,
   'id' | 'report_no' | 'observation_type' | 'status' | 'reported_at' | 'location_department'
 >;
+
+// ─── Incident Analysis ──────────────────────────────────────────────────────
+
+export type IncidentAnalysisStatus = 'Open' | 'Assigned' | 'Closed';
+
+export type IncidentAnalysisListItem = {
+  id: number;
+  title: string;
+  incident_type: string | null;
+  severity_level: string | null;
+  location: string | null;
+  date: string | null;
+  is_completed: boolean | null;
+  assigned_to_user_id: string | null;
+  created_at: string;
+};

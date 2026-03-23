@@ -8,7 +8,9 @@ export const ROLE_TO_PATH_MAP: Record<string, string> = {
   admin: AppRoutes.ADMIN_DASHBOARD,
   contractor: AppRoutes.HOME,
   warehouse_operator: AppRoutes.WAREHOUSE_OPERATOR_DASHBOARD,
-  principle: AppRoutes.PRINCIPAL_EMPLOYER_DASHBOARD
+  principle: AppRoutes.PRINCIPAL_EMPLOYER_DASHBOARD,
+  manager: AppRoutes.MANAGER_DASHBOARD,
+  safety_officer: AppRoutes.SAFETY_OFFICER_DASHBOARD
 };
 
 export const getProductCategoryLabel = (category: string) => {

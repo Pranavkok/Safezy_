@@ -77,8 +77,10 @@ export const UaUcNearMissSchema = z
     ua_other:           z.string().optional(),
 
     // Section 4 — UC classification
-    uc_classifications: z.array(z.string()).optional(),
-    uc_other:           z.string().optional(),
+    uc_classifications:    z.array(z.string()).optional(),
+    uc_other:              z.string().optional(),
+    uc_severity:           z.enum(['Low', 'Medium', 'High']).optional(),
+    uc_temporary_controls: z.string().optional(),
 
     // Section 4 — Near Miss classification
     nm_potential_injury:  z.string().optional(),

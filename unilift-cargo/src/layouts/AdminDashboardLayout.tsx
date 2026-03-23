@@ -14,7 +14,10 @@ import {
   Newspaper,
   ClipboardList,
   CheckSquare,
-  BookOpen
+  BookOpen,
+  UserCog,
+  Eye,
+  FileWarning
 } from 'lucide-react';
 import BlogIcon from '@/components/svgs/BlogIcon';
 
@@ -57,6 +60,12 @@ const ADMIN_SIDEBAR_MENU: SidebarMenuType = [
   },
   {
     id: 7,
+    title: 'Staff',
+    icon: <UserCog size={18} />,
+    route: AppRoutes.ADMIN_STAFF_LISTING
+  },
+  {
+    id: 8,
     title: 'EHS',
     icon: <ShieldCheck size={18} />,
     route: null,
@@ -84,11 +93,23 @@ const ADMIN_SIDEBAR_MENU: SidebarMenuType = [
         title: 'EHS First Principles',
         icon: <BookOpen size={18} />,
         route: AppRoutes.ADMIN_EHS_FIRST_PRINCIPLES_LISTING
+      },
+      {
+        id: 5,
+        title: 'UA / UC / Near Miss',
+        icon: <Eye size={18} />,
+        route: AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING
+      },
+      {
+        id: 6,
+        title: 'Incident Analysis',
+        icon: <FileWarning size={18} />,
+        route: AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_LISTING
       }
     ]
   },
   {
-    id: 8,
+    id: 9,
     title: 'Blogs',
     icon: <BlogIcon className="w-4 h-4" />,
     route: AppRoutes.ADMIN_BLOG

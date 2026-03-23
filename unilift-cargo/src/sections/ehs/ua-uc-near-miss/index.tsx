@@ -220,6 +220,8 @@ const UaUcNearMissForm = () => {
         } else if (observationType === 'UC') {
           setValue('uc_classifications', analysis.uc_classifications ?? []);
           setValue('uc_other', analysis.uc_other ?? '');
+          setValue('uc_severity', analysis.uc_severity);
+          setValue('uc_temporary_controls', analysis.uc_temporary_controls ?? '');
         } else if (observationType === 'NearMiss') {
           setValue('nm_potential_injury', analysis.nm_potential_injury ?? '');
           setValue('nm_what_could_happen', analysis.nm_what_could_happen ?? '');
@@ -352,6 +354,69 @@ const UaUcNearMissForm = () => {
           </p>
         )}
       </div>
+
+      {/* ── SECTION 4: UC-specific fields ── */}
+      {observationType === 'UC' && (
+        <>
+          <hr className="border-gray-200" />
+          <div>
+            <SectionHeader
+              number="4"
+              title="UC Assessment"
+              subtitle="AI-suggested values — review and adjust if needed."
+            />
+            <div className="space-y-5">
+
+              {/* Risk Severity */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Risk Severity
+                </label>
+                <Controller
+                  name="uc_severity"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex gap-3">
+                      {(['Low', 'Medium', 'High'] as const).map(level => (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => field.onChange(level)}
+                          className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                            field.value === level
+                              ? level === 'High'
+                                ? 'bg-red-500 border-red-500 text-white'
+                                : level === 'Medium'
+                                ? 'bg-yellow-400 border-yellow-400 text-white'
+                                : 'bg-green-500 border-green-500 text-white'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
+                          }`}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                />
+              </div>
+
+              {/* Temporary Controls */}
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">
+                  Temporary Controls Applied
+                </label>
+                <textarea
+                  {...register('uc_temporary_controls')}
+                  rows={3}
+                  placeholder="Describe any immediate temporary controls applied to reduce the risk..."
+                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                />
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── Submit ── */}
       <div className="flex justify-end pt-2 pb-8">

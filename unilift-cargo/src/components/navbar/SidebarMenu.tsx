@@ -124,7 +124,7 @@ export const SIDEBAR_MENU_ITEMS: NavigationMenuType[] = [
       {
         id: 'ehs-incident',
         title: 'EHS Incident Analysis',
-        route: AppRoutes.EHS_INCIDENT_ANALYSIS_ADD
+        route: AppRoutes.EHS_INCIDENT_ANALYSIS_LISTING
       },
       {
         id: 'ehs-ua-uc-near-miss',

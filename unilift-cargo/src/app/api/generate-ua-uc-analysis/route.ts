@@ -94,7 +94,9 @@ Based on your analysis, respond with ONLY this exact JSON structure — no expla
   "what_happened": "<1-2 sentences describing the unsafe condition observed>",
   "equipment_involved": "<comma-separated list of equipment, tools, or materials involved — write 'None identified' if nothing is visible>",
   "uc_classifications": ["<select all that apply from the list above — use the exact text>"],
-  "uc_other": "<only if none of the above classifications fit, briefly describe the condition; otherwise leave as empty string>"
+  "uc_other": "<only if none of the above classifications fit, briefly describe the condition; otherwise leave as empty string>",
+  "uc_severity": "<one of: Low | Medium | High — based on the potential harm this unsafe condition could cause>",
+  "uc_temporary_controls": "<immediate temporary control measures that should be applied right now to reduce the risk, written as short actionable instructions>"
 }`;
   }
 
