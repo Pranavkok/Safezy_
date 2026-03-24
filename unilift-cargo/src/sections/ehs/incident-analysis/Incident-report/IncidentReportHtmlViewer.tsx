@@ -156,7 +156,13 @@ const IncidentReportHtmlViewer = ({
         <FieldGroup>
           <ChipList label="Controls Present but Failed" values={controlsFailed} />
           <YesNoField label="Deviation from SOP?" value={incidentDetails.sop_deviation} />
+          {(incidentDetails as any).sop_deviation_remarks && (
+            <Field label="SOP Deviation Details" value={(incidentDetails as any).sop_deviation_remarks} />
+          )}
           <YesNoField label="Authorization / Competence Verified?" value={incidentDetails.authorization_competence} />
+          {(incidentDetails as any).authorization_competence_remarks && (
+            <Field label="Authorization Details" value={(incidentDetails as any).authorization_competence_remarks} />
+          )}
           <ChipList label="Pressure or Constraints Present" values={pressureConstraints} />
           <Field label="Historical Incident Date" value={incidentDetails.historical_incident_date} />
           <Field label="Past Similar Incidents" value={incidentDetails.past_incidents_text} />
@@ -172,7 +178,7 @@ const IncidentReportHtmlViewer = ({
         <Divider />
 
         {/* ── Page 3: 10 Whys & Root Cause Analysis ── */}
-        <PageTitle>10 Whys &amp; Root Cause Analysis</PageTitle>
+        <PageTitle>10 Whys &amp; Root Cause Analysis (AI Analysis)</PageTitle>
 
         {fiveWhyAnalysis?.points?.length > 0 && (
           <>
@@ -245,7 +251,7 @@ const IncidentReportHtmlViewer = ({
         <Divider />
 
         {/* ── Page 4: CAPA + Flowchart + Images ── */}
-        <PageTitle>CAPA &amp; Flow Chart of Events</PageTitle>
+        <PageTitle>CAPA &amp; Flow Chart of Events (AI Analysis)</PageTitle>
 
         <SectionTitle>Corrective &amp; Preventive Actions (CAPA)</SectionTitle>
         <FieldGroup>

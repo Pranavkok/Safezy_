@@ -20,6 +20,7 @@ const AdminIncidentListingPage = async () => {
         <ManagerIncidentListingSection
           incidents={incidents}
           detailRouteBase="/admin/ehs/incident-analysis"
+          showExportButton
         />
       </Suspense>
     </AdminTopbarLayout>

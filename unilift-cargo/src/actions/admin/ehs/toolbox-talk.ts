@@ -14,6 +14,7 @@ import {
   UserDetails
 } from '@/types/ehs.types';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { revalidatePath } from 'next/cache';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
 import { sendPushNotification } from '@/lib/web-push';
@@ -344,7 +345,7 @@ export const getToolboxTopicUserDetails = async (toolboxTalkId: number) => {
 export const addToolboxTalkDetails = async (
   toolbox: addToolboxType
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const newToolBoxTalk = {
@@ -396,7 +397,7 @@ export const updateToolboxTalkDetails = async (
   toolbox: updateToolboxType,
   toolboxId: number
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const toolBoxTalk = {
@@ -437,7 +438,7 @@ export const updateToolboxTalkDetails = async (
 };
 
 export const deleteToolboxTalk = async (toolboxId: number) => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const { error } = await supabase

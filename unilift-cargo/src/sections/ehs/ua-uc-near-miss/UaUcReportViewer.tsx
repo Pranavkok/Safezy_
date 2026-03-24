@@ -171,7 +171,7 @@ const UaUcReportViewer = ({ report }: { report: UaUcNearMissRecord }) => {
       </SectionCard>
 
       {/* Section 4 — Classification */}
-      <SectionCard title="Classification">
+      <SectionCard title="Classification (AI Classified)">
         {report.observation_type === 'UA' && (
           <ClassificationList items={report.ua_classifications ?? []} other={report.ua_other} />
         )}

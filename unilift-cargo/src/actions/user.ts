@@ -38,7 +38,17 @@ export const getUserRole = async () => {
   if (!session) return null;
 
   const jwt: CustomJwtType = jwtDecode(session.access_token);
-  return jwt.user_role;
+  if (jwt.user_role) return jwt.user_role;
+
+  // Fallback to DB when JWT doesn't have custom claims (e.g. remote Supabase without hook)
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('users')
+    .select('user_roles(role)')
+    .eq('auth_id', session.user.id)
+    .maybeSingle();
+
+  return (data as any)?.user_roles?.role ?? null;
 };
 
 export const getUserIdFromAuth = async () => {

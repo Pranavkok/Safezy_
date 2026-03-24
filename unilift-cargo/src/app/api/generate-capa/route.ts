@@ -1,9 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
+import { generateWithRetry } from '@/lib/gemini';
 
 async function fetchImageParts(incidentId: number) {
   try {
@@ -14,13 +11,17 @@ async function fetchImageParts(incidentId: number) {
       .eq('incident_analysis_id', incidentId);
 
     if (!images || images.length === 0) return [];
+    const MAX_IMAGES = 3;
+    const imagesToFetch = images.slice(0, MAX_IMAGES);
 
+    const MAX_IMAGE_BYTES = 1 * 1024 * 1024; // 1 MB per image
     const parts = await Promise.all(
-      images.map(async (img) => {
+      imagesToFetch.map(async (img) => {
         try {
           const res = await fetch(img.image_url);
           if (!res.ok) return null;
           const buffer = await res.arrayBuffer();
+          if (buffer.byteLength > MAX_IMAGE_BYTES) return null; // skip large images
           const mimeType = (res.headers.get('content-type') || 'image/jpeg').split(';')[0];
           return {
             inlineData: {
@@ -64,13 +65,10 @@ export async function POST(req: NextRequest) {
       { text: prompt }
     ];
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: contentParts }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.4
-      }
-    });
+    const result = await generateWithRetry(
+      { contents: [{ role: 'user', parts: contentParts }] },
+      { responseMimeType: 'application/json', temperature: 0.4 }
+    );
 
     const responseText = result.response.text().trim();
 

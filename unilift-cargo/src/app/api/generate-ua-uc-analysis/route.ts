@@ -1,8 +1,5 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type NextRequest, NextResponse } from 'next/server';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' });
+import { generateWithRetry } from '@/lib/gemini';
 
 // ─── Fetch media from URL and encode as base64 inlineData part ────────────────
 
@@ -134,13 +131,10 @@ export async function POST(req: NextRequest) {
     const mediaPart = await buildMediaPart(media_url, media_type);
     const prompt = buildPrompt(observation_type, media_type);
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [mediaPart, { text: prompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.3
-      }
-    });
+    const result = await generateWithRetry(
+      { contents: [{ role: 'user', parts: [mediaPart, { text: prompt }] }] },
+      { responseMimeType: 'application/json', temperature: 0.3 }
+    );
 
     const responseText = result.response.text().trim();
 

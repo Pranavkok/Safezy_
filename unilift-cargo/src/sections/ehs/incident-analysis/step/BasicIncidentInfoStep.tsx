@@ -42,7 +42,7 @@ const BasicIncidentInfoStep = ({
     defaultValues: {
       affected_entity: incidentDetails.affected_entity as string[],
       custom_affected_entity: incidentDetails.custom_affected_entity ?? '',
-      incident_datetime: incidentDetails.date ?? '',
+      incident_datetime: incidentDetails.date ?? new Date().toISOString().slice(0, 16),
       location: incidentDetails.location ?? '',
       narrative: incidentDetails.narrative ?? '',
       investigation_team:

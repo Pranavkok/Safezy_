@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { adminAssignIncidentReport, adminCloseIncidentReport } from '@/actions/admin/ehs';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
@@ -25,6 +26,7 @@ function deriveStatus(incident: IncidentAnalysisWithImageType): 'Open' | 'Assign
 }
 
 const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
+  const router = useRouter();
   const [selectedOfficer, setSelectedOfficer] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [corrective, setCorrective] = useState('');
@@ -44,8 +46,12 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
     setAssigning(true);
     try {
       const result = await adminAssignIncidentReport(incident.id, officer.authId, officer.name);
-      if (result.success) toast.success(result.message);
-      else toast.error(result.message);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
     } catch {
       toast.error('An unexpected error occurred.');
     } finally {
@@ -65,8 +71,12 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
         corrective_actions: corrective,
         preventive_actions: preventive
       });
-      if (result.success) toast.success(result.message);
-      else toast.error(result.message);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
     } catch {
       toast.error('An unexpected error occurred.');
     } finally {
@@ -82,9 +92,16 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
         <div className="max-w-screen-lg mx-auto px-4 md:px-8 pb-8 space-y-4">
           {/* Assign Panel */}
           <section className="border-2 border-dashed border-blue-200 rounded-lg p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-blue-800">
-              {status === 'Assigned' ? 'Reassign to Safety Officer' : 'Assign to Safety Officer'}
-            </h3>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-sm font-semibold text-blue-800">
+                {status === 'Assigned' ? 'Reassign to Safety Officer' : 'Assign to Safety Officer'}
+              </h3>
+              {status === 'Assigned' && incident.assigned_to_name && (
+                <span className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
+                  Currently: <span className="font-medium text-blue-700">{incident.assigned_to_name}</span>
+                </span>
+              )}
+            </div>
             {safetyOfficers.length === 0 ? (
               <p className="text-sm text-gray-500">No active Safety Officers available.</p>
             ) : (

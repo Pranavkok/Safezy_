@@ -20,6 +20,7 @@ const AdminUaUcListingPage = async () => {
         <ManagerUaUcListingSection
           reports={reports}
           detailRouteBase="/admin/ehs/ua-uc-near-miss"
+          showExportButton
         />
       </Suspense>
     </AdminTopbarLayout>

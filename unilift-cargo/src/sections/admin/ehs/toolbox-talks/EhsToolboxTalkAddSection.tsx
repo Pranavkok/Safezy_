@@ -16,6 +16,7 @@ import { AppRoutes } from '@/constants/AppRoutes';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { formats, modules } from '@/constants/editor';
+import { Sparkles } from 'lucide-react';
 
 const EhsToolboxTalkAddSection = () => {
   const router = useRouter();
@@ -24,6 +25,7 @@ const EhsToolboxTalkAddSection = () => {
     handleSubmit,
     setError,
     setValue,
+    watch,
     reset,
     formState: { errors, isSubmitting }
   } = useForm<addToolboxTalkType>({
@@ -33,11 +35,48 @@ const EhsToolboxTalkAddSection = () => {
 
   const [editorContent, setEditorContent] = useState('');
   const [summarizeContent, setSummarizeContent] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const topicName = watch('topic_name');
 
   useEffect(() => {
     setValue('description', editorContent);
     setValue('summarize', summarizeContent);
   }, [editorContent, summarizeContent, setValue]);
+
+  const handleGenerate = async () => {
+    if (!topicName?.trim()) {
+      toast.error('Please enter a topic name first.');
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      toast.loading('Generating content with AI...', { id: 'generate-toolbox' });
+
+      const response = await fetch('/api/generate-toolbox-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: topicName })
+      });
+
+      const result = await response.json();
+      toast.dismiss('generate-toolbox');
+
+      if (result.success) {
+        setEditorContent(result.data.description);
+        setSummarizeContent(result.data.summarize);
+        toast.success('Content generated! Review and edit as needed.');
+      } else {
+        toast.error(result.error || 'Failed to generate content.');
+      }
+    } catch {
+      toast.dismiss('generate-toolbox');
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const onSubmit = async (data: addToolboxTalkType) => {
     try {
@@ -84,12 +123,24 @@ const EhsToolboxTalkAddSection = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid lg:grid-cols-2 lg:gap-x-4 gap-x-8">
         <div className="space-y-4">
-          <InputFieldWithLabel
-            label="Topic Name"
-            errorText={errors.topic_name?.message}
-            required
-            {...register('topic_name')}
-          />
+          <div>
+            <InputFieldWithLabel
+              label="Topic Name"
+              errorText={errors.topic_name?.message}
+              required
+              {...register('topic_name')}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerate}
+              disabled={isGenerating || !topicName?.trim()}
+              className="mt-2 flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-white"
+            >
+              <Sparkles className="w-4 h-4" />
+              {isGenerating ? 'Generating...' : 'Generate with AI'}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -110,7 +161,6 @@ const EhsToolboxTalkAddSection = () => {
       </div>
 
       <div className="rounded-sm">
-        {/* Text editor */}
         <label className="font-medium">Description</label>
         <ReactQuill
           modules={modules}
@@ -127,7 +177,6 @@ const EhsToolboxTalkAddSection = () => {
       </div>
 
       <div className="rounded-sm">
-        {/* Text editor */}
         <label className="font-medium">Summarize</label>
         <ReactQuill
           modules={modules}

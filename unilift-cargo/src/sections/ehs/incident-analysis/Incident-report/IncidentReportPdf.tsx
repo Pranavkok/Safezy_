@@ -340,7 +340,13 @@ const IncidentReportPdf = ({
         <View style={styles.fieldGroup}>
           <ChipList label="Controls Present but Failed" values={controlsFailed} />
           <YesNoField label="Deviation from SOP?" value={incidentDetails.sop_deviation} />
+          {(incidentDetails as any).sop_deviation_remarks && (
+            <Field label="SOP Deviation Details" value={(incidentDetails as any).sop_deviation_remarks} />
+          )}
           <YesNoField label="Authorization / Competence Verified?" value={incidentDetails.authorization_competence} />
+          {(incidentDetails as any).authorization_competence_remarks && (
+            <Field label="Authorization Details" value={(incidentDetails as any).authorization_competence_remarks} />
+          )}
           <ChipList label="Pressure or Constraints Present" values={pressureConstraints} />
           <Field label="Historical Incident Date" value={incidentDetails.historical_incident_date} />
           <Field label="Past Similar Incidents" value={incidentDetails.past_incidents_text} />
@@ -364,7 +370,7 @@ const IncidentReportPdf = ({
         <Watermark />
         <PageHeader title={incidentDetails.title} refId={refId} date={createdDate} />
 
-        <Text style={styles.pageTitle}>10 Whys & Root Cause Analysis</Text>
+        <Text style={styles.pageTitle}>10 Whys & Root Cause Analysis (AI Analysis)</Text>
 
         {/* 5 Whys */}
         {fiveWhyAnalysis?.points?.length > 0 && (
@@ -450,7 +456,7 @@ const IncidentReportPdf = ({
         <Watermark />
         <PageHeader title={incidentDetails.title} refId={refId} date={createdDate} />
 
-        <Text style={styles.pageTitle}>CAPA & Flow Chart of Events</Text>
+        <Text style={styles.pageTitle}>CAPA & Flow Chart of Events (AI Analysis)</Text>
 
         {/* CAPA */}
         <Text style={styles.sectionTitle}>Corrective & Preventive Actions (CAPA)</Text>

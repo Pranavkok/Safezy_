@@ -53,7 +53,9 @@ export const IncidentPage2Schema = z.object({
     .array(z.string())
     .min(1, 'Please select at least one option'),
   sop_deviation: z.boolean({ required_error: 'Please select yes or no' }),
+  sop_deviation_remarks: z.string().optional(),
   authorization_competence: z.boolean({ required_error: 'Please select yes or no' }),
+  authorization_competence_remarks: z.string().optional(),
   pressure_constraints: z
     .array(z.string())
     .min(1, 'Please select at least one option'),

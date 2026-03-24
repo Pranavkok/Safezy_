@@ -143,6 +143,7 @@ const IncidentPage2Step = ({
   const {
     register,
     control,
+    watch,
     handleSubmit,
     formState: { errors }
   } = useForm<IncidentPage2Type>({
@@ -150,7 +151,9 @@ const IncidentPage2Step = ({
     defaultValues: {
       controls_failed: (incidentDetails.controls_failed as string[]) || [],
       sop_deviation: incidentDetails.sop_deviation ?? undefined,
+      sop_deviation_remarks: (incidentDetails as any).sop_deviation_remarks ?? '',
       authorization_competence: incidentDetails.authorization_competence ?? undefined,
+      authorization_competence_remarks: (incidentDetails as any).authorization_competence_remarks ?? '',
       pressure_constraints: (incidentDetails.pressure_constraints as string[]) || [],
       historical_incident_date: incidentDetails.historical_incident_date ?? '',
       past_incidents_text: incidentDetails.past_incidents_text ?? '',
@@ -159,6 +162,9 @@ const IncidentPage2Step = ({
       immediate_actions: incidentDetails.immediate_actions ?? ''
     }
   });
+
+  const sopDeviation = watch('sop_deviation');
+  const authCompetence = watch('authorization_competence');
 
   const onSubmit = async (data: IncidentPage2Type) => {
     try {
@@ -248,6 +254,13 @@ const IncidentPage2Step = ({
                 />
               )}
             />
+            {sopDeviation === true && (
+              <Textarea
+                className="mt-2"
+                placeholder="Describe the deviation (optional)..."
+                {...register('sop_deviation_remarks')}
+              />
+            )}
           </div>
 
           <div>
@@ -265,6 +278,13 @@ const IncidentPage2Step = ({
                 />
               )}
             />
+            {authCompetence === true && (
+              <Textarea
+                className="mt-2"
+                placeholder="Describe the authorization details (optional)..."
+                {...register('authorization_competence_remarks')}
+              />
+            )}
           </div>
 
           <div>

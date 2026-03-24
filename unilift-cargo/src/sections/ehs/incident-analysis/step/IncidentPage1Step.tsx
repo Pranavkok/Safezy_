@@ -240,7 +240,7 @@ const IncidentPage1Step = ({
       incident_type: incidentDetails?.incident_type ?? '',
       severity_level: incidentDetails?.severity_level ?? '',
       location: incidentDetails?.location ?? '',
-      date: incidentDetails?.date ?? '',
+      date: incidentDetails?.date ?? new Date().toISOString().split('T')[0],
       time: incidentDetails?.time ?? '',
       activity_type: incidentDetails?.activity_type ?? '',
       pre_incident_activity: incidentDetails?.pre_incident_activity ?? '',
@@ -359,25 +359,17 @@ const IncidentPage1Step = ({
             )}
           />
 
-          <Controller
-            name="date"
-            control={control}
-            render={({ field }) => (
-              <div className="space-y-1">
-                <label className="text-sm font-medium">
-                  Date Of Incident <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={field.value ?? ''}
-                  onChange={e => field.onChange(e.target.value)}
-                  onBlur={field.onBlur}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-                {errors.date && <p className="text-sm text-red-500">{errors.date.message}</p>}
-              </div>
-            )}
-          />
+          <div className="space-y-1">
+            <label className="text-sm font-medium">
+              Date Of Incident <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              value={new Date().toISOString().split('T')[0]}
+              readOnly
+              className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
+            />
+          </div>
 
           <Controller
             name="time"

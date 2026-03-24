@@ -177,7 +177,7 @@ export const verifyOtp = async (
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
-      type: 'email'
+      type: 'signup'
     });
 
     if (error) {
@@ -206,11 +206,9 @@ export const resendOtp = async (
 ): Promise<{ success: boolean; message: string }> => {
   const supabase = await createClient();
   try {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false
-      }
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email
     });
 
     if (error) {

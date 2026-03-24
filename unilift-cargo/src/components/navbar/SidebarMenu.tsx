@@ -117,9 +117,9 @@ export const SIDEBAR_MENU_ITEMS: NavigationMenuType[] = [
         route: AppRoutes.EHS_CHECKLIST_LISTING
       },
       {
-        id: 'ehs-first-principles',
-        title: 'EHS First Principles',
-        route: AppRoutes.EHS_FIRST_PRINCIPLES
+        id: 'ehs-ua-uc-near-miss',
+        title: 'UA / UC / Near Miss',
+        route: AppRoutes.EHS_UA_UC_NEAR_MISS_LISTING
       },
       {
         id: 'ehs-incident',
@@ -127,14 +127,14 @@ export const SIDEBAR_MENU_ITEMS: NavigationMenuType[] = [
         route: AppRoutes.EHS_INCIDENT_ANALYSIS_LISTING
       },
       {
-        id: 'ehs-ua-uc-near-miss',
-        title: 'UA / UC / Near Miss',
-        route: AppRoutes.EHS_UA_UC_NEAR_MISS_LISTING
-      },
-      {
         id: 'ehs-news',
         title: 'EHS News & Update',
         route: '/#ehs-news'
+      },
+      {
+        id: 'ehs-first-principles',
+        title: 'EHS First Principles',
+        route: AppRoutes.EHS_FIRST_PRINCIPLES
       }
     ]
   },

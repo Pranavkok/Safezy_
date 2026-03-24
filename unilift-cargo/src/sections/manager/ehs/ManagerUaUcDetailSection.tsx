@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { UaUcNearMissRecord } from '@/types/ehs.types';
 import { assignUaUcReport } from '@/actions/manager/ehs';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 const ManagerUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
+  const router = useRouter();
   const [selectedOfficer, setSelectedOfficer] = useState('');
   const [assigning, setAssigning] = useState(false);
 
@@ -35,6 +37,7 @@ const ManagerUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
       const result = await assignUaUcReport(report.id, officer.authId, officer.name);
       if (result.success) {
         toast.success(result.message);
+        router.refresh();
       } else {
         toast.error(result.message);
       }
@@ -53,9 +56,16 @@ const ManagerUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
       {/* Assign Panel — only for Open or Assigned reports */}
       {report.status !== 'Closed' && (
         <section className="border-2 border-dashed border-blue-200 rounded-lg p-4 space-y-3 max-w-3xl mx-auto">
-          <h3 className="text-sm font-semibold text-blue-800">
-            {report.status === 'Assigned' ? 'Reassign to Safety Officer' : 'Assign to Safety Officer'}
-          </h3>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-sm font-semibold text-blue-800">
+              {report.status === 'Assigned' ? 'Reassign to Safety Officer' : 'Assign to Safety Officer'}
+            </h3>
+            {report.status === 'Assigned' && report.assigned_to_name && (
+              <span className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
+                Currently: <span className="font-medium text-blue-700">{report.assigned_to_name}</span>
+              </span>
+            )}
+          </div>
           {safetyOfficers.length === 0 ? (
             <p className="text-sm text-gray-500">No active Safety Officers available. Add one from Staff Management.</p>
           ) : (

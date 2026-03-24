@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { UaUcNearMissRecord } from '@/types/ehs.types';
 import { adminAssignUaUcReport, adminCloseUaUcReport } from '@/actions/admin/ehs';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ interface Props {
 }
 
 const AdminUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
+  const router = useRouter();
   const [selectedOfficer, setSelectedOfficer] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [actionTaken, setActionTaken] = useState('');
@@ -36,8 +38,12 @@ const AdminUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
     setAssigning(true);
     try {
       const result = await adminAssignUaUcReport(report.id, officer.authId, officer.name);
-      if (result.success) toast.success(result.message);
-      else toast.error(result.message);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
     } catch {
       toast.error('An unexpected error occurred.');
     } finally {
@@ -62,8 +68,12 @@ const AdminUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
         action_by: 'Admin',
         action_date: actionDate
       });
-      if (result.success) toast.success(result.message);
-      else toast.error(result.message);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
     } catch {
       toast.error('An unexpected error occurred.');
     } finally {
@@ -79,9 +89,16 @@ const AdminUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
         <div className="space-y-4 max-w-3xl mx-auto">
           {/* Assign Panel */}
           <section className="border-2 border-dashed border-blue-200 rounded-lg p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-blue-800">
-              {report.status === 'Assigned' ? 'Reassign to Safety Officer' : 'Assign to Safety Officer'}
-            </h3>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-sm font-semibold text-blue-800">
+                {report.status === 'Assigned' ? 'Reassign to Safety Officer' : 'Assign to Safety Officer'}
+              </h3>
+              {report.status === 'Assigned' && report.assigned_to_name && (
+                <span className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-0.5">
+                  Currently: <span className="font-medium text-blue-700">{report.assigned_to_name}</span>
+                </span>
+              )}
+            </div>
             {safetyOfficers.length === 0 ? (
               <p className="text-sm text-gray-500">No active Safety Officers available.</p>
             ) : (

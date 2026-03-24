@@ -290,7 +290,7 @@ const UaUcReportPdf = ({ report }: { report: UaUcNearMissRecord }) => {
         </View>
 
         {/* Section 3 — Classification */}
-        <Text style={S.sectionTitle}>Section 3 — Classification</Text>
+        <Text style={S.sectionTitle}>Section 3 — Classification (AI Classified)</Text>
         <View style={S.fieldGroup}>
           {report.observation_type === 'UA' && (
             <>

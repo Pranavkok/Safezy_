@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { ERROR_MESSAGES } from '@/constants/constants';
 import { revalidatePath } from 'next/cache';
 import { AppRoutes } from '@/constants/AppRoutes';
@@ -12,7 +12,7 @@ export const adminAssignUaUcReport = async (
   safetyOfficerId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const { error } = await supabase
@@ -43,7 +43,7 @@ export const adminCloseUaUcReport = async (
   reportId: number,
   closeData: { action_taken: string; action_by: string; action_date: string }
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const { error } = await supabase
@@ -78,7 +78,7 @@ export const adminAssignIncidentReport = async (
   safetyOfficerId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const { error } = await supabase
@@ -108,15 +108,15 @@ export const adminCloseIncidentReport = async (
   reportId: number,
   closeData: { corrective_actions: string; preventive_actions: string }
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const { error } = await supabase
       .from('ehs_incident_analysis')
       .update({
         is_completed: true,
-        corrective_actions: closeData.corrective_actions,
-        preventive_actions: closeData.preventive_actions,
+        corrective_actions: closeData.corrective_actions ? [closeData.corrective_actions] : [],
+        preventive_actions: closeData.preventive_actions ? [closeData.preventive_actions] : [],
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);

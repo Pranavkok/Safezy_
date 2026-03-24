@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { ERROR_MESSAGES } from '@/constants/constants';
 import { UaUcNearMissRecord } from '@/types/ehs.types';
 import { revalidatePath } from 'next/cache';
@@ -51,7 +52,7 @@ export const closeUaUcReport = async (
   reportId: number,
   closeData: CloseUaUcInput
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const authId = await getAuthId();
@@ -135,7 +136,7 @@ export const closeIncidentReport = async (
   reportId: number,
   closeData: CloseIncidentInput
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const authId = await getAuthId();
@@ -155,8 +156,8 @@ export const closeIncidentReport = async (
       .from('ehs_incident_analysis')
       .update({
         is_completed: true,
-        corrective_actions: closeData.corrective_actions,
-        preventive_actions: closeData.preventive_actions,
+        corrective_actions: closeData.corrective_actions ? [closeData.corrective_actions] : [],
+        preventive_actions: closeData.preventive_actions ? [closeData.preventive_actions] : [],
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);

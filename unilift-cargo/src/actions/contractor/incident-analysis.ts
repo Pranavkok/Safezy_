@@ -497,7 +497,7 @@ export const savePage1 = async (
       const authId = await getAuthId();
       const { data: inserted, error } = await supabase
         .from('ehs_incident_analysis')
-        .insert({ ...payload, reported_by_user_id: authId ?? undefined })
+        .insert({ ...payload, reported_by_user_id: authId ?? undefined, is_completed: false })
         .select('id')
         .single();
       if (error || !inserted) {
@@ -560,13 +560,16 @@ export const savePage2 = async (
     const updatePayload = {
       controls_failed: data.controls_failed,
       sop_deviation: data.sop_deviation,
+      sop_deviation_remarks: data.sop_deviation ? (data.sop_deviation_remarks || null) : null,
       authorization_competence: data.authorization_competence,
+      authorization_competence_remarks: data.authorization_competence ? (data.authorization_competence_remarks || null) : null,
       pressure_constraints: data.pressure_constraints,
       historical_incident_date: data.historical_incident_date || null,
       past_incidents_text: data.past_incidents_text || null,
       impact_description: data.impact_description,
       worst_case_potential: data.worst_case_potential,
       immediate_actions: data.immediate_actions,
+      is_completed: false,
       updated_at: new Date().toISOString(),
       ...(correctives ? { corrective_actions: correctives } : {}),
       ...(preventives ? { preventive_actions: preventives } : {}),

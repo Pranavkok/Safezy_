@@ -72,39 +72,39 @@ const ADMIN_SIDEBAR_MENU: SidebarMenuType = [
     subMenu: [
       {
         id: 1,
-        title: 'EHS News & Update',
-        icon: <Newspaper size={18} />,
-        route: AppRoutes.ADMIN_EHS_NEWS_LISTING
-      },
-      {
-        id: 2,
         title: 'EHS Toolbox Talk',
         icon: <ClipboardList size={18} />,
         route: AppRoutes.ADMIN_EHS_TOOLBOX_TALK_LISTING
       },
       {
-        id: 3,
+        id: 2,
         title: 'EHS Checklist',
         icon: <CheckSquare size={18} />,
         route: AppRoutes.ADMIN_EHS_CHECKLIST_LISTING
       },
       {
-        id: 4,
-        title: 'EHS First Principles',
-        icon: <BookOpen size={18} />,
-        route: AppRoutes.ADMIN_EHS_FIRST_PRINCIPLES_LISTING
-      },
-      {
-        id: 5,
+        id: 3,
         title: 'UA / UC / Near Miss',
         icon: <Eye size={18} />,
         route: AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING
       },
       {
-        id: 6,
+        id: 4,
         title: 'Incident Analysis',
         icon: <FileWarning size={18} />,
         route: AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_LISTING
+      },
+      {
+        id: 5,
+        title: 'EHS News & Update',
+        icon: <Newspaper size={18} />,
+        route: AppRoutes.ADMIN_EHS_NEWS_LISTING
+      },
+      {
+        id: 6,
+        title: 'EHS First Principles',
+        icon: <BookOpen size={18} />,
+        route: AppRoutes.ADMIN_EHS_FIRST_PRINCIPLES_LISTING
       }
     ]
   },
