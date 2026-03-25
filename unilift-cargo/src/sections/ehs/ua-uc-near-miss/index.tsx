@@ -230,9 +230,9 @@ const UaUcNearMissForm = () => {
 
         toast.success('AI classification complete');
       } else if (res.status === 429) {
-        toast.warning('AI quota exceeded. Please try again later.');
+        toast('AI quota exceeded. Please try again later.');
       } else {
-        toast.warning('AI analysis unavailable. Please try again.');
+        toast('AI analysis unavailable. Please try again.');
       }
     } catch {
       toast.error('AI analysis failed. Please try again.');

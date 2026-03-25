@@ -15,7 +15,7 @@ const ManagerUaUcDetailPage = async ({ params }: Props) => {
   const { data: report, error } = await supabase
     .from('ehs_ua_uc_near_miss')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', Number(params.id))
     .single();
 
   if (error || !report) return notFound();

@@ -50,32 +50,32 @@ const AddStaffSection = () => {
         <InputFieldWithLabel
           label="First Name"
           placeholder="Enter first name"
-          error={errors.firstName?.message}
+          errorText={errors.firstName?.message}
           {...register('firstName')}
         />
         <InputFieldWithLabel
           label="Last Name"
           placeholder="Enter last name"
-          error={errors.lastName?.message}
+          errorText={errors.lastName?.message}
           {...register('lastName')}
         />
         <InputFieldWithLabel
           label="Email"
           type="email"
           placeholder="Enter email address"
-          error={errors.email?.message}
+          errorText={errors.email?.message}
           {...register('email')}
         />
         <InputFieldWithLabel
           label="Contact Number"
           placeholder="Enter contact number"
-          error={errors.contactNumber?.message}
+          errorText={errors.contactNumber?.message}
           {...register('contactNumber')}
         />
         <PasswordFieldWithLabel
           label="Password"
           placeholder="Enter password"
-          error={errors.password?.message}
+          errorText={errors.password?.message}
           {...register('password')}
         />
 

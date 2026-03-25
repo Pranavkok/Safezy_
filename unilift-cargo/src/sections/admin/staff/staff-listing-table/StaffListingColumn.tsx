@@ -62,7 +62,7 @@ export function getStaffListingColumns(): ColumnDef<StaffMember>[] {
       ),
       cell: ({ row }) => (
         <ToggleStaffStatusSection
-          id={row.original.id}
+          id={String(row.original.id)}
           isActive={row.original.is_active}
         />
       ),

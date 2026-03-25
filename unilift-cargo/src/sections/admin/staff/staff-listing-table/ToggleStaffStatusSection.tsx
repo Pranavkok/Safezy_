@@ -15,7 +15,7 @@ import { toast } from 'react-hot-toast';
 import { toggleStaffStatus } from '@/actions/admin/staff';
 
 interface Props {
-  id: number;
+  id: string;
   isActive: boolean | null;
 }
 

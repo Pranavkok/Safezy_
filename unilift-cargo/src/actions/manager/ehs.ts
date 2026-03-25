@@ -29,7 +29,7 @@ export const getAllUaUcReports = async (filters?: {
       query = query.eq('observation_type', filters.type);
     }
     if (filters?.status && filters.status !== 'All') {
-      query = query.eq('status', filters.status);
+      query = query.eq('status', filters.status as 'Open' | 'Assigned' | 'Closed');
     }
 
     const { data, error } = await query;
@@ -84,9 +84,12 @@ export const assignUaUcReport = async (
 export type IncidentListItem = {
   id: number;
   title: string;
+  incident_type: string | null;
+  severity_level: string | null;
   location: string | null;
   date: string | null;
-  is_completed: boolean;
+  created_at: string;
+  is_completed: boolean | null;
   assigned_to_name: string | null;
   assigned_to_user_id: string | null;
 };

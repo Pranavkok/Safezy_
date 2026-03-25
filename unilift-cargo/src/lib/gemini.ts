@@ -24,8 +24,8 @@ export async function generateWithRetry(
   const PRIMARY_TIMEOUT_MS = 6000; // bail out of primary after 6s and use fallback
 
   const attempt = async (modelName: string) => {
-    const m = getModel(modelName);
-    return m.generateContent({ ...(contents as object), generationConfig });
+    const m = genAI.getGenerativeModel({ model: modelName, generationConfig });
+    return m.generateContent(contents);
   };
 
   const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {

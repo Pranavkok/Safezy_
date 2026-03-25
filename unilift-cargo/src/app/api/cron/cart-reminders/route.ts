@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     const itemCount = cartItems.length;
     const firstItem =
       (cartItems[0].product as { ppe_name: string } | null)?.ppe_name ?? 'item';
-    const reminderNumber = row.reminders_sent + 1;
+    const reminderNumber = (row.reminders_sent ?? 0) + 1;
 
     const messages = [
       {

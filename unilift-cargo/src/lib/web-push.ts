@@ -1,5 +1,8 @@
 import webpush from 'web-push';
 import { createServiceClient } from '@/utils/supabase/service';
+import { Database, Json } from '@/types/supabase';
+
+type NotificationType = Database['public']['Enums']['notification_type'];
 
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL!,
@@ -16,7 +19,7 @@ export interface PushPayload {
 
 export async function sendPushNotification(
   userId: string,
-  type: string,
+  type: NotificationType | string,
   payload: PushPayload,
   data: Record<string, unknown> = {},
 ): Promise<void> {
@@ -25,11 +28,11 @@ export async function sendPushNotification(
   // 1. Persist in notifications table (for in-app center)
   const { error: insertError } = await supabase.from('notifications').insert({
     user_id: userId,
-    type,
+    type: type as NotificationType,
     title: payload.title,
     body: payload.body,
     url: payload.url ?? '/contractor/notifications',
-    data,
+    data: data as Json,
     is_read: false,
   });
   if (insertError) {

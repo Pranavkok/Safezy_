@@ -664,15 +664,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const excelBuffer = Buffer.from(
-    await excelFiles[0].async('arraybuffer')
-  );
+  const excelArrayBuffer = await excelFiles[0].async('arraybuffer');
 
   // ── Parse Excel ─────────────────────────────────────────────────────────────
   let workbook: ExcelJS.Workbook;
   try {
     workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(excelBuffer);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await workbook.xlsx.load(excelArrayBuffer as any);
   } catch {
     return NextResponse.json(
       { error: 'Could not parse the Excel file. Ensure it was created using the official template.' },

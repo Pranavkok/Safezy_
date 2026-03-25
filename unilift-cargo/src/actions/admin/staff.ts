@@ -145,7 +145,7 @@ export const getStaffList = async (): Promise<{
 
 // Toggle active/inactive status for a staff member
 export const toggleStaffStatus = async (
-  userId: number,
+  userId: string,
   currentStatus: boolean
 ): Promise<{ success: boolean; message: string }> => {
   const supabase = await createClient();

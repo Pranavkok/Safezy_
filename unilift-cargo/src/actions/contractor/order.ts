@@ -381,14 +381,14 @@ export const placeOrder = async (
     revalidatePath('/cart');
 
     // Reset cart reminder tracking since the cart has been cleared by order placement
-    supabase
-      .from('cart_reminder_tracking')
-      .upsert(
-        { user_id: userId, last_cart_activity: null, reminders_sent: 0, last_reminder_at: null },
-        { onConflict: 'user_id' }
-      )
-      .then(() => {})
-      .catch(() => {});
+    Promise.resolve(
+      supabase
+        .from('cart_reminder_tracking')
+        .upsert(
+          { user_id: userId, last_cart_activity: null, reminders_sent: 0, last_reminder_at: null },
+          { onConflict: 'user_id' }
+        )
+    ).catch(() => {});
 
     getAuthId()
       .then((authId) => {

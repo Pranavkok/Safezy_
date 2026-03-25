@@ -531,6 +531,8 @@ export type Database = {
           process_frequency: string | null
           rca_conclusion: string | null
           regular_process: Database["public"]["Enums"]["confirmation"] | null
+          assigned_to_user_id: string | null
+          assigned_to_name: string | null
           reported_by_user_id: string | null
           root_causes: Json | null
           severity_level: string | null
@@ -592,6 +594,8 @@ export type Database = {
           process_before_incident?: string | null
           process_frequency?: string | null
           rca_conclusion?: string | null
+          assigned_to_user_id?: string | null
+          assigned_to_name?: string | null
           regular_process?: Database["public"]["Enums"]["confirmation"] | null
           reported_by_user_id?: string | null
           root_causes?: Json | null
@@ -654,6 +658,8 @@ export type Database = {
           process_before_incident?: string | null
           process_frequency?: string | null
           rca_conclusion?: string | null
+          assigned_to_user_id?: string | null
+          assigned_to_name?: string | null
           regular_process?: Database["public"]["Enums"]["confirmation"] | null
           root_causes?: Json | null
           severity_level?: string | null
@@ -807,6 +813,7 @@ export type Database = {
         Row: {
           best_performer: string
           created_at: string
+          duration_seconds: number | null
           id: number
           rating: number | null
           superior_email: string
@@ -817,6 +824,7 @@ export type Database = {
         Insert: {
           best_performer: string
           created_at?: string
+          duration_seconds?: number | null
           id?: never
           rating?: number | null
           superior_email: string
@@ -827,6 +835,7 @@ export type Database = {
         Update: {
           best_performer?: string
           created_at?: string
+          duration_seconds?: number | null
           id?: never
           rating?: number | null
           superior_email?: string
@@ -1704,6 +1713,105 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ehs_ua_uc_near_miss: {
+        Row: {
+          id: number
+          report_no: string
+          observation_type: 'UA' | 'UC' | 'NearMiss'
+          reported_at: string
+          location_department: string
+          reported_by_user_id: string
+          reported_by_name: string
+          employee_id: string
+          what_happened: string | null
+          equipment_involved: string | null
+          activity_at_time: string | null
+          media_url: string | null
+          media_type: 'image' | 'video' | 'voice' | null
+          ua_classifications: string[]
+          ua_other: string | null
+          uc_classifications: string[]
+          uc_other: string | null
+          uc_severity: 'Low' | 'Medium' | 'High' | null
+          uc_temporary_controls: string | null
+          nm_potential_injury: string | null
+          nm_what_could_happen: string | null
+          nm_severity: 'Low' | 'Medium' | 'High' | null
+          status: 'Open' | 'Assigned' | 'Closed'
+          action_taken: string | null
+          action_by: string | null
+          action_date: string | null
+          assigned_to_user_id: string | null
+          assigned_to_name: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          report_no: string
+          observation_type: 'UA' | 'UC' | 'NearMiss'
+          reported_at?: string
+          location_department: string
+          reported_by_user_id: string
+          reported_by_name: string
+          employee_id: string
+          what_happened?: string | null
+          equipment_involved?: string | null
+          activity_at_time?: string | null
+          media_url?: string | null
+          media_type?: 'image' | 'video' | 'voice' | null
+          ua_classifications?: string[]
+          ua_other?: string | null
+          uc_classifications?: string[]
+          uc_other?: string | null
+          uc_severity?: 'Low' | 'Medium' | 'High' | null
+          uc_temporary_controls?: string | null
+          nm_potential_injury?: string | null
+          nm_what_could_happen?: string | null
+          nm_severity?: 'Low' | 'Medium' | 'High' | null
+          status?: 'Open' | 'Assigned' | 'Closed'
+          action_taken?: string | null
+          action_by?: string | null
+          action_date?: string | null
+          assigned_to_user_id?: string | null
+          assigned_to_name?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          report_no?: string
+          observation_type?: 'UA' | 'UC' | 'NearMiss'
+          reported_at?: string
+          location_department?: string
+          reported_by_user_id?: string
+          reported_by_name?: string
+          employee_id?: string
+          what_happened?: string | null
+          equipment_involved?: string | null
+          activity_at_time?: string | null
+          media_url?: string | null
+          media_type?: 'image' | 'video' | 'voice' | null
+          ua_classifications?: string[]
+          ua_other?: string | null
+          uc_classifications?: string[]
+          uc_other?: string | null
+          uc_severity?: 'Low' | 'Medium' | 'High' | null
+          uc_temporary_controls?: string | null
+          nm_potential_injury?: string | null
+          nm_what_could_happen?: string | null
+          nm_severity?: 'Low' | 'Medium' | 'High' | null
+          status?: 'Open' | 'Assigned' | 'Closed'
+          action_taken?: string | null
+          action_by?: string | null
+          action_date?: string | null
+          assigned_to_user_id?: string | null
+          assigned_to_name?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       wishlist: {
         Row: {

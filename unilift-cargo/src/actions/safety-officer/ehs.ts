@@ -110,7 +110,7 @@ export const getMyAssignedIncidents = async (): Promise<{
 
     const { data, error } = await supabase
       .from('ehs_incident_analysis')
-      .select('id, title, location, date, is_completed, assigned_to_name, assigned_to_user_id')
+      .select('id, title, incident_type, severity_level, location, date, created_at, is_completed, assigned_to_name, assigned_to_user_id')
       .eq('assigned_to_user_id', authId)
       .order('created_at', { ascending: false });
 
