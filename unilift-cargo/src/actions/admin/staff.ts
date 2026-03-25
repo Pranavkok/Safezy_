@@ -53,7 +53,8 @@ export const createStaffUser = async (
       await serviceClient.auth.admin.createUser({
         email: data.email,
         password: data.password,
-        email_confirm: true // mark email as already confirmed
+        email_confirm: true, // mark email as already confirmed
+        user_metadata: { user_role: data.role }
       });
 
     if (authError) {
