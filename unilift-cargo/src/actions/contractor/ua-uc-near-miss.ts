@@ -27,18 +27,23 @@ async function generateReportNo(
   supabase: Awaited<ReturnType<typeof createClient>>,
   observationType: ObservationType
 ): Promise<string> {
-  const year = new Date().getFullYear();
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
   const prefix = getReportPrefix(observationType);
+
+  const monthStart = `${year}-${month}-01T00:00:00.000Z`;
+  const nextMonth = now.getMonth() === 11 ? `${year + 1}-01-01T00:00:00.000Z` : `${year}-${(now.getMonth() + 2).toString().padStart(2, '0')}-01T00:00:00.000Z`;
 
   const { count } = await supabase
     .from('ehs_ua_uc_near_miss')
     .select('*', { count: 'exact', head: true })
     .eq('observation_type', observationType)
-    .gte('reported_at', `${year}-01-01T00:00:00.000Z`)
-    .lt('reported_at', `${year + 1}-01-01T00:00:00.000Z`);
+    .gte('reported_at', monthStart)
+    .lt('reported_at', nextMonth);
 
   const sequence = ((count ?? 0) + 1).toString().padStart(4, '0');
-  return `${prefix}-${year}-${sequence}`;
+  return `${prefix}-${year}-${month}-${sequence}`;
 }
 
 // ─── submitUaUcReport ─────────────────────────────────────────────────────────
