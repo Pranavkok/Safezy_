@@ -17,7 +17,7 @@ export const getMyAssignedUaUcReports = async (): Promise<{
   message: string;
   data?: UaUcNearMissRecord[];
 }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const authId = await getAuthId();
@@ -102,7 +102,7 @@ export const getMyAssignedIncidents = async (): Promise<{
   message: string;
   data?: IncidentListItem[];
 }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const authId = await getAuthId();
@@ -184,7 +184,7 @@ export const getSafetyOfficerDashboardStats = async (): Promise<{
     incidents: { assigned: number; closed: number };
   };
 }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const authId = await getAuthId();

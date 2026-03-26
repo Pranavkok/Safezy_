@@ -1,7 +1,6 @@
-import { notFound } from 'next/navigation';
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import { AppRoutes } from '@/constants/AppRoutes';
-import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { getUserDetails } from '@/actions/user';
 import SoUaUcDetailSection from '@/sections/safety-officer/ehs/SoUaUcDetailSection';
 
@@ -10,15 +9,23 @@ interface Props {
 }
 
 const SoUaUcDetailPage = async ({ params }: Props) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
-  const { data: report, error } = await supabase
+  const { data: report, error } = await serviceClient
     .from('ehs_ua_uc_near_miss')
     .select('*')
     .eq('id', Number(params.id))
     .single();
 
-  if (error || !report) return notFound();
+  if (error || !report) {
+    return (
+      <AdminTopbarLayout title="UA / UC / Near Miss">
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">
+          Failed to load the report details. Please go back and try again.
+        </div>
+      </AdminTopbarLayout>
+    );
+  }
 
   const userDetails = await getUserDetails();
   const officerName = `${userDetails.firstName ?? ''} ${userDetails.lastName ?? ''}`.trim();

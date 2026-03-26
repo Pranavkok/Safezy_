@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation';
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { getIncidentDetailsById } from '@/actions/contractor/incident-analysis';
@@ -11,7 +10,15 @@ interface Props {
 const SoIncidentDetailPage = async ({ params }: Props) => {
   const incidentResult = await getIncidentDetailsById(Number(params.id));
 
-  if (!incidentResult.success || !incidentResult.data) return notFound();
+  if (!incidentResult.success || !incidentResult.data) {
+    return (
+      <AdminTopbarLayout title="Incident Analysis">
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">
+          Failed to load the incident details. Please go back and try again.
+        </div>
+      </AdminTopbarLayout>
+    );
+  }
 
   const incident = incidentResult.data;
 

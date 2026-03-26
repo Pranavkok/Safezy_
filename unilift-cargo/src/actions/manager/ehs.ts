@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { ERROR_MESSAGES, USER_ROLES } from '@/constants/constants';
 import { ObservationType, UaUcNearMissRecord } from '@/types/ehs.types';
 import { revalidatePath } from 'next/cache';
@@ -17,10 +17,10 @@ export const getAllUaUcReports = async (filters?: {
   message: string;
   data?: UaUcNearMissRecord[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    let query = supabase
+    let query = serviceClient
       .from('ehs_ua_uc_near_miss')
       .select('*')
       .order('reported_at', { ascending: false });
@@ -52,10 +52,10 @@ export const assignUaUcReport = async (
   safetyOfficerId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_ua_uc_near_miss')
       .update({
         assigned_to_user_id: safetyOfficerId,
@@ -102,10 +102,10 @@ export const getAllIncidentReports = async (filters?: {
   message: string;
   data?: IncidentListItem[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    let query = supabase
+    let query = serviceClient
       .from('ehs_incident_analysis')
       .select('id, title, incident_type, severity_level, location, date, created_at, is_completed, assigned_to_name, assigned_to_user_id')
       .order('created_at', { ascending: false });
@@ -141,10 +141,10 @@ export const assignIncidentReport = async (
   safetyOfficerId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_incident_analysis')
       .update({
         assigned_to_user_id: safetyOfficerId,
@@ -174,10 +174,10 @@ export const getSafetyOfficersList = async (): Promise<{
   success: boolean;
   data?: { authId: string; name: string }[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('users')
       .select('auth_id, first_name, last_name, user_roles!inner(role)')
       .eq('user_roles.role', USER_ROLES.SAFETY_OFFICER)
@@ -208,14 +208,14 @@ export const getManagerDashboardStats = async (): Promise<{
     incidents: { open: number; assigned: number; closed: number };
   };
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const [uaUcResult, incidentResult] = await Promise.all([
-      supabase
+      serviceClient
         .from('ehs_ua_uc_near_miss')
         .select('status'),
-      supabase
+      serviceClient
         .from('ehs_incident_analysis')
         .select('is_completed, assigned_to_user_id')
     ]);
