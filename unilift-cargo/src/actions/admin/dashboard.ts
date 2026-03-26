@@ -6,7 +6,7 @@ import {
   USER_ROLES
 } from '@/constants/constants';
 import { CountsType } from '@/types/dashboard.types';
-import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 
 // [#] Fetch counts of contractors, orders, products, and complaints
 export const getAdminCounts = async (): Promise<{
@@ -14,7 +14,7 @@ export const getAdminCounts = async (): Promise<{
   data?: CountsType;
   message: string;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const [
@@ -23,7 +23,7 @@ export const getAdminCounts = async (): Promise<{
       { count: productsCount, error: ProductsError },
       { count: complaintsCount, error: complaintsError }
     ] = await Promise.all([
-      supabase
+      serviceClient
         .from('users')
         .select(
           `
@@ -33,12 +33,12 @@ export const getAdminCounts = async (): Promise<{
           { count: 'exact', head: true }
         )
         .eq('user_roles.role', USER_ROLES.CONTRACTOR),
-      supabase.from('order').select('id', { count: 'exact', head: true }),
-      supabase
+      serviceClient.from('order').select('id', { count: 'exact', head: true }),
+      serviceClient
         .from('product')
         .select('id', { count: 'exact', head: true })
         .eq('is_deleted', false),
-      supabase.from('complaint').select('id', { count: 'exact', head: true })
+      serviceClient.from('complaint').select('id', { count: 'exact', head: true })
     ]);
 
     if (contractorsError || OrdersError || ProductsError || complaintsError) {

@@ -3,7 +3,6 @@ import { AppRoutes } from '@/constants/AppRoutes';
 
 import Link from 'next/link';
 import { getAdminCounts } from '@/actions/admin/dashboard';
-import { notFound } from 'next/navigation';
 import { Boxes, NotepadText, PackageOpen, UserCircle } from 'lucide-react';
 
 const DashboardStatCard = ({
@@ -39,16 +38,18 @@ const DashboardStatCard = ({
 
 const AdminDashboardSection = async () => {
   const { data: counts } = await getAdminCounts();
-
-  if (!counts) {
-    return notFound();
-  }
+  const resolvedCounts = counts ?? {
+    contractors: 0,
+    orders: 0,
+    products: 0,
+    complaints: 0
+  };
 
   // Dashboard stats data for reuse
   const dashboardStats = [
     {
       route: AppRoutes.ADMIN_CONTRACTOR_LISTING,
-      count: counts.contractors,
+      count: resolvedCounts.contractors,
       icon: (
         <UserCircle
           className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
@@ -59,7 +60,7 @@ const AdminDashboardSection = async () => {
     },
     {
       route: AppRoutes.ADMIN_ORDER_LISTING,
-      count: counts.orders,
+      count: resolvedCounts.orders,
       icon: (
         <PackageOpen
           className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
@@ -70,7 +71,7 @@ const AdminDashboardSection = async () => {
     },
     {
       route: AppRoutes.ADMIN_PRODUCT_LISTING,
-      count: counts.products,
+      count: resolvedCounts.products,
       icon: (
         <Boxes
           className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
@@ -81,7 +82,7 @@ const AdminDashboardSection = async () => {
     },
     {
       route: AppRoutes.ADMIN_COMPLAINTS,
-      count: counts.complaints,
+      count: resolvedCounts.complaints,
       icon: (
         <NotepadText
           className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
