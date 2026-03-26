@@ -3,7 +3,6 @@ import { getFirstPrincipleById } from '@/actions/admin/ehs/first-principles';
 import { AppRoutes } from '@/constants/AppRoutes';
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import EHSFirstPrinciplesDetailsUpdateSection from '@/sections/admin/ehs/first-principles/EhsFirstPrinciplesUpdateSection';
-import { notFound } from 'next/navigation';
 import Spinner from '@/components/loaders/Spinner';
 
 const BREADCRUMBS = [
@@ -51,7 +50,11 @@ const EHSFirstPrinciplesUpdateSection = async ({
   const { data: principles } = await getFirstPrincipleById(firstPrincipleId);
 
   if (!principles) {
-    notFound();
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">
+        Failed to load the first principles details. Please go back and try again.
+      </div>
+    );
   }
 
   return <EHSFirstPrinciplesDetailsUpdateSection principles={principles} />;

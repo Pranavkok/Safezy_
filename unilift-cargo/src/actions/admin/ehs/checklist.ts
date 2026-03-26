@@ -11,15 +11,16 @@ import {
 } from '@/types/ehs.types';
 import { SuggestionType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
 
 export const addChecklistTopic = async (
   checklist: EhsChecklistFormType
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_checklist_topics')
       .insert({
         topic_name: checklist.topic_name,
@@ -44,7 +45,7 @@ export const addChecklistTopic = async (
       };
     });
 
-    const { error: checklistQuestionError } = await supabase
+    const { error: checklistQuestionError } = await serviceClient
       .from('ehs_checklist_questions')
       .insert(question);
 
@@ -83,7 +84,7 @@ export const updateChecklistTopic = async (
   checklist: EhsChecklistFormType,
   questionIdsToDelete: number[]
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
   const topicId = initialData.id;
 
   try {
@@ -92,7 +93,7 @@ export const updateChecklistTopic = async (
       initialData.topic_name !== checklist.topic_name ||
       initialData.image_url !== checklist.image_url
     ) {
-      const { error: topicError } = await supabase
+      const { error: topicError } = await serviceClient
         .from('ehs_checklist_topics')
         .update({
           topic_name: checklist.topic_name,
@@ -110,7 +111,7 @@ export const updateChecklistTopic = async (
     }
 
     if (questionIdsToDelete.length > 0) {
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await serviceClient
         .from('ehs_checklist_questions')
         .delete()
         .in('id', questionIdsToDelete);
@@ -135,7 +136,7 @@ export const updateChecklistTopic = async (
       });
 
     if (questionsToAdd.length > 0) {
-      const { error: insertError } = await supabase
+      const { error: insertError } = await serviceClient
         .from('ehs_checklist_questions')
         .insert(questionsToAdd);
 
@@ -174,10 +175,10 @@ export const getAllChecklistTopic = async (
   message: string;
   count?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const query = supabase
+    const query = serviceClient
       .from('ehs_checklist_topics')
       .select('id, topic_name ', { count: 'exact' })
       .order('created_at', { ascending: false });
@@ -229,10 +230,10 @@ export const getAllChecklistTopicWithPerformedCount = async (
   message: string;
   count?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const query = supabase
+    const query = serviceClient
       .from('ehs_checklist_topics')
       .select('id, topic_name, performed:ehs_checklist_users(count) ', {
         count: 'exact'
@@ -283,10 +284,10 @@ export const getAllContractorsDoneChecklist = async (
   message: string;
   data?: ContractorChecklistType[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_checklist_users')
       .select(
         `users(
@@ -330,10 +331,10 @@ export const getChecklistResponseByUser = async (
   message: string;
   data?: ChecklistDetailsType;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_checklist_users')
       .select(
         `
@@ -379,10 +380,10 @@ export const getChecklistResponseByUser = async (
 };
 
 export const deleteChecklist = async (topicId: number) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error: checklistQuestionError } = await supabase
+    const { error: checklistQuestionError } = await serviceClient
       .from('ehs_checklist_questions')
       .delete()
       .eq('topic_id', topicId);
@@ -398,7 +399,7 @@ export const deleteChecklist = async (topicId: number) => {
       };
     }
 
-    const { error: checklistTopicError } = await supabase
+    const { error: checklistTopicError } = await serviceClient
       .from('ehs_checklist_topics')
       .delete()
       .eq('id', topicId);
@@ -431,10 +432,10 @@ export const deleteChecklist = async (topicId: number) => {
 };
 
 export const addChecklistSuggestion = async (suggestion: addSuggestionType) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_suggestions')
       .insert({
         topic_name: suggestion.topic_name,
@@ -471,10 +472,10 @@ export const getChecklistSuggestions = async (): Promise<{
   message: string;
   data?: SuggestionType[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_suggestions')
       .select('*')
       .eq('suggestion_type', 'checklist');

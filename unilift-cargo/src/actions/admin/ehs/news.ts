@@ -4,14 +4,15 @@ import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { EhsNewsFormType } from '@/sections/admin/ehs/ehs-news/EhsAddUpdateSection';
 import { EhsNewsType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { revalidatePath } from 'next/cache';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
 
 export const addEhsNews = async (newsData: EhsNewsFormType) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_news')
       .insert({
         title: newsData.title,
@@ -60,10 +61,10 @@ export const getEhsNews = async (
   message: string;
   count?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const query = supabase
+    const query = serviceClient
       .from('ehs_news')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
@@ -97,10 +98,10 @@ export const getEhsNews = async (
 };
 
 export const updateEhsNews = async (id: number, newsData: EhsNewsFormType) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_news')
       .update({
         title: newsData.title,
@@ -142,10 +143,10 @@ export const getEhsNewsById = async (
   data?: EhsNewsType;
   message: string;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data: ehsNews, error } = await supabase
+    const { data: ehsNews, error } = await serviceClient
       .from('ehs_news')
       .select('*')
       .eq('id', Number(id))
@@ -175,10 +176,10 @@ export const getEhsNewsById = async (
 };
 
 export const deleteEhsNews = async (id: number) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase.from('ehs_news').delete().eq('id', id);
+    const { error } = await serviceClient.from('ehs_news').delete().eq('id', id);
 
     if (error) {
       console.error('Error while deleting news item', error);

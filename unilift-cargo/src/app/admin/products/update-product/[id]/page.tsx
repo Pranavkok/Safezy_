@@ -1,7 +1,6 @@
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import { AppRoutes } from '@/constants/AppRoutes';
 import UpdateProductDetailsSection from '@/sections/admin/products/UpdateProductSection';
-import { notFound } from 'next/navigation';
 import { getProductById } from '@/actions/contractor/product';
 import Spinner from '@/components/loaders/Spinner';
 import { Suspense } from 'react';
@@ -46,7 +45,11 @@ const UpdateProduct = async ({ productId }: { productId: string }) => {
   const { data: productDetails } = await getProductById(productId);
 
   if (!productDetails) {
-    notFound();
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">
+        Failed to load the product details. Please go back and try again.
+      </div>
+    );
   }
   return <UpdateProductDetailsSection productDetails={productDetails} />;
 };

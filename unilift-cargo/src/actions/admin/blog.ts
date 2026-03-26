@@ -5,6 +5,7 @@ import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { AddBlogType, UpdateBlogType } from '@/types/ehs.types';
 import { BlogType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { revalidatePath } from 'next/cache';
 
 // Get all Blogs
@@ -19,10 +20,10 @@ export const getAllBlogDetails = async (
   pageCount?: number;
   count?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    let query = supabase.from('blogs').select('*', { count: 'exact' });
+    let query = serviceClient.from('blogs').select('*', { count: 'exact' });
 
     if (searchQuery) {
       query.or(`title.ilike.%${searchQuery}%`);
@@ -69,10 +70,10 @@ export const getBlogDetailsById = async (
   message: string;
   data?: BlogType;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('blogs')
       .select('*')
       .eq('id', blogId)
@@ -111,7 +112,7 @@ export const addBlogDetails = async (
   message: string;
   blog?: { id: number; title: string; image_url: string | null };
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const newBlog = {
@@ -121,7 +122,7 @@ export const addBlogDetails = async (
       image_url: blog.image_url
     };
 
-    const { data: insertedBlog, error } = await supabase
+    const { data: insertedBlog, error } = await serviceClient
       .from('blogs')
       .insert(newBlog)
       .select()
@@ -163,7 +164,7 @@ export const updateBlogDetails = async (
   blog: UpdateBlogType,
   blogId: number
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const blogData = {
@@ -173,7 +174,7 @@ export const updateBlogDetails = async (
       long_description: blog.long_description
     };
 
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('blogs')
       .update(blogData)
       .eq('id', blogId);
@@ -205,10 +206,10 @@ export const updateBlogDetails = async (
 
 // Delete blog
 export const deleteBlog = async (blogId: number) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data: blog, error: fetchError } = await supabase
+    const { data: blog, error: fetchError } = await serviceClient
       .from('blogs')
       .select('*')
       .eq('id', blogId)
@@ -226,7 +227,7 @@ export const deleteBlog = async (blogId: number) => {
       await deleteFile(blog.image_url, 'blogs', 'images');
     }
 
-    const { error } = await supabase.from('blogs').delete().eq('id', blogId);
+    const { error } = await serviceClient.from('blogs').delete().eq('id', blogId);
 
     if (error) {
       console.error('Error deleting blog', error);
@@ -306,7 +307,7 @@ export const deleteFile = async (
   bucket: string,
   folder: string
 ) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const fileName = fileUrl.split('/').pop();
@@ -317,7 +318,7 @@ export const deleteFile = async (
 
     const filePath = `${folder}/${fileName}`;
 
-    const { error: deleteError } = await supabase.storage
+    const { error: deleteError } = await serviceClient.storage
       .from(bucket)
       .remove([filePath]);
 

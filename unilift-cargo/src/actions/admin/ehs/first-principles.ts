@@ -7,12 +7,13 @@ import {
 } from '@/types/ehs.types';
 import { FirstPrinciplesType, SuggestionType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { revalidatePath } from 'next/cache';
 
 export const addFirstPrinciples = async (
   principles: addFirstPrinciplesDataType
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const principleDetails = {
@@ -20,7 +21,7 @@ export const addFirstPrinciples = async (
       description: principles.description,
       image_url: principles.image_url
     };
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_first_principles')
       .insert(principleDetails);
 
@@ -54,7 +55,7 @@ export const updateFirstPrinciples = async (
   principles: addFirstPrinciplesDataType,
   id: number
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const principleDetails = {
@@ -63,7 +64,7 @@ export const updateFirstPrinciples = async (
       image_url: principles.image_url
     };
 
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_first_principles')
       .update(principleDetails)
       .eq('id', id);
@@ -105,10 +106,10 @@ export const getAllFirstPrinciples = async (
   pageCount?: number;
   count?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    let query = supabase
+    let query = serviceClient
       .from('ehs_first_principles')
       .select('*', { count: 'exact' });
 
@@ -156,10 +157,10 @@ export const getFirstPrincipleById = async (
   message: string;
   data?: FirstPrinciplesType;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_first_principles')
       .select('*')
       .eq('id', principleId)
@@ -193,10 +194,10 @@ export const getFirstPrincipleById = async (
 export const deleteFirstPrinciple = async (
   principleId: number
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_first_principles')
       .delete()
       .eq('id', principleId);
@@ -230,10 +231,10 @@ export const deleteFirstPrinciple = async (
 export const addFirstPrincipleSuggestion = async (
   suggestion: addSuggestionType
 ) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_suggestions')
       .insert({
         topic_name: suggestion.topic_name,
@@ -270,10 +271,10 @@ export const getFirstPrincipleSuggestions = async (): Promise<{
   message: string;
   data?: SuggestionType[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_suggestions')
       .select('*')
       .eq('suggestion_type', 'first_principle');

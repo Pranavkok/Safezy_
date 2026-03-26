@@ -30,10 +30,10 @@ export const getAllToolboxTalkDetails = async (
   pageCount?: number;
   count?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    let query = supabase
+    let query = serviceClient
       .from('ehs_toolbox_talk')
       .select('*', { count: 'exact' });
 
@@ -81,10 +81,10 @@ export const getToolboxTalkDetailsById = async (
   message: string;
   data?: ToolboxTalkType;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_toolbox_talk')
       .select('*')
       .eq('id', toolboxId)
@@ -122,10 +122,10 @@ export const getAllToolboxUserDetailsById = async (
   message: string;
   data?: ToolboxCompleteDataType[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const query = supabase
+    const query = serviceClient
       .from('ehs_toolbox_users')
       .select(
         `
@@ -268,10 +268,10 @@ export const addToolboxUserDetails = async (
 };
 
 export const getToolboxTopicUserDetails = async (toolboxTalkId: number) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const query = supabase
+    const query = serviceClient
       .from('ehs_toolbox_users')
       .select(
         `
@@ -475,10 +475,10 @@ export const deleteToolboxTalk = async (toolboxId: number) => {
 export const addToolboxTalkSuggestion = async (
   suggestion: addSuggestionType
 ) => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('ehs_suggestions')
       .insert({
         topic_name: suggestion.topic_name,
@@ -515,10 +515,10 @@ export const getToolboxTalkSuggestions = async (): Promise<{
   message: string;
   data?: SuggestionType[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_suggestions')
       .select('*')
       .eq('suggestion_type', 'toolbox_talk');

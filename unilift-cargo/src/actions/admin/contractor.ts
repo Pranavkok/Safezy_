@@ -2,16 +2,16 @@
 
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { ContractorType } from '@/types/index.types';
-import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 
 // [#] Fetch contractor by their id (Admin)
 export const fetchContractorById = async (
   contractorId: string
 ): Promise<{ success: boolean; message: string; data?: ContractorType }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('users')
       .select('*')
       .eq('id', contractorId)
@@ -56,10 +56,10 @@ export const fetchContractors = async (
   data?: FetchContractorType[];
   pageCount?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase.rpc('fetch_contractors', {
+    const { data, error } = await serviceClient.rpc('fetch_contractors', {
       search_query: searchQuery?.trim(),
       sort_by: sortBy,
       sort_order: sortOrder,
@@ -114,10 +114,10 @@ export const fetchAllContractors = async (): Promise<{
   message: string;
   data?: FetchAllContractorType[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase.rpc('fetch_all_contractors');
+    const { data, error } = await serviceClient.rpc('fetch_all_contractors');
 
     if (error) {
       console.error('Error fetching all contractors:', error);

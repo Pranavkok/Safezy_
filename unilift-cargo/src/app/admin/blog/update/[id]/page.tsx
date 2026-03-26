@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
-import { notFound } from 'next/navigation';
 import { AppRoutes } from '@/constants/AppRoutes';
 import Spinner from '@/components/loaders/Spinner';
 import { getBlogDetailsById } from '@/actions/admin/blog';
@@ -47,7 +46,11 @@ const BlogUpdateSection = async ({ blogId }: { blogId: number }) => {
   const { data: blogDetails } = await getBlogDetailsById(blogId);
 
   if (!blogDetails) {
-    notFound();
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">
+        Failed to load the blog details. Please go back and try again.
+      </div>
+    );
   }
   return <BlogAddUpdateSection blogDetails={blogDetails} />;
 };

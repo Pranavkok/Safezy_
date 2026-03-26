@@ -1,6 +1,5 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
 import { createServiceClient } from '@/utils/supabase/service';
 import { ERROR_MESSAGES, USER_ROLES } from '@/constants/constants';
 import { revalidatePath } from 'next/cache';
@@ -33,12 +32,11 @@ export type StaffMember = {
 export const createStaffUser = async (
   data: CreateStaffInput
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
   const serviceClient = createServiceClient();
 
   try {
     // Check for existing user by email
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await serviceClient
       .from('users')
       .select('email')
       .eq('email', data.email)
@@ -68,7 +66,7 @@ export const createStaffUser = async (
     }
 
     // Fetch the role ID from user_roles lookup table
-    const { data: roleData, error: roleError } = await supabase
+    const { data: roleData, error: roleError } = await serviceClient
       .from('user_roles')
       .select('id')
       .eq('role', data.role)
@@ -80,7 +78,7 @@ export const createStaffUser = async (
     }
 
     // Insert into users table
-    const { error: insertError } = await supabase.from('users').insert({
+    const { error: insertError } = await serviceClient.from('users').insert({
       first_name: data.firstName,
       last_name: data.lastName,
       email: data.email,
@@ -112,10 +110,10 @@ export const getStaffList = async (): Promise<{
   message: string;
   data?: StaffMember[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('users')
       .select('id, first_name, last_name, email, contact_number, is_active, created_at, user_roles!inner(role)')
       .in('user_roles.role', [USER_ROLES.MANAGER, USER_ROLES.SAFETY_OFFICER])
@@ -149,10 +147,10 @@ export const toggleStaffStatus = async (
   userId: string,
   currentStatus: boolean
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('users')
       .update({ is_active: !currentStatus })
       .eq('id', userId);

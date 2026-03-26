@@ -8,6 +8,7 @@ import {
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { notifyWishlistedContractors } from '@/lib/notify-wishlisted-contractors';
 
 // Fetch all products and fetch them by their properties too
@@ -70,7 +71,7 @@ export const addNewProduct = async (
   product: addProductWithImageUrlType,
   uploadImages: { publicUrl: string }[]
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const newProduct = {
@@ -95,7 +96,7 @@ export const addNewProduct = async (
       geographical_location: product.geographicalLocation
     };
 
-    const { data: productDataResponse, error: productError } = await supabase
+    const { data: productDataResponse, error: productError } = await serviceClient
       .from('product')
       .insert(newProduct)
       .select()
@@ -117,7 +118,7 @@ export const addNewProduct = async (
       };
     });
 
-    const { error: productImageError } = await supabase
+    const { error: productImageError } = await serviceClient
       .from('images')
       .insert(productImages);
     if (productImageError) {
@@ -142,7 +143,7 @@ export const addNewProduct = async (
       })
     );
 
-    const { error: tiersError } = await supabase
+    const { error: tiersError } = await serviceClient
       .from('price_tiers')
       .insert(formattedTiers);
 
@@ -175,11 +176,11 @@ export const updateProduct = async (
   productId: string,
   uploadImages: { publicUrl: string }[]
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     // Read current stock status before update — needed for back-in-stock detection
-    const { data: currentProduct } = await supabase
+    const { data: currentProduct } = await serviceClient
       .from('product')
       .select('is_out_of_stock, ppe_name')
       .eq('id', productId)
@@ -211,7 +212,7 @@ export const updateProduct = async (
       is_out_of_stock: product.isOutOfStock
     };
 
-    const { error: productError } = await supabase
+    const { error: productError } = await serviceClient
       .from('product')
       .update(updatedProduct)
       .eq('id', productId)
@@ -233,7 +234,7 @@ export const updateProduct = async (
       };
     });
 
-    const { error: productImageError } = await supabase
+    const { error: productImageError } = await serviceClient
       .from('images')
       .insert(productImages);
 
@@ -245,7 +246,7 @@ export const updateProduct = async (
       };
     }
 
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await serviceClient
       .from('price_tiers')
       .delete()
       .eq('product_id', productId);
@@ -265,7 +266,7 @@ export const updateProduct = async (
       price: Number(tier.price) || 0
     }));
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await serviceClient
       .from('price_tiers')
       .insert(formattedTiers);
 
@@ -304,9 +305,9 @@ export const updateProduct = async (
 export const deleteProduct = async (
   id: string
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
   try {
-    const { error: tiersError } = await supabase
+    const { error: tiersError } = await serviceClient
       .from('price_tiers')
       .delete()
       .eq('product_id', id);
@@ -318,7 +319,7 @@ export const deleteProduct = async (
         message: ERROR_MESSAGES.PRODUCT_NOT_DELETED
       };
     }
-    const { error: productError } = await supabase
+    const { error: productError } = await serviceClient
       .from('product')
       .update({ is_deleted: true })
       .eq('id', id);
@@ -349,9 +350,9 @@ export const deleteProduct = async (
 export const deleteProductImage = async (
   imageId: number
 ): Promise<{ success: boolean; message: string }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
   try {
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await serviceClient
       .from('images')
       .delete()
       .eq('id', imageId);

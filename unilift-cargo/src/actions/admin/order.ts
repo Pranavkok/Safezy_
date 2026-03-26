@@ -7,7 +7,7 @@ import {
   FetchOrderParams,
   OrderListingType
 } from '@/types/order.types';
-import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 
 // Orders placed by individual user
 export const fetchOrdersByUser = async (
@@ -22,9 +22,9 @@ export const fetchOrdersByUser = async (
   data?: AdminContractorOrdersTableColumnType[];
   pageCount?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
   try {
-    let query = supabase
+    let query = serviceClient
       .from('order')
       .select(
         `
@@ -128,12 +128,12 @@ export const fetchAllOrders = async ({
   data?: OrderListingType[];
   pageCount?: number;
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const isQuantitySort = sortBy === 'total_quantity';
 
-    let query = supabase.from('order').select(
+    let query = serviceClient.from('order').select(
       `
           id, 
           date, 
@@ -152,7 +152,7 @@ export const fetchAllOrders = async ({
     );
 
     if (searchQuery) {
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await serviceClient
         .from('users')
         .select('id')
         .or(

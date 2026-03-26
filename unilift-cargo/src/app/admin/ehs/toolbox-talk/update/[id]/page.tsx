@@ -1,7 +1,6 @@
 import React, { Suspense } from 'react';
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import ToolboxTalkDetailsUpdateSection from '@/sections/admin/ehs/toolbox-talks/EhsToolboxTalkUpdateSection';
-import { notFound } from 'next/navigation';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { getToolboxTalkDetailsById } from '@/actions/admin/ehs/toolbox-talk';
 import Spinner from '@/components/loaders/Spinner';
@@ -51,7 +50,11 @@ const ToolboxTalkUpdateSection = async ({
   const { data: toolboxDetails } = await getToolboxTalkDetailsById(toolboxId);
 
   if (!toolboxDetails) {
-    notFound();
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-600">
+        Failed to load the toolbox talk details. Please go back and try again.
+      </div>
+    );
   }
   return <ToolboxTalkDetailsUpdateSection toolboxDetails={toolboxDetails} />;
 };
