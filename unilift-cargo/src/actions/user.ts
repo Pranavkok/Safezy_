@@ -3,6 +3,7 @@
 import { jwtDecode, JwtPayload } from 'jwt-decode';
 import { createClient } from '@/utils/supabase/server';
 import { UserDataType } from '@/context/UserContext';
+import { createServiceClient } from '@/utils/supabase/service';
 
 // Utility function to get Supabase session
 const getSupabaseSession = async () => {
@@ -41,8 +42,8 @@ export const getUserRole = async () => {
   if (jwt.user_role) return jwt.user_role;
 
   // Fallback to DB when JWT doesn't have custom claims (e.g. remote Supabase without hook)
-  const supabase = await createClient();
-  const { data } = await supabase
+  const serviceClient = createServiceClient();
+  const { data } = await serviceClient
     .from('users')
     .select('user_roles(role)')
     .eq('auth_id', session.user.id)
@@ -52,7 +53,7 @@ export const getUserRole = async () => {
 };
 
 export const getUserIdFromAuth = async () => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   const authId = await getAuthId();
   if (!authId) {
@@ -60,7 +61,7 @@ export const getUserIdFromAuth = async () => {
     return null;
   }
 
-  const { data: userData, error: userError } = await supabase
+  const { data: userData, error: userError } = await serviceClient
     .from('users')
     .select('id')
     .eq('auth_id', authId)
@@ -100,8 +101,8 @@ export const getUserDetails = async (): Promise<UserDataType> => {
     const jwt: CustomJwtType = jwtDecode(session.access_token);
 
     // Fetch user data from database
-    const supabase = await createClient();
-    const { data: userData, error: userError } = await supabase
+    const serviceClient = createServiceClient();
+    const { data: userData, error: userError } = await serviceClient
       .from('users')
       .select('id, first_name, last_name, contact_number, email, company_name, user_roles(role)')
       .eq('auth_id', session.user.id)

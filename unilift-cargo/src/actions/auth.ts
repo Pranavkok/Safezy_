@@ -19,6 +19,7 @@ import { WarehouseOperatorSignUpType } from '@/sections/auth/SignUpWarehouseOper
 import { addPrincipalDetails } from '@/actions/principal-employer/principal';
 import { addContractorDetails } from './contractor/contractor';
 import { sendPushNotification } from '@/lib/web-push';
+import { createServiceClient } from '@/utils/supabase/service';
 
 export const signUpUser = async (
   userDetails: SignUpType
@@ -108,39 +109,10 @@ export const loginUser = async (
   userDetails: LoginType
 ): Promise<{ success: boolean; message: string; redirectPath?: string }> => {
   const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
-    // Check if user exists
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', userDetails.email)
-      .maybeSingle();
-
-    if (userError) throw userError;
-
-    if (!userData) {
-      return {
-        success: false,
-        message: ERROR_MESSAGES.USER_NOT_FOUND
-      };
-    }
-
-    if (userData.is_deleted) {
-      return {
-        success: false,
-        message: ERROR_MESSAGES.USER_DELETED
-      };
-    }
-
-    if (!userData.is_active) {
-      return {
-        success: false,
-        message: ERROR_MESSAGES.USER_DEACTIVATED
-      };
-    }
-
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: userDetails.email,
       password: userDetails.password
     });
@@ -150,6 +122,47 @@ export const loginUser = async (
       return {
         success: false,
         message: ERROR_MESSAGES.INVALID_CREDENTIALS
+      };
+    }
+
+    const authId = authData.user?.id;
+    if (!authId) {
+      console.error('Login error: missing auth user after successful sign-in');
+      return {
+        success: false,
+        message: ERROR_MESSAGES.LOGIN_ERROR
+      };
+    }
+
+    const { data: userData, error: userError } = await serviceClient
+      .from('users')
+      .select('is_active, is_deleted')
+      .eq('auth_id', authId)
+      .maybeSingle();
+
+    if (userError) throw userError;
+
+    if (!userData) {
+      await supabase.auth.signOut();
+      return {
+        success: false,
+        message: ERROR_MESSAGES.USER_NOT_FOUND
+      };
+    }
+
+    if (userData.is_deleted) {
+      await supabase.auth.signOut();
+      return {
+        success: false,
+        message: ERROR_MESSAGES.USER_DELETED
+      };
+    }
+
+    if (!userData.is_active) {
+      await supabase.auth.signOut();
+      return {
+        success: false,
+        message: ERROR_MESSAGES.USER_DEACTIVATED
       };
     }
 
