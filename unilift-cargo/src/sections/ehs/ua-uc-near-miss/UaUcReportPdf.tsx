@@ -368,55 +368,58 @@ const UaUcReportPdf = ({ report }: { report: UaUcNearMissRecord }) => {
           PAGE 2 — Evidence (only if image)
           For video/voice: show link + note instead
       ══════════════════════════════════════════════ */}
-      {report.media_url && (
-        <Page {...pageProps}>
-          <Watermark />
-          <PageHeader reportNo={report.report_no} type={observationLabel} date={createdDate} />
-
-          <Text style={S.pageTitle}>Section 5 — Evidence</Text>
-
-          {report.media_type === 'image' && (
-            <View>
-              <Text style={S.sectionTitle}>Attached Photo</Text>
-              <Image
-                src={report.media_url}
-                style={{ maxHeight: 400, objectFit: 'contain', borderRadius: 4 }}
-              />
-              <Text style={{ fontSize: 8, color: '#6B7280', textAlign: 'center', marginTop: 6 }}>
-                Photo submitted with this report
-              </Text>
-            </View>
-          )}
-
-          {report.media_type === 'video' && (
-            <View style={S.fieldGroup}>
-              <Text style={S.sectionTitle}>Attached Video</Text>
-              <Text style={[S.value, { marginBottom: 6 }]}>
-                A video was submitted with this report. It cannot be embedded in the PDF.
-              </Text>
-              <Text style={S.label}>Video URL</Text>
-              <Link src={report.media_url} style={{ fontSize: 9, color: '#FF914D' }}>
-                {report.media_url}
-              </Link>
-            </View>
-          )}
-
-          {report.media_type === 'voice' && (
-            <View style={S.fieldGroup}>
-              <Text style={S.sectionTitle}>Attached Voice Note</Text>
-              <Text style={[S.value, { marginBottom: 6 }]}>
-                A voice note was submitted with this report. It cannot be embedded in the PDF.
-              </Text>
-              <Text style={S.label}>Audio URL</Text>
-              <Link src={report.media_url} style={{ fontSize: 9, color: '#FF914D' }}>
-                {report.media_url}
-              </Link>
-            </View>
-          )}
-
-          <PageFooter />
-        </Page>
-      )}
+      {(() => {
+        const urls = report.media_urls?.length ? report.media_urls : (report.media_url ? [report.media_url] : []);
+        const types = report.media_types?.length ? report.media_types : (report.media_type ? [report.media_type] : []);
+        if (!urls.length) return null;
+        return (
+          <Page {...pageProps}>
+            <Watermark />
+            <PageHeader reportNo={report.report_no} type={observationLabel} date={createdDate} />
+            <Text style={S.pageTitle}>Section 5 — Evidence</Text>
+            {urls.map((url, i) => {
+              const type = types[i] ?? 'image';
+              return (
+                <View key={i} style={{ marginBottom: 16 }}>
+                  {type === 'image' && (
+                    <View>
+                      <Text style={S.sectionTitle}>Photo {urls.length > 1 ? `${i + 1}` : ''}</Text>
+                      <Image
+                        src={url}
+                        style={{ maxHeight: 400, objectFit: 'contain', borderRadius: 4 }}
+                      />
+                      <Text style={{ fontSize: 8, color: '#6B7280', textAlign: 'center', marginTop: 6 }}>
+                        Photo submitted with this report
+                      </Text>
+                    </View>
+                  )}
+                  {type === 'video' && (
+                    <View style={S.fieldGroup}>
+                      <Text style={S.sectionTitle}>Video {urls.length > 1 ? `${i + 1}` : ''}</Text>
+                      <Text style={[S.value, { marginBottom: 6 }]}>
+                        A video was submitted with this report. It cannot be embedded in the PDF.
+                      </Text>
+                      <Text style={S.label}>Video URL</Text>
+                      <Link src={url} style={{ fontSize: 9, color: '#FF914D' }}>{url}</Link>
+                    </View>
+                  )}
+                  {type === 'voice' && (
+                    <View style={S.fieldGroup}>
+                      <Text style={S.sectionTitle}>Voice Note {urls.length > 1 ? `${i + 1}` : ''}</Text>
+                      <Text style={[S.value, { marginBottom: 6 }]}>
+                        A voice note was submitted with this report. It cannot be embedded in the PDF.
+                      </Text>
+                      <Text style={S.label}>Audio URL</Text>
+                      <Link src={url} style={{ fontSize: 9, color: '#FF914D' }}>{url}</Link>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+            <PageFooter />
+          </Page>
+        );
+      })()}
     </Document>
   );
 };

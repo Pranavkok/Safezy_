@@ -48,28 +48,34 @@ const SectionHeader = ({ number, title, subtitle }: { number: string; title: str
 
 // ─── Media Upload ─────────────────────────────────────────────────────────────
 
+type MediaItem = { url: string; type: MediaType; name: string };
+
 const MediaUpload = ({
-  onMediaReady,
+  onItemsChange,
   isAnalyzing
 }: {
-  onMediaReady: (file: File, url: string, type: MediaType) => void;
+  onItemsChange: (items: MediaItem[]) => void;
   isAnalyzing: boolean;
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<{ url: string; type: MediaType; name: string } | null>(null);
+  const [items, setItems] = useState<MediaItem[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const type = detectMediaType(file);
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
     setUploading(true);
-
     try {
-      const publicUrl = await uploadFile(file, 'ehs-ua-uc-media', 'media');
-      setPreview({ url: publicUrl, type, name: file.name });
-      onMediaReady(file, publicUrl, type);
+      const uploaded = await Promise.all(
+        files.map(async (file) => {
+          const type = detectMediaType(file);
+          const url = await uploadFile(file, 'ehs-ua-uc-media', 'media');
+          return { url, type, name: file.name };
+        })
+      );
+      const updated = [...items, ...uploaded];
+      setItems(updated);
+      onItemsChange(updated);
     } catch {
       toast.error('Failed to upload media. Please try again.');
     } finally {
@@ -78,77 +84,88 @@ const MediaUpload = ({
     }
   };
 
-  const handleRemove = () => {
-    setPreview(null);
+  const handleRemove = (index: number) => {
+    const updated = items.filter((_, i) => i !== index);
+    setItems(updated);
+    onItemsChange(updated);
   };
 
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium block">
-        Upload Evidence <span className="text-gray-400 text-xs">(image, video, or voice note)</span>
+        Upload Evidence <span className="text-gray-400 text-xs">(image, video, or voice note — multiple allowed)</span>
       </label>
 
-      {!preview ? (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="w-full h-32 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-sm">Uploading...</span>
-            </>
-          ) : (
-            <>
-              <ImagePlus className="w-6 h-6" />
-              <span className="text-sm">Click to upload image, video, or voice note</span>
-              <span className="text-xs text-gray-400">Max: 10MB image · 100MB video · 25MB audio</span>
-            </>
-          )}
-        </button>
-      ) : (
-        <div className="border rounded-lg p-3 bg-gray-50 space-y-2">
-          {preview.type === 'image' && (
-            <img src={preview.url} alt="Evidence" className="w-full max-h-48 object-contain rounded" />
-          )}
-          {preview.type === 'video' && (
-            <video src={preview.url} controls className="w-full max-h-48 rounded" />
-          )}
-          {preview.type === 'voice' && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded border">
-              <Mic className="w-5 h-5 text-primary flex-shrink-0" />
-              <audio src={preview.url} controls className="flex-1 h-8" />
-            </div>
-          )}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              {preview.type === 'image' && <ImagePlus className="w-4 h-4" />}
-              {preview.type === 'video' && <FileVideo className="w-4 h-4" />}
-              {preview.type === 'voice' && <Mic className="w-4 h-4" />}
-              <span className="truncate max-w-xs">{preview.name}</span>
-              {isAnalyzing ? (
-                <span className="flex items-center gap-1 text-primary text-xs">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Classifying...
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-green-600 text-xs">
-                  <CheckCircle2 className="w-3 h-3" /> AI classification done
-                </span>
+      {items.length > 0 && (
+        <div className="space-y-2">
+          {items.map((item, i) => (
+            <div key={i} className="border rounded-lg p-3 bg-gray-50 space-y-2">
+              {item.type === 'image' && (
+                <img src={item.url} alt="Evidence" className="w-full max-h-48 object-contain rounded" />
               )}
+              {item.type === 'video' && (
+                <video src={item.url} controls className="w-full max-h-48 rounded" />
+              )}
+              {item.type === 'voice' && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded border">
+                  <Mic className="w-5 h-5 text-primary flex-shrink-0" />
+                  <audio src={item.url} controls className="flex-1 h-8" />
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  {item.type === 'image' && <ImagePlus className="w-4 h-4" />}
+                  {item.type === 'video' && <FileVideo className="w-4 h-4" />}
+                  {item.type === 'voice' && <Mic className="w-4 h-4" />}
+                  <span className="truncate max-w-xs">{item.name}</span>
+                  {isAnalyzing ? (
+                    <span className="flex items-center gap-1 text-primary text-xs">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Analyzing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-green-600 text-xs">
+                      <CheckCircle2 className="w-3 h-3" /> Ready
+                    </span>
+                  )}
+                </div>
+                <button type="button" onClick={() => handleRemove(i)} className="text-gray-400 hover:text-red-500">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <button type="button" onClick={handleRemove} className="text-gray-400 hover:text-red-500">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+          ))}
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className={`w-full rounded-lg border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-primary hover:text-primary transition-colors disabled:opacity-50 ${items.length > 0 ? 'h-12 border' : 'h-32 border-2'}`}
+      >
+        {uploading ? (
+          <>
+            <Loader2 className={items.length > 0 ? 'w-4 h-4 animate-spin' : 'w-6 h-6 animate-spin'} />
+            <span className="text-sm">Uploading...</span>
+          </>
+        ) : items.length === 0 ? (
+          <>
+            <ImagePlus className="w-6 h-6" />
+            <span className="text-sm">Click to upload image, video, or voice note</span>
+            <span className="text-xs text-gray-400">Max: 10MB image · 100MB video · 25MB audio</span>
+          </>
+        ) : (
+          <span className="text-sm flex items-center gap-2">
+            <ImagePlus className="w-4 h-4" /> Add more media
+          </span>
+        )}
+      </button>
 
       <input
         ref={inputRef}
         type="file"
         accept="image/*,video/*,audio/*"
+        multiple
         className="hidden"
         onChange={handleChange}
       />
@@ -164,8 +181,7 @@ const UaUcNearMissForm = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<MediaType | null>(null);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
   const now = new Date();
 
@@ -190,29 +206,33 @@ const UaUcNearMissForm = () => {
 
   // ── AI Analysis trigger ────────────────────────────────────────────────────
 
-  const handleMediaReady = async (file: File, url: string, type: MediaType) => {
-    setMediaUrl(url);
-    setMediaType(type);
-    setValue('activity_at_time', formatDateTime(new Date()));
+  const handleItemsChange = async (items: MediaItem[]) => {
+    setMediaItems(items);
 
-    if (!observationType) return;
+    // Set activity time on first upload
+    if (items.length === 1) {
+      setValue('activity_at_time', formatDateTime(new Date()));
+    }
+
+    if (!observationType || items.length === 0) return;
 
     setIsAnalyzing(true);
     try {
       const res = await fetch('/api/generate-ua-uc-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ media_url: url, media_type: type, observation_type: observationType })
+        body: JSON.stringify({
+          media_items: items.map(i => ({ url: i.url, type: i.type })),
+          observation_type: observationType
+        })
       });
       const json = await res.json();
       if (json.success) {
         const analysis: UaUcAiAnalysisResponse = json.data;
 
-        // Set common fields
         setValue('what_happened', analysis.what_happened);
         setValue('equipment_involved', analysis.equipment_involved);
 
-        // Set classification fields per type
         if (observationType === 'UA') {
           setValue('ua_classifications', analysis.ua_classifications ?? []);
           setValue('ua_other', analysis.ua_other ?? '');
@@ -247,7 +267,11 @@ const UaUcNearMissForm = () => {
     setIsSubmitting(true);
     try {
       const { media: _media, media_type: _mt, ...rest } = data;
-      const res = await submitUaUcReport(rest, mediaUrl, mediaType);
+      const res = await submitUaUcReport(
+        rest,
+        mediaItems.map(i => i.url),
+        mediaItems.map(i => i.type)
+      );
 
       if (res.success && res.data) {
         toast.success('Report submitted successfully');
@@ -341,7 +365,7 @@ const UaUcNearMissForm = () => {
           title="Upload Evidence"
           subtitle="Upload an image, video, or voice note — AI will automatically classify the observation."
         />
-        <MediaUpload onMediaReady={handleMediaReady} isAnalyzing={isAnalyzing} />
+        <MediaUpload onItemsChange={handleItemsChange} isAnalyzing={isAnalyzing} />
         {isAnalyzing && (
           <p className="text-sm text-primary mt-3 flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />

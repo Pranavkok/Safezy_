@@ -52,8 +52,8 @@ async function generateReportNo(
 // as savePage1 in incident-analysis.ts — client uploads first, then passes URL)
 export const submitUaUcReport = async (
   formData: Omit<UaUcNearMissFormType, 'media' | 'media_type'>,
-  mediaUrl: string | null,
-  mediaType: MediaType | null
+  mediaUrls: string[],
+  mediaTypes: MediaType[]
 ): Promise<{ success: boolean; message: string; data?: { id: number; report_no: string } }> => {
   const supabase = await createClient();
 
@@ -92,8 +92,10 @@ export const submitUaUcReport = async (
         what_happened:        formData.what_happened ?? null,
         equipment_involved:   formData.equipment_involved ?? null,
         activity_at_time:     formData.activity_at_time ?? null,
-        media_url:            mediaUrl,
-        media_type:           mediaType,
+        media_url:            mediaUrls[0] ?? null,
+        media_type:           mediaTypes[0] ?? null,
+        media_urls:           mediaUrls,
+        media_types:          mediaTypes,
         ua_classifications:   formData.ua_classifications ?? [],
         ua_other:             formData.ua_other ?? null,
         uc_classifications:    formData.uc_classifications ?? [],

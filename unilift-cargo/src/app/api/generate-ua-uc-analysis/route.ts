@@ -45,16 +45,28 @@ const UC_CLASSIFICATION_OPTIONS = [
   'Poor lighting / ventilation',
 ];
 
+function buildMediaInstruction(mediaItems: { url: string; type: string }[]): string {
+  if (mediaItems.length === 1) {
+    const t = mediaItems[0].type;
+    if (t === 'image') return 'Carefully analyze this image.';
+    if (t === 'video') return 'Carefully analyze this video clip. Consider all moments visible across the footage.';
+    return 'This is a voice note recorded at a worksite. Transcribe what is being described and analyze the reported situation.';
+  }
+  const counts: string[] = [];
+  const images = mediaItems.filter(i => i.type === 'image').length;
+  const videos = mediaItems.filter(i => i.type === 'video').length;
+  const voices = mediaItems.filter(i => i.type === 'voice').length;
+  if (images) counts.push(`${images} image${images > 1 ? 's' : ''}`);
+  if (videos) counts.push(`${videos} video${videos > 1 ? 's' : ''}`);
+  if (voices) counts.push(`${voices} voice note${voices > 1 ? 's' : ''}`);
+  return `Carefully analyze all ${mediaItems.length} provided media files (${counts.join(', ')}). Consider all evidence collectively for the most comprehensive and accurate assessment.`;
+}
+
 function buildPrompt(
   observationType: string,
-  mediaType: string
+  mediaItems: { url: string; type: string }[]
 ): string {
-  const mediaInstruction =
-    mediaType === 'image'
-      ? `Carefully analyze this image.`
-      : mediaType === 'video'
-      ? `Carefully analyze this video clip. Consider all moments visible across the footage.`
-      : `This is a voice note recorded at a worksite. Transcribe what is being described and analyze the reported situation.`;
+  const mediaInstruction = buildMediaInstruction(mediaItems);
 
   if (observationType === 'UA') {
     return `You are a senior EHS (Environmental, Health & Safety) expert with 20+ years of experience in industrial safety.
@@ -119,20 +131,22 @@ Based on your analysis, respond with ONLY this exact JSON structure — no expla
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { media_url, media_type, observation_type } = body;
+    const { media_items, observation_type } = body;
 
-    if (!media_url || !media_type || !observation_type) {
+    if (!media_items || !Array.isArray(media_items) || media_items.length === 0 || !observation_type) {
       return NextResponse.json(
-        { success: false, error: 'media_url, media_type, and observation_type are required' },
+        { success: false, error: 'media_items (array) and observation_type are required' },
         { status: 400 }
       );
     }
 
-    const mediaPart = await buildMediaPart(media_url, media_type);
-    const prompt = buildPrompt(observation_type, media_type);
+    const mediaParts = await Promise.all(
+      media_items.map((item: { url: string; type: string }) => buildMediaPart(item.url, item.type))
+    );
+    const prompt = buildPrompt(observation_type, media_items);
 
     const result = await generateWithRetry(
-      { contents: [{ role: 'user', parts: [mediaPart, { text: prompt }] }] },
+      { contents: [{ role: 'user', parts: [...mediaParts, { text: prompt }] }] },
       { responseMimeType: 'application/json', temperature: 0.3 }
     );
 

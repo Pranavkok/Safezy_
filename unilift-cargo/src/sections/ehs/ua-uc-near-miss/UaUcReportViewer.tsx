@@ -188,11 +188,20 @@ const UaUcReportViewer = ({ report }: { report: UaUcNearMissRecord }) => {
       </SectionCard>
 
       {/* Section 5 — Evidence */}
-      {report.media_url && report.media_type && (
-        <SectionCard title="Evidence">
-          <MediaEvidence url={report.media_url} type={report.media_type} />
-        </SectionCard>
-      )}
+      {(() => {
+        const urls = report.media_urls?.length ? report.media_urls : (report.media_url ? [report.media_url] : []);
+        const types = report.media_types?.length ? report.media_types : (report.media_type ? [report.media_type] : []);
+        if (!urls.length) return null;
+        return (
+          <SectionCard title="Evidence">
+            <div className="space-y-4">
+              {urls.map((url, i) => (
+                <MediaEvidence key={i} url={url} type={types[i] ?? 'image'} />
+              ))}
+            </div>
+          </SectionCard>
+        );
+      })()}
 
       {/* Section 6 — Status */}
       <SectionCard title="Status & Action">
