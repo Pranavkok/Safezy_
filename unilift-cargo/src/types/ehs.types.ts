@@ -277,8 +277,8 @@ export type UaUcNearMissRecord = {
   activity_at_time: string | null;
   media_url: string | null;
   media_type: MediaType | null;
-  media_urls: string[] | null;
-  media_types: MediaType[] | null;
+  media_urls?: string[] | null;
+  media_types?: MediaType[] | null;
   ua_classifications: string[];
   ua_other: string | null;
   uc_classifications: string[];
