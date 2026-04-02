@@ -201,17 +201,6 @@ const ChecklistResponseFormSection = ({
             </div>
           </Card>
 
-          <div className=" absolute -right-[19rem] max-w-72 top-0 ">
-            {checklistQuestions.image_url && (
-              <Image
-                src={checklistQuestions?.image_url}
-                alt={checklistQuestions.topic_name}
-                width={900}
-                height={900}
-                className="w-96"
-              />
-            )}
-          </div>
         </div>
         <div className=" absolute w-full h-full pointer-events-none">
           <div className="absolute -left-96 top-10 rotate-90">
@@ -238,6 +227,19 @@ const ChecklistResponseFormSection = ({
             <div className="w-full text-center bg-primary text-white text-base sm:text-lg md:text-xl font-extrabold py-2 sm:py-3 mt-2 sm:mt-4 rounded-md px-2">
               {checklistQuestions.topic_name.toUpperCase()}
             </div>
+
+            {/* Reference Image */}
+            {checklistQuestions.image_url && (
+              <div className="mt-4">
+                <Image
+                  src={checklistQuestions.image_url}
+                  alt={checklistQuestions.topic_name}
+                  width={1200}
+                  height={600}
+                  className="w-full max-h-72 object-cover rounded-md border border-gray-200"
+                />
+              </div>
+            )}
           </CardHeader>
 
           <CardContent className="p-2 sm:p-6">
