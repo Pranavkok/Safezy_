@@ -27,6 +27,7 @@ const ToolboxTalkDetailsUpdateSection = ({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [editorContent, setEditorContent] = useState(
     toolboxDetails.description ?? ''
   );
@@ -52,10 +53,32 @@ const ToolboxTalkDetailsUpdateSection = ({
       setIsGenerating(true);
       toast.loading('Generating content with AI...', { id: 'generate-toolbox' });
 
+      // Use newly selected file as base64, or fall back to existing image URL
+      const newFile = (watch('pdf_url') as unknown as FileList | null)?.[0];
+      let image_base64: string | undefined;
+      let image_mime_type: string | undefined;
+      let image_url: string | undefined;
+
+      if (newFile) {
+        await new Promise<void>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            const [header, data] = dataUrl.split(',');
+            image_mime_type = header.replace('data:', '').replace(';base64', '');
+            image_base64 = data;
+            resolve();
+          };
+          reader.readAsDataURL(newFile);
+        });
+      } else if (toolboxDetails.pdf_url) {
+        image_url = toolboxDetails.pdf_url;
+      }
+
       const response = await fetch('/api/generate-toolbox-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topicName })
+        body: JSON.stringify({ topic: topicName, length: responseLength, image_base64, image_mime_type, image_url })
       });
 
       const result = await response.json();
@@ -81,6 +104,7 @@ const ToolboxTalkDetailsUpdateSection = ({
     handleSubmit,
     setError,
     setValue,
+    watch,
     formState: { errors }
   } = useForm<updateToolboxTalkType>({
     resolver: zodResolver(AddToolboxTalkSchema),
@@ -160,16 +184,35 @@ const ToolboxTalkDetailsUpdateSection = ({
               required
               {...register('topic_name')}
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="mt-2 flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-white"
-            >
-              <Sparkles className="w-4 h-4" />
-              {isGenerating ? 'Generating...' : 'Regenerate with AI'}
-            </Button>
+            <div className="mt-2 space-y-2">
+              <label className="text-sm font-medium text-gray-700">Response Length</label>
+              <div className="flex gap-2">
+                {(['short', 'medium', 'long'] as const).map(len => (
+                  <button
+                    key={len}
+                    type="button"
+                    onClick={() => setResponseLength(len)}
+                    className={`flex-1 py-1.5 rounded-md text-xs font-semibold border capitalize transition-colors ${
+                      responseLength === len
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'
+                    }`}
+                  >
+                    {len}
+                  </button>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="w-full flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-white"
+              >
+                <Sparkles className="w-4 h-4" />
+                {isGenerating ? 'Generating...' : 'Regenerate with AI'}
+              </Button>
+            </div>
           </div>
         </div>
 
