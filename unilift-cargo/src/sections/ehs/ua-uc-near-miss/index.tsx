@@ -15,9 +15,13 @@ import { submitUaUcReport } from '@/actions/contractor/ua-uc-near-miss';
 import { uploadFile } from '@/utils';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ImagePlus, Loader2, FileVideo, Mic, X, CheckCircle2 } from 'lucide-react';
+import { ImagePlus, Loader2, FileVideo, Mic, X, CheckCircle2, Camera, Video, Square, Circle } from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function isMobileDevice(): boolean {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
 function detectMediaType(file: File): MediaType {
   if (file.type.startsWith('image/')) return 'image';
@@ -46,6 +50,178 @@ const SectionHeader = ({ number, title, subtitle }: { number: string; title: str
   </div>
 );
 
+// ─── Photo Capture Modal ──────────────────────────────────────────────────────
+
+const PhotoCaptureModal = ({
+  onCaptured,
+  onClose
+}: {
+  onCaptured: (file: File) => void;
+  onClose: () => void;
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  React.useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(stream => {
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+        setIsReady(true);
+      })
+      .catch(() => {
+        toast.error('Camera access denied. Please allow camera permission.');
+        onClose();
+      });
+    return () => { streamRef.current?.getTracks().forEach(t => t.stop()); };
+  }, [onClose]);
+
+  const handleCapture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      onCaptured(file);
+      onClose();
+    }, 'image/jpeg', 0.92);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-md space-y-4 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800">Take Photo</h3>
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <video ref={videoRef} muted playsInline className="w-full rounded-lg bg-black aspect-video object-cover" />
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={handleCapture}
+            disabled={!isReady}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-full text-sm font-medium disabled:opacity-50"
+          >
+            <Camera className="w-4 h-4" /> Capture Photo
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Video Recorder Modal ─────────────────────────────────────────────────────
+
+const VideoRecorderModal = ({
+  onRecorded,
+  onClose
+}: {
+  onRecorded: (file: File) => void;
+  onClose: () => void;
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  React.useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      setIsReady(true);
+    }).catch(() => {
+      toast.error('Camera access denied. Please allow camera permission.');
+      onClose();
+    });
+    return () => {
+      streamRef.current?.getTracks().forEach(t => t.stop());
+    };
+  }, [onClose]);
+
+  const startRecording = () => {
+    if (!streamRef.current) return;
+    chunksRef.current = [];
+
+    const preferredTypes = [
+      'video/webm;codecs=vp8,opus',
+      'video/webm;codecs=vp9,opus',
+      'video/webm',
+      'video/mp4',
+    ];
+    const mimeType = preferredTypes.find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+    const recorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined);
+
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    recorder.onstop = () => {
+      const type = recorder.mimeType || 'video/webm';
+      const ext = type.includes('mp4') ? 'mp4' : 'webm';
+      const blob = new Blob(chunksRef.current, { type });
+      const file = new File([blob], `recording_${Date.now()}.${ext}`, { type });
+      onRecorded(file);
+      onClose();
+    };
+    recorder.start(250); // collect data every 250ms for reliable chunks
+    recorderRef.current = recorder;
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    recorderRef.current?.stop();
+    setIsRecording(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-md space-y-4 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800">Record Video</h3>
+          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <video ref={videoRef} muted className="w-full rounded-lg bg-black aspect-video object-cover" />
+        <div className="flex justify-center">
+          {!isRecording ? (
+            <button
+              type="button"
+              onClick={startRecording}
+              disabled={!isReady}
+              className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-medium disabled:opacity-50"
+            >
+              <Circle className="w-4 h-4 fill-white" /> Start Recording
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={stopRecording}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-full text-sm font-medium"
+            >
+              <Square className="w-4 h-4 fill-white" /> Stop & Save
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Media Upload ─────────────────────────────────────────────────────────────
 
 type MediaItem = { url: string; type: MediaType; name: string };
@@ -58,12 +234,13 @@ const MediaUpload = ({
   isAnalyzing: boolean;
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const nativeCameraRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<MediaItem[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [showPhotoCapture, setShowPhotoCapture] = useState(false);
+  const [showVideoRecorder, setShowVideoRecorder] = useState(false);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
+  const uploadFiles = async (files: File[], currentItems: MediaItem[]) => {
     setUploading(true);
     try {
       const uploaded = await Promise.all(
@@ -73,7 +250,7 @@ const MediaUpload = ({
           return { url, type, name: file.name };
         })
       );
-      const updated = [...items, ...uploaded];
+      const updated = [...currentItems, ...uploaded];
       setItems(updated);
       onItemsChange(updated);
     } catch (err) {
@@ -81,14 +258,24 @@ const MediaUpload = ({
       toast.error('Failed to upload media. Please try again.');
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
+  };
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    await uploadFiles(files, items);
+    e.target.value = '';
   };
 
   const handleRemove = (index: number) => {
     const updated = items.filter((_, i) => i !== index);
     setItems(updated);
     onItemsChange(updated);
+  };
+
+  const handleCaptured = async (file: File) => {
+    await uploadFiles([file], items);
   };
 
   return (
@@ -129,7 +316,7 @@ const MediaUpload = ({
                     </span>
                   )}
                 </div>
-                <button type="button" onClick={() => handleRemove(i)} className="text-gray-400 hover:text-red-500">
+                <button type="button" onClick={() => handleRemove(i)} aria-label="Remove" className="text-gray-400 hover:text-red-500">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -138,6 +325,7 @@ const MediaUpload = ({
         </div>
       )}
 
+      {/* Upload / Add more */}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
@@ -162,14 +350,41 @@ const MediaUpload = ({
         )}
       </button>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*,video/*,audio/*"
-        multiple
-        className="hidden"
-        onChange={handleChange}
-      />
+      {/* Camera capture buttons */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => isMobileDevice() ? nativeCameraRef.current?.click() : setShowPhotoCapture(true)}
+          disabled={uploading}
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+        >
+          <Camera className="w-4 h-4" /> Take Photo
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowVideoRecorder(true)}
+          disabled={uploading}
+          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+        >
+          <Video className="w-4 h-4" /> Record Video
+        </button>
+      </div>
+
+      <input ref={inputRef} type="file" accept="image/*,video/*,audio/*" multiple className="hidden" onChange={handleChange} />
+      <input ref={nativeCameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleChange} />
+
+      {showPhotoCapture && (
+        <PhotoCaptureModal
+          onCaptured={handleCaptured}
+          onClose={() => setShowPhotoCapture(false)}
+        />
+      )}
+      {showVideoRecorder && (
+        <VideoRecorderModal
+          onRecorded={handleCaptured}
+          onClose={() => setShowVideoRecorder(false)}
+        />
+      )}
     </div>
   );
 };

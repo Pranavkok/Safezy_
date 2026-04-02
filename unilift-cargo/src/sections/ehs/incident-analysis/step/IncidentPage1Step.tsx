@@ -21,7 +21,83 @@ import { uploadMultipleFiles } from '@/utils';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ImagePlus, X } from 'lucide-react';
+import { ImagePlus, X, Camera } from 'lucide-react';
+
+function isMobileDevice(): boolean {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+// ─── Photo Capture Modal ──────────────────────────────────────────────────────
+
+const PhotoCaptureModal = ({
+  onCaptured,
+  onClose
+}: {
+  onCaptured: (file: File) => void;
+  onClose: () => void;
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  React.useEffect(() => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(stream => {
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+        setIsReady(true);
+      })
+      .catch(() => {
+        toast.error('Camera access denied. Please allow camera permission.');
+        onClose();
+      });
+    return () => { streamRef.current?.getTracks().forEach(t => t.stop()); };
+  }, [onClose]);
+
+  const handleCapture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+      onCaptured(file);
+      onClose();
+    }, 'image/jpeg', 0.92);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-md space-y-4 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800">Take Photo</h3>
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <video ref={videoRef} muted playsInline className="w-full rounded-lg bg-black aspect-video object-cover" />
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={handleCapture}
+            disabled={!isReady}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-full text-sm font-medium disabled:opacity-50"
+          >
+            <Camera className="w-4 h-4" /> Capture Photo
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -154,6 +230,8 @@ const ImageUpload = ({
   onChange: (files: File[]) => void;
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const nativeCameraRef = useRef<HTMLInputElement>(null);
+  const [showCamera, setShowCamera] = useState(false);
   const previews = files.map(f => URL.createObjectURL(f));
 
   const handleAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,6 +254,7 @@ const ImageUpload = ({
             <button
               type="button"
               onClick={() => handleRemove(i)}
+              aria-label="Remove image"
               className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5"
             >
               <X className="w-3 h-3 text-white" />
@@ -190,15 +269,23 @@ const ImageUpload = ({
           <ImagePlus className="w-5 h-5" />
           <span className="text-xs mt-1">Add</span>
         </button>
+        <button
+          type="button"
+          onClick={() => isMobileDevice() ? nativeCameraRef.current?.click() : setShowCamera(true)}
+          className="w-20 h-20 rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-primary hover:text-primary transition-colors"
+        >
+          <Camera className="w-5 h-5" />
+          <span className="text-xs mt-1">Camera</span>
+        </button>
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png"
-        multiple
-        className="hidden"
-        onChange={handleAdd}
-      />
+      <input ref={inputRef} type="file" accept="image/jpeg,image/png" multiple className="hidden" onChange={handleAdd} />
+      <input ref={nativeCameraRef} type="file" accept="image/jpeg,image/png" capture="environment" className="hidden" onChange={handleAdd} />
+      {showCamera && (
+        <PhotoCaptureModal
+          onCaptured={file => onChange([...files, file])}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
     </div>
   );
 };
