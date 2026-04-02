@@ -54,6 +54,7 @@ const ChecklistResponseFormSection = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       topicId: checklistQuestions?.id || 0,
+      date: new Date().toISOString().split('T')[0],
       answers: checklistQuestions.ehs_checklist_questions.map(q => ({
         questionId: q.id,
         answer: undefined,

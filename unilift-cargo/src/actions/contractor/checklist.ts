@@ -9,6 +9,7 @@ import {
 } from '@/types/ehs.types';
 import { ChecklistTopicType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { getAuthId, getUserIdFromAuth } from '../user';
 import { checklistCompletionEmailHTML } from '@/data/checklistCompletionEmail';
 import { sendPushNotification } from '@/lib/web-push';
@@ -192,15 +193,17 @@ export const updateChecklistResponseByContractor = async (
   prevProgress: ChecklistProgressType,
   totalWeightage: number
 ) => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
+    const prevProgressArray = Array.isArray(prevProgress.progress) ? prevProgress.progress : [];
+
     // First, update the main checklist entry
     const { error: updateChecklistError } = await supabase
       .from('ehs_checklist_users')
       .update({
         progress: [
-          ...prevProgress.progress,
+          ...prevProgressArray,
           { date: new Date().toISOString(), progress: totalWeightage }
         ],
         date: checklist.date,
@@ -249,7 +252,7 @@ export const updateChecklistResponseByContractor = async (
 
     if (insertError) {
       console.error(
-        'Error while inserting updated checklist questions',
+        '[STEP 3] Error while inserting updated checklist questions',
         insertError
       );
       return {

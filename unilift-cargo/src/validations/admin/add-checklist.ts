@@ -38,9 +38,9 @@ export const answerSchema = z.object({
 export const formSchema = z.object({
   topicId: z.number(),
   answers: z.array(answerSchema),
-  site_name: z.string(),
-  inspected_by: z.string(),
-  date: z.string(),
+  site_name: z.string().min(1, 'Site name is required'),
+  inspected_by: z.string().min(1, 'Inspected by is required'),
+  date: z.string().min(1, 'Date is required'),
   email: z
     .string({ required_error: 'Email is required' })
     .trim()
