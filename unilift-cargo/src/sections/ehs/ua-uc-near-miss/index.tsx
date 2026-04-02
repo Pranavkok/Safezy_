@@ -76,7 +76,8 @@ const MediaUpload = ({
       const updated = [...items, ...uploaded];
       setItems(updated);
       onItemsChange(updated);
-    } catch {
+    } catch (err) {
+      console.error('[MediaUpload] upload error:', err);
       toast.error('Failed to upload media. Please try again.');
     } finally {
       setUploading(false);
