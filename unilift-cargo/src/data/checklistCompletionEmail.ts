@@ -3,7 +3,16 @@ import { sendChecklistMailType } from '@/types/ehs.types';
 export const checklistCompletionEmailHTML = (
   userName: string,
   context: sendChecklistMailType
-) => `
+) => {
+  const totalQuestions = context.answers.length;
+  const attempted = context.answers.filter(a => a.answer && a.answer !== 'N/A').length;
+  const yesCount = context.answers.filter(a => a.answer === 'Yes').length;
+  const noCount = context.answers.filter(a => a.answer === 'No').length;
+  const naCount = context.answers.filter(a => a.answer === 'N/A').length;
+  const denominator = totalQuestions - naCount;
+  const scorePercentage = denominator > 0 ? Math.round((yesCount / denominator) * 100) : 0;
+
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,7 +53,42 @@ export const checklistCompletionEmailHTML = (
            border-bottom: 2px solid #FF914D;
            padding-bottom: 16px;
            margin-bottom: 24px;
+           display: flex;
+           align-items: flex-start;
+           justify-content: space-between;
+           gap: 16px;
+           flex-wrap: wrap;
        }
+       .stats-box {
+           background: #FFF5EB;
+           border: 1px solid #FF914D;
+           border-radius: 10px;
+           padding: 12px 18px;
+           min-width: 180px;
+           flex-shrink: 0;
+       }
+       .stats-box .stats-title {
+           font-size: 12px;
+           font-weight: 700;
+           color: #FF914D;
+           text-transform: uppercase;
+           letter-spacing: 0.5px;
+           margin-bottom: 8px;
+       }
+       .stats-row {
+           display: flex;
+           justify-content: space-between;
+           font-size: 13px;
+           color: #4A5568;
+           padding: 2px 0;
+       }
+       .stats-row .stats-val {
+           font-weight: 700;
+           color: #2D3748;
+       }
+       .stats-row .stats-val.yes { color: #38A169; }
+       .stats-row .stats-val.no { color: #E53E3E; }
+       .stats-row .stats-val.score { color: #FF914D; }
        .info-section {
            background-color: #FFF5EB;
            padding: 16px;
@@ -122,6 +166,13 @@ export const checklistCompletionEmailHTML = (
    <div class="container">
        <div class="header">
            <h1>${userName} has performed the Checklist</h1>
+           <div class="stats-box">
+               <div class="stats-title">Summary</div>
+               <div class="stats-row"><span>Attempted</span><span class="stats-val">${attempted} / ${totalQuestions}</span></div>
+               <div class="stats-row"><span>Yes</span><span class="stats-val yes">${yesCount}</span></div>
+               <div class="stats-row"><span>No</span><span class="stats-val no">${noCount}</span></div>
+               <div class="stats-row"><span>Score %</span><span class="stats-val score">${scorePercentage}%</span></div>
+           </div>
        </div>
        <div class="info-section">
            <h2>Topic Name: ${context.topicName}</h2>
@@ -155,3 +206,4 @@ export const checklistCompletionEmailHTML = (
    </div>
 </body>
 </html>`;
+};

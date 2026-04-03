@@ -6,7 +6,11 @@ export const metadata = {
 };
 
 const IncidentAnalysisListingPage = () => {
-  return <IncidentAnalysisListingSection />;
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <IncidentAnalysisListingSection />
+    </div>
+  );
 };
 
 export default IncidentAnalysisListingPage;

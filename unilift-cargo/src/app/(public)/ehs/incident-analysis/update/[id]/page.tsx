@@ -29,7 +29,11 @@ const ContractorIncidentAnalysisUpdatePage = async ({
     redirect(AppRoutes.EHS_INCIDENT_ANALYSIS_REPORT(incidentId));
   }
 
-  return <IncidentReportStepper incidentDetails={incidentDetails} />;
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <IncidentReportStepper incidentDetails={incidentDetails} />
+    </div>
+  );
 };
 
 export default ContractorIncidentAnalysisUpdatePage;

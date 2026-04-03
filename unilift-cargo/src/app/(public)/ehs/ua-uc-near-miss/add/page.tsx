@@ -6,7 +6,11 @@ export const metadata = {
 };
 
 const UaUcNearMissAddPage = () => {
-  return <UaUcNearMissForm />;
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <UaUcNearMissForm />
+    </div>
+  );
 };
 
 export default UaUcNearMissAddPage;

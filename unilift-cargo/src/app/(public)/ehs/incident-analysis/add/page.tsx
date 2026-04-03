@@ -7,7 +7,11 @@ export const metadata = {
 };
 
 const ContractorIncidentAnalysisAddPage = () => {
-  return <IncidentReportStepper isFromAdd={true} />;
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <IncidentReportStepper isFromAdd={true} />
+    </div>
+  );
 };
 
 export default ContractorIncidentAnalysisAddPage;
