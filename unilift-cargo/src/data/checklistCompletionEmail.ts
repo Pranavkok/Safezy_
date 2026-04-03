@@ -50,22 +50,18 @@ export const checklistCompletionEmailHTML = (
            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
        }
        .header {
-           border-bottom: 2px solid #FF914D;
            padding-bottom: 16px;
            margin-bottom: 24px;
-           display: flex;
-           align-items: flex-start;
-           justify-content: space-between;
-           gap: 16px;
-           flex-wrap: wrap;
+       }
+       .header h1 {
+           margin-bottom: 16px;
        }
        .stats-box {
            background: #FFF5EB;
            border: 1px solid #FF914D;
            border-radius: 10px;
            padding: 12px 18px;
-           min-width: 180px;
-           flex-shrink: 0;
+           border-bottom: 2px solid #FF914D;
        }
        .stats-box .stats-title {
            font-size: 12px;
@@ -73,22 +69,34 @@ export const checklistCompletionEmailHTML = (
            color: #FF914D;
            text-transform: uppercase;
            letter-spacing: 0.5px;
-           margin-bottom: 8px;
+           margin-bottom: 10px;
        }
-       .stats-row {
+       .stats-cols {
            display: flex;
-           justify-content: space-between;
-           font-size: 13px;
-           color: #4A5568;
-           padding: 2px 0;
+           gap: 0;
        }
-       .stats-row .stats-val {
+       .stat-item {
+           flex: 1;
+           text-align: center;
+           padding: 8px 0;
+           border-right: 1px solid #FFD5B0;
+       }
+       .stat-item:last-child {
+           border-right: none;
+       }
+       .stat-label {
+           font-size: 12px;
+           color: #4A5568;
+           margin-bottom: 4px;
+       }
+       .stat-val {
+           font-size: 18px;
            font-weight: 700;
            color: #2D3748;
        }
-       .stats-row .stats-val.yes { color: #38A169; }
-       .stats-row .stats-val.no { color: #E53E3E; }
-       .stats-row .stats-val.score { color: #FF914D; }
+       .stat-val.yes { color: #38A169; }
+       .stat-val.no { color: #E53E3E; }
+       .stat-val.score { color: #FF914D; }
        .info-section {
            background-color: #FFF5EB;
            padding: 16px;
@@ -168,10 +176,24 @@ export const checklistCompletionEmailHTML = (
            <h1>${userName} has performed the Checklist</h1>
            <div class="stats-box">
                <div class="stats-title">Summary</div>
-               <div class="stats-row"><span>Attempted</span><span class="stats-val">${attempted} / ${totalQuestions}</span></div>
-               <div class="stats-row"><span>Yes</span><span class="stats-val yes">${yesCount}</span></div>
-               <div class="stats-row"><span>No</span><span class="stats-val no">${noCount}</span></div>
-               <div class="stats-row"><span>Score %</span><span class="stats-val score">${scorePercentage}%</span></div>
+               <div class="stats-cols">
+                   <div class="stat-item">
+                       <div class="stat-label">Attempted</div>
+                       <div class="stat-val">${attempted} / ${totalQuestions}</div>
+                   </div>
+                   <div class="stat-item">
+                       <div class="stat-label">Yes</div>
+                       <div class="stat-val yes">${yesCount}</div>
+                   </div>
+                   <div class="stat-item">
+                       <div class="stat-label">No</div>
+                       <div class="stat-val no">${noCount}</div>
+                   </div>
+                   <div class="stat-item">
+                       <div class="stat-label">Score %</div>
+                       <div class="stat-val score">${scorePercentage}%</div>
+                   </div>
+               </div>
            </div>
        </div>
        <div class="info-section">
