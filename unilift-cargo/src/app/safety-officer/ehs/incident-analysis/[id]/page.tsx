@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { getIncidentDetailsById } from '@/actions/contractor/incident-analysis';

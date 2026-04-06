@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { createServiceClient } from '@/utils/supabase/service';

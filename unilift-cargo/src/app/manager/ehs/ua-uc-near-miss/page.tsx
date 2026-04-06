@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { Suspense } from 'react';
 import AdminTopbarLayout from '@/layouts/AdminTopbarLayout';
 import { AppRoutes } from '@/constants/AppRoutes';
