@@ -32,7 +32,7 @@ const PRESSURE_OPTIONS = [
 ];
 
 const SEVERITY_OPTIONS = [
-  'Near Miss', 'First Aid', 'LTI', 'Major', 'Fatal'
+  'Minor', 'Moderate', 'Serious', 'Major', 'Critical/Fatal'
 ];
 
 // ─── Multi Checkbox ───────────────────────────────────────────────────────────
@@ -155,6 +155,7 @@ const IncidentPage2Step = ({
       authorization_competence: incidentDetails.authorization_competence ?? undefined,
       authorization_competence_remarks: (incidentDetails as any).authorization_competence_remarks ?? '',
       pressure_constraints: (incidentDetails.pressure_constraints as string[]) || [],
+      has_incident_occurred: (incidentDetails as any).has_incident_occurred ?? undefined,
       historical_incident_date: incidentDetails.historical_incident_date ?? '',
       past_incidents_text: incidentDetails.past_incidents_text ?? '',
       impact_description: incidentDetails.impact_description ?? '',
@@ -165,6 +166,7 @@ const IncidentPage2Step = ({
 
   const sopDeviation = watch('sop_deviation');
   const authCompetence = watch('authorization_competence');
+  const hasIncidentOccurred = watch('has_incident_occurred');
 
   const onSubmit = async (data: IncidentPage2Type) => {
     try {
@@ -305,25 +307,44 @@ const IncidentPage2Step = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputFieldWithLabel
-              label="Historical Incident Date"
-              type="date"
-              errorText={errors.historical_incident_date?.message}
-              {...register('historical_incident_date')}
+          <div>
+            <label className="text-sm font-medium block mb-1">
+              Has any incident happened? <span className="text-red-500">*</span>
+            </label>
+            <Controller
+              name="has_incident_occurred"
+              control={control}
+              render={({ field }) => (
+                <YesNoRadio
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.has_incident_occurred?.message}
+                />
+              )}
             />
-
-            <div className="space-y-1 md:col-span-1">
-              <label className="text-sm font-medium">
-                Have there been incidents of a similar nature at the same location in the past?
-              </label>
-              <Textarea
-                placeholder="Provide details if applicable..."
-                className="h-24"
-                {...register('past_incidents_text')}
-              />
-            </div>
           </div>
+
+          {hasIncidentOccurred === true && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputFieldWithLabel
+                label="Historical Incident Date"
+                type="date"
+                errorText={errors.historical_incident_date?.message}
+                {...register('historical_incident_date')}
+              />
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium">
+                  Have there been incidents of a similar nature at the same location in the past?
+                </label>
+                <Textarea
+                  placeholder="Provide details if applicable..."
+                  className="h-24"
+                  {...register('past_incidents_text')}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

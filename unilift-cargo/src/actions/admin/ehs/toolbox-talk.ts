@@ -171,7 +171,7 @@ export const getAllToolboxUserDetailsById = async (
 };
 
 export const addToolboxUserDetails = async (
-  userDetails: addToolboxUserType,
+  userDetails: addToolboxUserType & { superior_email: string },
   uploadImages: { publicUrl: string }[],
   toolboxTalkId: number | null,
   rating: number,
@@ -194,7 +194,7 @@ export const addToolboxUserDetails = async (
     }
     const newUser = {
       superior_email: userDetails.superior_email,
-      best_performer: userDetails.best_performer,
+      best_performer: userDetails.comments || '',
       user_id: userId,
       toolbox_talk_id: toolboxTalkId,
       ...(rating > 0 && { rating }),

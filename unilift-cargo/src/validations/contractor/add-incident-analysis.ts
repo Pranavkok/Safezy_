@@ -24,6 +24,7 @@ export const IncidentPage1Schema = z.object({
     .min(5, 'Please provide at least 5 characters')
     .nonempty('This field is required'),
   failure_type: z.string({ required_error: 'Please select what failed' }).nonempty('Please select what failed'),
+  failure_type_other: z.string().optional(),
   narrative: z
     .string({ required_error: 'Please describe the incident' })
     .min(10, 'Description must be at least 10 characters'),
@@ -59,6 +60,7 @@ export const IncidentPage2Schema = z.object({
   pressure_constraints: z
     .array(z.string())
     .min(1, 'Please select at least one option'),
+  has_incident_occurred: z.boolean({ required_error: 'Please select yes or no' }),
   historical_incident_date: z.string().optional(),
   past_incidents_text: z.string().optional(),
 

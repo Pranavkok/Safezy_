@@ -116,11 +116,11 @@ const INCIDENT_TYPE_OPTIONS = [
 ];
 
 const SEVERITY_OPTIONS = [
-  'Near Miss',
-  'First Aid',
-  'LTI',
+  'Minor',
+  'Moderate',
+  'Serious',
   'Major',
-  'Fatal'
+  'Critical/Fatal'
 ];
 
 const ACTIVITY_TYPE_OPTIONS = [
@@ -128,7 +128,8 @@ const ACTIVITY_TYPE_OPTIONS = [
   'Non-routine Operation',
   'Routine Maintenance',
   'Non-routine Maintenance',
-  'Emergency'
+  'Emergency',
+  'Shutdown activity'
 ];
 
 const FAILURE_TYPE_OPTIONS = [
@@ -136,7 +137,8 @@ const FAILURE_TYPE_OPTIONS = [
   'Process',
   'Human action',
   'Environment',
-  'External Disturbance'
+  'External Disturbance',
+  'Other'
 ];
 
 const INDIA_LOCATIONS = [
@@ -318,6 +320,7 @@ const IncidentPage1Step = ({
   const {
     register,
     control,
+    watch,
     handleSubmit,
     formState: { errors }
   } = useForm<IncidentPage1Type>({
@@ -332,10 +335,13 @@ const IncidentPage1Step = ({
       activity_type: incidentDetails?.activity_type ?? '',
       pre_incident_activity: incidentDetails?.pre_incident_activity ?? '',
       failure_type: incidentDetails?.failure_type ?? '',
+      failure_type_other: (incidentDetails as any)?.failure_type_other ?? '',
       narrative: incidentDetails?.narrative ?? '',
       how_stopped: incidentDetails?.how_stopped ?? ''
     }
   });
+
+  const failureType = watch('failure_type');
 
   const onSubmit = async (data: IncidentPage1Type) => {
     try {
@@ -538,6 +544,18 @@ const IncidentPage1Step = ({
             />
             {errors.failure_type && (
               <p className="text-sm text-red-500">{errors.failure_type.message}</p>
+            )}
+            {failureType === 'Other' && (
+              <div className="mt-2 space-y-1">
+                <label className="text-sm font-medium">Please describe what went wrong</label>
+                <Textarea
+                  placeholder="Describe what failed or went wrong..."
+                  {...register('failure_type_other')}
+                />
+                {errors.failure_type_other && (
+                  <p className="text-sm text-red-500">{errors.failure_type_other.message}</p>
+                )}
+              </div>
             )}
           </div>
 

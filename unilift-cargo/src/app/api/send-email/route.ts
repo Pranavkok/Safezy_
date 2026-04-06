@@ -5,11 +5,12 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
 
-    const email = formData.get('superior_email') as string;
+    const emailsRaw = formData.get('superior_email') as string;
+    const emails = emailsRaw.split(',').map(e => e.trim()).filter(Boolean);
     const firstName = formData.get('firstName') as string;
     const lastName = formData.get('lastName') as string;
     const topicName = formData.get('topicName') as string;
-    const bestPerformer = formData.get('bestPerformer') as string;
+    const comments = formData.get('comments') as string;
     const sessionDate = new Date().toLocaleString();
 
     const files: File[] = [];
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
         <ul>
             <li><strong>Topic:</strong> ${topicName}</li>
             <li><strong>Completion Date:</strong> ${sessionDate}</li>
-            <li><strong>Best Performer:</strong> ${bestPerformer}</li>
+            ${comments ? `<li><strong>Comments/Remarks:</strong> ${comments}</li>` : ''}
         </ul>
         <p>Attached, you will find the attendance sheets for the session.</p>
         <p>Thank you for your continued commitment to workplace safety and training.</p>
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: email,
+      to: emails.join(', '),
       subject: 'Safezy | Toolbox Talk Completion Notification',
       html,
       attachments

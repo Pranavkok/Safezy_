@@ -4,8 +4,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export const AddToolboxTalkUserSchema = z.object({
-  superior_email: z.string().min(1, "Superior's Email is required"),
-  best_performer: z.string().min(1, "Best performer's name is required")
+  comments: z.string().optional()
 });
 
 export const AddToolboxTalkSchema = z.object({

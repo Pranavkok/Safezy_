@@ -10,7 +10,10 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import React, { useState } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import React, { useEffect, useState } from 'react';
 import { addToolboxUserDetails } from '@/actions/admin/ehs/toolbox-talk';
 import { addToolboxUserType } from '@/types/ehs.types';
 import { AddToolboxTalkUserSchema } from '@/validations/admin/add-toolbox-talk';
@@ -21,6 +24,8 @@ import { uploadMultipleFiles } from '@/utils';
 import { useUser } from '@/context/UserContext';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
 import CustomRating from '@/components/CustomRating';
+import { getStaffList } from '@/actions/admin/staff';
+import { ChevronDown, X } from 'lucide-react';
 
 const MarkTBTDoneModal = ({
   toolboxTalkId,
@@ -36,6 +41,10 @@ const MarkTBTDoneModal = ({
   const [loading, setLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [rating, setRating] = useState(0);
+  const [staffEmails, setStaffEmails] = useState<string[]>([]);
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [emailPopoverOpen, setEmailPopoverOpen] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const {
     register,
@@ -48,6 +57,25 @@ const MarkTBTDoneModal = ({
 
   const user = useUser();
 
+  useEffect(() => {
+    getStaffList().then(res => {
+      if (res.success && res.data) {
+        setStaffEmails(res.data.map(s => s.email));
+      }
+    });
+  }, []);
+
+  const toggleEmail = (email: string) => {
+    setSelectedEmails(prev =>
+      prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
+    );
+    setEmailError('');
+  };
+
+  const removeEmail = (email: string) => {
+    setSelectedEmails(prev => prev.filter(e => e !== email));
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setSelectedFiles(Array.from(event.target.files));
@@ -58,7 +86,20 @@ const MarkTBTDoneModal = ({
     setRating(newRating);
   };
 
+  const handleReset = () => {
+    reset();
+    setSelectedFiles([]);
+    setSelectedEmails([]);
+    setEmailError('');
+    setRating(0);
+  };
+
   const onSubmit = async (data: addToolboxUserType) => {
+    if (selectedEmails.length === 0) {
+      setEmailError("Please select at least one superior's email");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -76,8 +117,10 @@ const MarkTBTDoneModal = ({
         publicUrl: img.publicUrl
       }));
 
+      const superiorEmail = selectedEmails.join(',');
+
       const res = await addToolboxUserDetails(
-        data,
+        { ...data, superior_email: superiorEmail },
         imageUrls,
         toolboxTalkId,
         rating,
@@ -86,14 +129,13 @@ const MarkTBTDoneModal = ({
 
       const firstName = user.firstName as string;
       const lastName = user.lastName as string;
-      const bestPerformer = res.data?.bestPerformer as string;
 
       const formData = new FormData();
-      formData.append('superior_email', data.superior_email);
+      formData.append('superior_email', superiorEmail);
       formData.append('topicName', toolboxTopic);
       formData.append('firstName', firstName);
       formData.append('lastName', lastName);
-      formData.append('bestPerformer', bestPerformer);
+      formData.append('comments', data.comments || '');
       selectedFiles.forEach(file => formData.append('file', file));
 
       if (res?.success) {
@@ -105,8 +147,7 @@ const MarkTBTDoneModal = ({
         if (result.ok) {
           toast.success(res?.message);
           localStorage.removeItem(storageKey);
-          reset();
-          setSelectedFiles([]);
+          handleReset();
         } else {
           toast.error('Failed to send email');
         }
@@ -131,28 +172,90 @@ const MarkTBTDoneModal = ({
       <DialogContent
         className="bg-white"
         onInteractOutside={e => e.preventDefault()}
-        onCloseClick={() => reset()}
+        onCloseClick={() => handleReset()}
       >
         <DialogHeader>
           <DialogTitle className="font-bold text-xl">Confirmation</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          <InputFieldWithLabel
-            label="Add Superior's Email"
-            type="email"
-            required
-            errorText={errors.superior_email?.message as string}
-            {...register('superior_email')}
-          />
+          {/* Multi-select email dropdown */}
+          <div className="space-y-2 pb-5">
+            <label className="capitalize">
+              Add Superior&apos;s Email
+              <span className="ml-[2px] text-red-500">*</span>
+            </label>
+            <Popover open={emailPopoverOpen} onOpenChange={setEmailPopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[36px]"
+                >
+                  <span className="text-muted-foreground">
+                    {selectedEmails.length === 0
+                      ? 'Select email(s)...'
+                      : `${selectedEmails.length} selected`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-2" align="start">
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {staffEmails.length === 0 ? (
+                    <p className="text-sm text-muted-foreground px-2 py-1">No staff emails found.</p>
+                  ) : (
+                    staffEmails.map(email => (
+                      <div
+                        key={email}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent cursor-pointer"
+                        onClick={() => toggleEmail(email)}
+                      >
+                        <Checkbox
+                          checked={selectedEmails.includes(email)}
+                          onCheckedChange={() => toggleEmail(email)}
+                        />
+                        <span className="text-sm">{email}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
 
-          <InputFieldWithLabel
-            label="Best Performer's Name"
-            type="text"
-            required
-            errorText={errors.best_performer?.message as string}
-            {...register('best_performer')}
-          />
+            {/* Selected email badges */}
+            {selectedEmails.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {selectedEmails.map(email => (
+                  <span
+                    key={email}
+                    className="flex items-center gap-1 bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5"
+                  >
+                    {email}
+                    <button type="button" onClick={() => removeEmail(email)}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {emailError && <div className="text-sm text-red-500">{emailError}</div>}
+          </div>
+
+          {/* Comments/Remarks */}
+          <div className="space-y-2 pb-5">
+            <label className="capitalize" htmlFor="comments">
+              Comments / Remarks
+            </label>
+            <Textarea
+              id="comments"
+              placeholder="Enter any comments or remarks..."
+              {...register('comments')}
+            />
+            {errors.comments?.message && (
+              <div className="text-sm text-red-500">{errors.comments.message}</div>
+            )}
+          </div>
 
           <InputFieldWithLabel
             label="Upload Attendance Sheet"
@@ -184,10 +287,7 @@ const MarkTBTDoneModal = ({
               <Button
                 className="h-9 lg:w-32 bg-white"
                 variant="outline"
-                onClick={() => {
-                  reset();
-                  setSelectedFiles([]);
-                }}
+                onClick={handleReset}
                 disabled={loading}
               >
                 Cancel
