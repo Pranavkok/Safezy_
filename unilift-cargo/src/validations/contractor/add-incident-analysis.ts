@@ -12,6 +12,7 @@ export const IncidentPage1Schema = z.object({
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title must not exceed 100 characters'),
   incident_type: z.string({ required_error: 'Incident type is required' }).nonempty('Incident type is required'),
+  incident_type_other: z.string().optional(),
   severity_level: z.string({ required_error: 'Severity is required' }).nonempty('Severity is required'),
   location: z.string({ required_error: 'Location is required' }).nonempty('Location is required'),
   date: z.string({ required_error: 'Date is required' }).nonempty('Date is required'),

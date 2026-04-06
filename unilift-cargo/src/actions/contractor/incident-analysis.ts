@@ -468,6 +468,7 @@ export const savePage1 = async (
     const payload = {
       title: data.title,
       incident_type: data.incident_type,
+      incident_type_other: data.incident_type === 'Other' ? (data.incident_type_other || null) : null,
       severity_level: data.severity_level,
       location: data.location,
       date: data.date,

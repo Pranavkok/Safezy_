@@ -220,16 +220,6 @@ export const EHSToolboxTalkDetailsSection = ({
                 style={{ fontSize: `${fontSize}px` }}
                 dangerouslySetInnerHTML={{ __html: displayDescription }}
               />
-              <div className="absolute z-[5] opacity-20 inset-0 justify-center items-center hidden sm:flex">
-                <Image
-                  src={ASSETS.IMG.TOOLBOX_BG}
-                  alt="Question"
-                  height={512}
-                  width={512}
-                  className="w-[550px] h-auto object-contain max-h-full"
-                  priority
-                />
-              </div>
             </div>
           )}
 

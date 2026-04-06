@@ -127,7 +127,7 @@ IMPORTANT INSTRUCTIONS:
 INCIDENT SNAPSHOT
 ====================
 - Title: ${incidentData.title || 'N/A'}
-- Incident Type: ${incidentData.incident_type || 'N/A'}
+- Incident Type: ${incidentData.incident_type === 'Other' && incidentData.incident_type_other ? `Other - ${incidentData.incident_type_other}` : (incidentData.incident_type || 'N/A')}
 - Severity: ${incidentData.severity_level || 'N/A'}
 - Worst-Case Potential: ${incidentData.worst_case_potential || 'N/A'}
 - Location: ${incidentData.location || 'N/A'}

@@ -8,6 +8,7 @@ import { Suspense } from 'react';
 import Spinner from '@/components/loaders/Spinner';
 import BottomTabLayout from '@/sections/bottom-tab/BottomTabLayout';
 import Script from 'next/script';
+import NextTopLoader from 'nextjs-toploader';
 
 // Import the Inter font from Google Fonts
 const inter = Inter({
@@ -74,6 +75,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`${inter.className} antialiased`}>
+        <NextTopLoader color="#ff7b28" showSpinner={false} height={3} />
         <UserProvider>
           <Providers>
             <Suspense

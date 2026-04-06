@@ -328,6 +328,7 @@ const IncidentPage1Step = ({
     defaultValues: {
       title: incidentDetails?.title ?? '',
       incident_type: incidentDetails?.incident_type ?? '',
+      incident_type_other: (incidentDetails as any)?.incident_type_other ?? '',
       severity_level: incidentDetails?.severity_level ?? '',
       location: incidentDetails?.location ?? '',
       date: incidentDetails?.date ?? new Date().toISOString().split('T')[0],
@@ -342,6 +343,7 @@ const IncidentPage1Step = ({
   });
 
   const failureType = watch('failure_type');
+  const incidentType = watch('incident_type');
 
   const onSubmit = async (data: IncidentPage1Type) => {
     try {
@@ -412,6 +414,18 @@ const IncidentPage1Step = ({
             />
             {errors.incident_type && (
               <p className="text-sm text-red-500">{errors.incident_type.message}</p>
+            )}
+            {incidentType === 'Other' && (
+              <div className="mt-2 space-y-1">
+                <label className="text-sm font-medium">Please describe <span className="text-red-500">*</span></label>
+                <Textarea
+                  placeholder="Describe the incident type..."
+                  {...register('incident_type_other')}
+                />
+                {errors.incident_type_other && (
+                  <p className="text-sm text-red-500">{errors.incident_type_other.message}</p>
+                )}
+              </div>
             )}
           </div>
 
