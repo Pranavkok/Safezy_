@@ -4,11 +4,23 @@ import { Database, Json } from '@/types/supabase';
 
 type NotificationType = Database['public']['Enums']['notification_type'];
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-);
+let vapidConfigured = false;
+
+function configureWebPush() {
+  if (vapidConfigured) return true;
+
+  const subject = process.env.VAPID_EMAIL;
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+
+  if (!subject || !publicKey || !privateKey) {
+    return false;
+  }
+
+  webpush.setVapidDetails(subject, publicKey, privateKey);
+  vapidConfigured = true;
+  return true;
+}
 
 export interface PushPayload {
   title: string;
@@ -48,6 +60,10 @@ export async function sendPushNotification(
   console.log(`[sendPushNotification] user=${userId} type=${type} subscriptions=${subscriptions?.length ?? 0}`);
 
   if (!subscriptions || subscriptions.length === 0) return;
+  if (!configureWebPush()) {
+    console.warn('[sendPushNotification] VAPID env vars are missing; skipping browser push delivery.');
+    return;
+  }
 
   // 3. Send push to each browser session, clean up expired endpoints
   const pushPromises = subscriptions.map(async (sub) => {
