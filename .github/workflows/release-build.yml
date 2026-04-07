@@ -93,16 +93,16 @@ jobs:
           echo "=== AAB Outputs ==="
           ls -lh android/app/build/outputs/bundle/release/ 2>/dev/null || echo "No AAB files found"
 
-      - name: Create Release
-        if: success()
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            unilift-cargo/android/app/build/outputs/apk/release/*.apk
-            unilift-cargo/android/app/build/outputs/bundle/release/*.aab
-          tag_name: release-${{ github.run_number }}
-          body: |
-            Release build generated on ${{ github.event.head_commit.timestamp }}
-            Build type: ${{ github.event.inputs.build_type }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create Release
+      #   if: success()
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: |
+      #       unilift-cargo/android/app/build/outputs/apk/release/*.apk
+      #       unilift-cargo/android/app/build/outputs/bundle/release/*.aab
+      #     tag_name: release-${{ github.run_number }}
+      #     body: |
+      #       Release build generated on ${{ github.event.head_commit.timestamp }}
+      #       Build type: ${{ github.event.inputs.build_type }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
