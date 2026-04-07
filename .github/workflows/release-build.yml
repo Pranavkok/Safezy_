@@ -16,6 +16,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: unilift-cargo
     
     steps:
       - name: Checkout code
@@ -26,7 +29,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'yarn'
-          cache-dependency-path: yarn.lock
+          cache-dependency-path: unilift-cargo/yarn.lock
 
       - name: Enable Corepack
         run: corepack enable
@@ -71,7 +74,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          path: unilift-cargo/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
 
       - name: Upload AAB artifact
@@ -79,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-aab
-          path: android/app/build/outputs/bundle/release/*.aab
+          path: unilift-cargo/android/app/build/outputs/bundle/release/*.aab
           retention-days: 30
 
       - name: Display build outputs
@@ -95,8 +98,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/bundle/release/*.aab
+            unilift-cargo/android/app/build/outputs/apk/release/*.apk
+            unilift-cargo/android/app/build/outputs/bundle/release/*.aab
           tag_name: release-${{ github.run_number }}
           body: |
             Release build generated on ${{ github.event.head_commit.timestamp }}
