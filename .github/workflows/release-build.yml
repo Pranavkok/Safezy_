@@ -1,0 +1,101 @@
+name: Build Release APK & AAB
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type to generate'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - apk
+          - aab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-levels: '34'
+          build-tools: '34.0.0'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build Release APK
+        if: github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both'
+        run: |
+          cd android
+          ./gradlew assembleRelease -x lint
+
+      - name: Build Release AAB
+        if: github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both'
+        run: |
+          cd android
+          ./gradlew bundleRelease -x lint
+
+      - name: Upload APK artifact
+        if: github.event.inputs.build_type == 'apk' || github.event.inputs.build_type == 'both'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Upload AAB artifact
+        if: github.event.inputs.build_type == 'aab' || github.event.inputs.build_type == 'both'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 30
+
+      - name: Display build outputs
+        if: always()
+        run: |
+          echo "=== APK Outputs ==="
+          ls -lh android/app/build/outputs/apk/release/ 2>/dev/null || echo "No APK files found"
+          echo "=== AAB Outputs ==="
+          ls -lh android/app/build/outputs/bundle/release/ 2>/dev/null || echo "No AAB files found"
+
+      - name: Create Release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+          tag_name: release-${{ github.run_number }}
+          body: |
+            Release build generated on ${{ github.event.head_commit.timestamp }}
+            Build type: ${{ github.event.inputs.build_type }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
