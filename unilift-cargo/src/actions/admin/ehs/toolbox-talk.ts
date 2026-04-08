@@ -547,3 +547,78 @@ export const getToolboxTalkSuggestions = async (): Promise<{
     };
   }
 };
+
+export type ToolboxTalkReportEntry = {
+  topic: string;
+  date: string;
+  rating: number | null;
+  submittedBy: string;
+};
+
+export const getToolboxTalkReportEntries = async (): Promise<{
+  success: boolean;
+  message: string;
+  data?: ToolboxTalkReportEntry[];
+}> => {
+  const serviceClient = createServiceClient();
+
+  try {
+    const { data, error } = await serviceClient
+      .from('ehs_toolbox_users')
+      .select(
+        `
+        created_at,
+        rating,
+        users (
+          first_name,
+          last_name
+        ),
+        ehs_toolbox_talk (
+          topic_name
+        )
+        `
+      )
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching toolbox report entries', error);
+      return {
+        success: false,
+        message: ERROR_MESSAGES.TOOLBOX_USERS_NOT_FETCHED
+      };
+    }
+
+    const reportEntries: ToolboxTalkReportEntry[] = (data ?? []).map(entry => {
+      const usersData = Array.isArray(entry.users) ? entry.users[0] : entry.users;
+      const talkData = Array.isArray(entry.ehs_toolbox_talk)
+        ? entry.ehs_toolbox_talk[0]
+        : entry.ehs_toolbox_talk;
+
+      const firstName = usersData?.first_name?.trim() ?? '';
+      const lastName = usersData?.last_name?.trim() ?? '';
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      return {
+        topic: talkData?.topic_name ?? '—',
+        date: entry.created_at,
+        rating: entry.rating ?? null,
+        submittedBy: fullName || '—'
+      };
+    });
+
+    return {
+      success: true,
+      message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED,
+      data: reportEntries
+    };
+  } catch (error) {
+    console.error(
+      'An unexpected error occurred while fetching toolbox talk report entries',
+      error
+    );
+    return {
+      success: false,
+      message: ERROR_MESSAGES.UNEXPECTED_ERROR
+    };
+  }
+};

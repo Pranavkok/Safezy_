@@ -13,6 +13,10 @@ import { AppRoutes } from '@/constants/AppRoutes';
 import { Button } from '@/components/ui/button';
 import { useMemo, useState } from 'react';
 import ToolboxTalkSugggestionModal from '@/components/modals/ehs/ToolboxTalkSuggestionsModal';
+import {
+  getToolboxTalkReportEntries,
+  ToolboxTalkReportEntry
+} from '@/actions/admin/ehs/toolbox-talk';
 
 type PeriodFilter = 'this_week' | 'this_month' | 'last_3_months';
 
@@ -22,7 +26,10 @@ const PERIOD_LABELS: Record<PeriodFilter, string> = {
   last_3_months: 'Last 3 Months'
 };
 
-function filterByPeriod(talks: ToolboxTalkType[], period: PeriodFilter): ToolboxTalkType[] {
+function filterByPeriod(
+  reportRows: ToolboxTalkReportEntry[],
+  period: PeriodFilter
+): ToolboxTalkReportEntry[] {
   const now = new Date();
   const start = new Date();
 
@@ -38,19 +45,23 @@ function filterByPeriod(talks: ToolboxTalkType[], period: PeriodFilter): Toolbox
     start.setHours(0, 0, 0, 0);
   }
 
-  return talks.filter(t => new Date(t.created_at) >= start);
+  return reportRows.filter(row => new Date(row.date) >= start);
 }
 
-async function downloadExcel(talks: ToolboxTalkType[], period: PeriodFilter) {
+async function downloadExcel(
+  reportRows: ToolboxTalkReportEntry[],
+  period: PeriodFilter
+) {
   const ExcelJS = (await import('exceljs')).default;
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Toolbox Talks');
 
   ws.columns = [
-    { header: 'No.', key: 'no', width: 6 },
-    { header: 'Topic Name', key: 'topic_name', width: 35 },
-    { header: 'Avg Rating', key: 'avg_rating', width: 14 },
-    { header: 'Created At', key: 'created_at', width: 18 }
+    { header: 'Sr No.', key: 'sr_no', width: 10 },
+    { header: 'Topic', key: 'topic', width: 35 },
+    { header: 'Date', key: 'date', width: 18 },
+    { header: 'Rating', key: 'rating', width: 14 },
+    { header: 'Submitted By', key: 'submitted_by', width: 28 }
   ];
 
   const headerRow = ws.getRow(1);
@@ -59,13 +70,17 @@ async function downloadExcel(talks: ToolboxTalkType[], period: PeriodFilter) {
   headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
   headerRow.height = 20;
 
-  const filtered = filterByPeriod(talks, period);
-  filtered.forEach((t, idx) => {
+  const filtered = filterByPeriod(reportRows, period);
+  filtered.forEach((rowData, idx) => {
     const row = ws.addRow({
-      no: idx + 1,
-      topic_name: t.topic_name,
-      avg_rating: t.avg_rating != null ? t.avg_rating.toFixed(1) : '—',
-      created_at: new Date(t.created_at).toLocaleDateString('en-IN')
+      sr_no: idx + 1,
+      topic: rowData.topic,
+      date: new Date(rowData.date).toLocaleDateString('en-IN'),
+      rating:
+        rowData.rating != null && !Number.isNaN(rowData.rating)
+          ? rowData.rating.toFixed(1)
+          : '—',
+      submitted_by: rowData.submittedBy
     });
 
     row.alignment = { vertical: 'middle' };
@@ -77,7 +92,7 @@ async function downloadExcel(talks: ToolboxTalkType[], period: PeriodFilter) {
   });
 
   ws.addRow([]);
-  const summaryRow = ws.addRow([`Total: ${filtered.length} topics`]);
+  const summaryRow = ws.addRow([`Total: ${filtered.length} submissions`]);
   summaryRow.font = { bold: true, italic: true, color: { argb: 'FF6B7280' } };
 
   ws.eachRow({ includeEmpty: false }, row => {
@@ -144,7 +159,8 @@ export function ToolboxTalkListingTable({
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      await downloadExcel(data, period);
+      const reportRes = await getToolboxTalkReportEntries();
+      await downloadExcel(reportRes.data ?? [], period);
     } finally {
       setDownloading(false);
     }
