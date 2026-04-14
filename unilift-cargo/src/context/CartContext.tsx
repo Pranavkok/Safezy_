@@ -184,6 +184,7 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
           }
         }
       } catch (error) {
+        console.error('[addItemToCart] error:', error);
         if (
           error ===
           'User not found. You need to register first before logging in'

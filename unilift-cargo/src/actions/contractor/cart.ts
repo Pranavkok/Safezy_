@@ -181,7 +181,14 @@ export const addToCart = async (cartItems: {
       )
       .maybeSingle();
 
-    if (insertError || !insertedData) throw insertError;
+    if (insertError) {
+      console.error('[addToCart] Supabase insert error:', JSON.stringify(insertError));
+      throw insertError;
+    }
+    if (!insertedData) {
+      console.error('[addToCart] Insert succeeded but no data returned. Possible RLS policy blocking select. userId:', userId, 'productId:', productId);
+      throw new Error('Cart item inserted but could not be read back. Check RLS policies.');
+    }
 
     updateCartReminderTracking(userId, supabase).catch(() => {});
 
