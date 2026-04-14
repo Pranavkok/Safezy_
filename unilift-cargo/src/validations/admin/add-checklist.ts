@@ -44,5 +44,9 @@ export const formSchema = z.object({
   email: z
     .string({ required_error: 'Email is required' })
     .trim()
-    .min(1, 'Email is required')
+    .min(1, 'Email is required'),
+  cc_emails: z
+    .array(z.string().email('Invalid email address'))
+    .optional()
+    .default([])
 });

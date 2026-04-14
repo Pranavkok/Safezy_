@@ -3,7 +3,7 @@ import nodemailer from 'npm:nodemailer';
 
 serve(async (req) => {
   try {
-    const { to, subject, html } = await req.json();
+    const { to, subject, html, cc } = await req.json();
 
     if (!to || !subject || !html) {
       return new Response(
@@ -20,12 +20,16 @@ serve(async (req) => {
       },
     });
 
-    const mailOptions = {
+    const mailOptions: Record<string, string> = {
       from: Deno.env.get('SMTP_USERNAME'),
       to,
       subject,
       html,
     };
+
+    if (cc) {
+      mailOptions.cc = cc;
+    }
 
     await transporter.sendMail(mailOptions);
 

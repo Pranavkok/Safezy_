@@ -84,7 +84,7 @@ export type EhsChecklistFormType = Omit<
 export type EhsChecklistType = z.infer<typeof EhsChecklistFormSchema>;
 export type sendChecklistMailType = Omit<
   ChecklistResponseByContractorType,
-  'topicId'
+  'topicId' | 'cc_emails'
 > & {
   topicName: string;
 };

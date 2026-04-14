@@ -29,7 +29,7 @@ import { SecondaryLogo } from '@/components/svgs';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formSchema } from '@/validations/admin/add-checklist';
-import { CheckCircle, AlertTriangle } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Plus, X } from 'lucide-react';
 import dynamic from 'next/dynamic';
 const ProgressDashboard = dynamic(() => import('@/components/ProgressChart'), {
   ssr: false, // Ensures it only runs on the client
@@ -68,6 +68,8 @@ const ChecklistResponseFormSection = ({
   const router = useRouter();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ccEmails, setCcEmails] = useState<string[]>([]);
+  const [ccInput, setCcInput] = useState('');
 
   const answers = watch('answers') || [];
 
@@ -142,7 +144,8 @@ const ChecklistResponseFormSection = ({
           inspected_by: data.inspected_by,
           site_name: data.site_name
         },
-        `${user.firstName + ' ' + user.lastName}`
+        `${user.firstName + ' ' + user.lastName}`,
+        ccEmails.filter(e => e.trim() !== '')
       );
 
       if (response.success && res.success) {
@@ -401,7 +404,7 @@ const ChecklistResponseFormSection = ({
 
               {/* Submit Section */}
               <Card className="border border-primary">
-                <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-end justify-end">
+                <CardContent className="p-4 space-y-3">
                   <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-start">
                     <div className="flex-1">
                       <Input
@@ -415,6 +418,64 @@ const ChecklistResponseFormSection = ({
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  {/* CC Emails */}
+                  <div>
+                    <Label className="text-sm text-gray-600 mb-1 block">CC (Optional)</Label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {ccEmails.map((email, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 bg-gray-100 text-sm px-2 py-1 rounded-md"
+                        >
+                          {email}
+                          <button
+                            type="button"
+                            onClick={() => setCcEmails(prev => prev.filter((_, i) => i !== index))}
+                            className="text-gray-500 hover:text-red-500"
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={ccInput}
+                        onChange={e => setCcInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const trimmed = ccInput.trim();
+                            if (trimmed && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) && !ccEmails.includes(trimmed)) {
+                              setCcEmails(prev => [...prev, trimmed]);
+                              setCcInput('');
+                            }
+                          }
+                        }}
+                        className="w-full sm:w-80"
+                        placeholder="Enter CC email and press Enter"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0"
+                        onClick={() => {
+                          const trimmed = ccInput.trim();
+                          if (trimmed && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) && !ccEmails.includes(trimmed)) {
+                            setCcEmails(prev => [...prev, trimmed]);
+                            setCcInput('');
+                          }
+                        }}
+                      >
+                        <Plus size={16} />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
                     <Button
                       type="submit"
                       className="px-8 h-10 whitespace-nowrap"

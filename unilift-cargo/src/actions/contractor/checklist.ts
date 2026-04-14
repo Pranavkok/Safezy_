@@ -328,17 +328,22 @@ export const getChecklistProgressByContractor = async (topicId: number) => {
 export const sendChecklistCompleteEmail = async (
   superiorEmail: string,
   emailContext: sendChecklistMailType,
-  userName: string
+  userName: string,
+  ccEmails?: string[]
 ) => {
   try {
     const supabase = await createClient();
     const subject = 'Safezy | Checklist Completion Notification';
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       to: superiorEmail,
       subject,
       html: checklistCompletionEmailHTML(userName, emailContext)
     };
+
+    if (ccEmails && ccEmails.length > 0) {
+      payload.cc = ccEmails.join(',');
+    }
 
     await supabase.functions.invoke('send-email', {
       body: payload

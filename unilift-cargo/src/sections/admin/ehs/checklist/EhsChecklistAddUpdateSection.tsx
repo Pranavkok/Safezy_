@@ -61,7 +61,7 @@ const EhsChecklistAddUpdateSection = ({
           question: checklist.question,
           weight: checklist.weightage.toString()
         };
-      }) || [{ question: '', weight: '10', question_id: null }]
+      }) || [{ question: '', weight: '5', question_id: null }]
     }
   });
 
@@ -261,7 +261,7 @@ const EhsChecklistAddUpdateSection = ({
               variant="outline"
               className="w-full sm:w-auto border-dashed"
               onClick={() =>
-                append({ question: '', weight: '10', question_id: null })
+                append({ question: '', weight: '5', question_id: null })
               }
             >
               <Plus className="h-4 w-4 mr-2" />
