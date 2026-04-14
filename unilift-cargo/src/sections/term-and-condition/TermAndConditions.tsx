@@ -39,10 +39,10 @@ const TermAndConditions = () => {
             </a>{' '}
             /{' '}
             <a
-              href="mailto:sales.commercial@uniliftcargo.com"
+              href="mailto:admin@safezy.in"
               className="text-blue-600 underline"
             >
-              sales.commercial@uniliftcargo.com
+              admin@safezy.in
             </a>{' '}
             or call{' '}
             <a href="tel:+918591307077" className="text-blue-600 underline">
@@ -82,10 +82,10 @@ const TermAndConditions = () => {
             </a>{' '}
             /{' '}
             <a
-              href="mailto:sales.commercial@uniliftcargo.com"
+              href="mailto:admin@safezy.in"
               className="text-blue-600 underline"
             >
-              sales.commercial@uniliftcargo.com
+              admin@safezy.in
             </a>
           </li>
           <li>
@@ -137,10 +137,10 @@ const TermAndConditions = () => {
           </a>{' '}
           /{' '}
           <a
-            href="mailto:sales.commercial@uniliftcargo.com"
+            href="mailto:admin@safezy.in"
             className="text-blue-600 underline"
           >
-            sales.commercial@uniliftcargo.com
+            admin@safezy.in
           </a>{' '}
           or call{' '}
           <a href="tel:+918591307077" className="text-blue-600 underline">

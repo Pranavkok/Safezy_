@@ -141,8 +141,7 @@ export const sendContactedSafezyEmail = async (
         'rahulkumar.ojha@safezy.in',
         'ravi.sharma@safezy.in',
         'pranay.aggarwal@safezy.in',
-        'sales.commercial@uniliftcargo.com',
-        'ashish.pawar@uniliftcargo.com'
+        'admin@safezy.in'
       ],
       subject,
       html: contactedEmailToAdminHTML({
@@ -183,8 +182,7 @@ export const sendOrderDetailsToAdmin = async (order: OrderDetailsForAdmin) => {
         'rahulkumar.ojha@safezy.in',
         'ravi.sharma@safezy.in',
         'pranay.aggarwal@safezy.in',
-        'sales.commercial@uniliftcargo.com',
-        'ashish.pawar@uniliftcargo.com'
+        'admin@safezy.in'
       ],
       subject,
       html: orderConfirmationEmailToAdminHTML({ orderDetails: order })

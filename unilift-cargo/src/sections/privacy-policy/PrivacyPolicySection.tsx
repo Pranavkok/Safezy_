@@ -77,10 +77,10 @@ const PrivacyPolicySection = () => {
           </a>{' '}
           or{' '}
           <a
-            href="mailto:sales.commercial@uniliftcargo.com"
+            href="mailto:admin@safezy.in"
             className="text-blue-600 underline"
           >
-            sales.commercial@uniliftcargo.com
+            admin@safezy.in
           </a>
           .
         </p>
