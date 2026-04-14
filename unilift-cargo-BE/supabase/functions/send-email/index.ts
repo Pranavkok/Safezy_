@@ -13,7 +13,9 @@ serve(async (req) => {
     }
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: Deno.env.get('SMTP_HOST') || 'smtp.hostinger.com',
+      port: parseInt(Deno.env.get('SMTP_PORT') || '587'),
+      secure: false,
       auth: {
         user: Deno.env.get('SMTP_USERNAME'),
         pass: Deno.env.get('SMTP_PASSWORD'),
