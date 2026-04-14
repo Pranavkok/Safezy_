@@ -13,6 +13,7 @@ import { SuggestionType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
 import { createServiceClient } from '@/utils/supabase/service';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
+import { revalidatePath } from 'next/cache';
 
 export const addChecklistTopic = async (
   checklist: EhsChecklistFormType
@@ -148,6 +149,24 @@ export const updateChecklistTopic = async (
         };
       }
     }
+
+    const questionsToUpdate = checklist.questions.filter(q => !!q.question_id);
+    for (const q of questionsToUpdate) {
+      const { error: updateError } = await serviceClient
+        .from('ehs_checklist_questions')
+        .update({ question: q.question, weightage: parseInt(q.weight) })
+        .eq('id', parseInt(q.question_id!));
+
+      if (updateError) {
+        console.error('Error while updating question', updateError);
+        return {
+          success: false,
+          message: ERROR_MESSAGES.CHECKLIST_QUESTION_NOT_UPDATED
+        };
+      }
+    }
+
+    revalidatePath('/admin/ehs/checklist', 'layout');
 
     return {
       success: true,

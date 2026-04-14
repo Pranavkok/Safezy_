@@ -115,10 +115,11 @@ const EhsChecklistAddUpdateSection = ({
           deletedQuestionIds
         );
         if (res.success) {
-          toast.success('Checklist created successfully');
+          toast.success('Checklist updated successfully');
+          router.refresh();
           router.push(AppRoutes.ADMIN_EHS_CHECKLIST_LISTING);
         } else {
-          toast.error('Failed to create checklist');
+          toast.error('Failed to update checklist');
         }
       } else {
         let image = '';

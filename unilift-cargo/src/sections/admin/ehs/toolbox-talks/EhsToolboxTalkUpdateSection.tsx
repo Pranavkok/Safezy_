@@ -159,6 +159,7 @@ const ToolboxTalkDetailsUpdateSection = ({
 
       if (response.success) {
         toast.success(response.message);
+        router.refresh();
         router.push(AppRoutes.ADMIN_EHS_TOOLBOX_TALK_LISTING);
       } else {
         toast.error(response.message);

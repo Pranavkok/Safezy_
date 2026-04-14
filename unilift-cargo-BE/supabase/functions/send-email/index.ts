@@ -20,16 +20,13 @@ serve(async (req) => {
       },
     });
 
-    const mailOptions: Record<string, string> = {
+    const mailOptions = {
       from: Deno.env.get('SMTP_USERNAME'),
       to,
       subject,
       html,
+      ...(cc ? { cc } : {})
     };
-
-    if (cc) {
-      mailOptions.cc = cc;
-    }
 
     await transporter.sendMail(mailOptions);
 

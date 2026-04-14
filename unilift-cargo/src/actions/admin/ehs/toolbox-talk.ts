@@ -419,7 +419,7 @@ export const updateToolboxTalkDetails = async (
         message: ERROR_MESSAGES.TOOLBOX_DETAILS_NOT_UPDATED
       };
     }
-    revalidatePath('/admin/ehs/toolbox-talk');
+    revalidatePath('/admin/ehs/toolbox-talk', 'layout');
 
     return {
       success: true,
