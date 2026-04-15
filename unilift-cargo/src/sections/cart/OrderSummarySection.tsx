@@ -203,7 +203,7 @@ const OrderSummarySection = ({
         <div className="space-y-4 mt-6">
           <div className="flex items-center space-x-3 text-gray-700">
             <Clock size={20} className="text-primary" />
-            <span>Expected Delivery: {maxLeadTime} Days</span>
+            <span>Expected Delivery: 2-3 Days</span>
           </div>
         </div>
         <div className="mt-6">

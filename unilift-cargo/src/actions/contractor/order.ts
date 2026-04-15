@@ -310,6 +310,10 @@ export const placeOrder = async (
       | 'Returned'
       | 'Shipped' = 'Processing';
 
+    const orderDate = new Date(orderDetails.date);
+    orderDate.setDate(orderDate.getDate() + 3);
+    const estimatedDeliveryDate = orderDate.toISOString().split('T')[0];
+
     const { data: newOrder, error: orderError } = await supabase
       .from('order')
       .insert({
@@ -319,6 +323,7 @@ export const placeOrder = async (
         total_amount: orderDetails.totalAmount,
         shipping_charges: orderDetails.shippingCharges,
         worksite_id: otherDetails.worksiteId,
+        estimated_delivery_date: estimatedDeliveryDate,
         order_details: {
           address: otherDetails.address,
           contractor: {
