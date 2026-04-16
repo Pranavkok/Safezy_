@@ -64,7 +64,8 @@ async function downloadExcel(reports: UaUcNearMissRecord[], period: PeriodFilter
     { header: 'Submitted By', key: 'submitted_by', width: 20 },
     { header: 'Date', key: 'date', width: 15 },
     { header: 'Assigned To', key: 'assigned_to', width: 20 },
-    { header: 'Status', key: 'status', width: 12 }
+    { header: 'Status', key: 'status', width: 12 },
+    { header: 'Remarks', key: 'remarks', width: 20 }
   ];
 
   // Style header
@@ -76,6 +77,15 @@ async function downloadExcel(reports: UaUcNearMissRecord[], period: PeriodFilter
 
   const filtered = filterByPeriod(reports, period);
   filtered.forEach((r, idx) => {
+    let remarks: string;
+    if (r.status === 'Closed') {
+      remarks = r.action_date ? formatDate(r.action_date) : '—';
+    } else {
+      const diffMs = Date.now() - new Date(r.reported_at).getTime();
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      remarks = `${days} days`;
+    }
+
     const row = ws.addRow({
       no: idx + 1,
       report_no: r.report_no,
@@ -84,7 +94,8 @@ async function downloadExcel(reports: UaUcNearMissRecord[], period: PeriodFilter
       submitted_by: r.reported_by_name ?? '—',
       date: formatDate(r.reported_at),
       assigned_to: r.assigned_to_name ?? '—',
-      status: r.status
+      status: r.status,
+      remarks
     });
 
     // Status cell color

@@ -89,6 +89,7 @@ export type IncidentListItem = {
   location: string | null;
   date: string | null;
   created_at: string;
+  updated_at: string;
   is_completed: boolean | null;
   assigned_to_name: string | null;
   assigned_to_user_id: string | null;
@@ -107,7 +108,7 @@ export const getAllIncidentReports = async (filters?: {
   try {
     let query = serviceClient
       .from('ehs_incident_analysis')
-      .select('id, title, incident_type, severity_level, location, date, created_at, is_completed, assigned_to_name, assigned_to_user_id')
+      .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id')
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status !== 'All') {

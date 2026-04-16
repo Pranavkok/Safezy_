@@ -63,7 +63,8 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
     { header: 'Location', key: 'location', width: 20 },
     { header: 'Date', key: 'date', width: 15 },
     { header: 'Assigned To', key: 'assigned_to', width: 22 },
-    { header: 'Status', key: 'status', width: 12 }
+    { header: 'Status', key: 'status', width: 12 },
+    { header: 'Remarks', key: 'remarks', width: 20 }
   ];
 
   // Style header
@@ -77,6 +78,17 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
   const filtered = filterByPeriod(incidents, period);
   filtered.forEach((inc, idx) => {
     const status = deriveStatus(inc);
+
+    let remarks: string;
+    if (status === 'Closed') {
+      remarks = formatDate(inc.updated_at);
+    } else {
+      const refDate = inc.date ? new Date(inc.date) : new Date(inc.created_at);
+      const diffMs = Date.now() - refDate.getTime();
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      remarks = `${days} days`;
+    }
+
     const row = ws.addRow({
       no: idx + 1,
       title: inc.title ?? '—',
@@ -85,7 +97,8 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
       location: inc.location ?? '—',
       date: inc.date ? formatDate(inc.date) : '—',
       assigned_to: inc.assigned_to_name ?? '—',
-      status
+      status,
+      remarks
     });
 
     // Status cell color
@@ -113,7 +126,7 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
 
   // Add summary row
   ws.addRow([]);
-  const summaryRow = ws.addRow([`Total: ${filtered.length} reports`, '', '', '', '', '', '', '']);
+  const summaryRow = ws.addRow([`Total: ${filtered.length} reports`, '', '', '', '', '', '', '', '']);
   summaryRow.font = { bold: true, italic: true, color: { argb: 'FF6B7280' } };
 
   // Add border to all data cells
