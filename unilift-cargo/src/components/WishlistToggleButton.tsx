@@ -21,8 +21,9 @@ const WishlistToggleButton: React.FC<WishlistToggleButtonProps> = ({
   const { userRole } = useUser();
   const { isWishlisted, toggleWishlist, state } = useWishlist();
 
-  // Only render for contractors
-  if (userRole !== USER_ROLES.CONTRACTOR) return null;
+  // Only render for roles that have wishlist access
+  const WISHLIST_ROLES = [USER_ROLES.CONTRACTOR, USER_ROLES.MANAGER, USER_ROLES.SAFETY_OFFICER];
+  if (!userRole || !WISHLIST_ROLES.includes(userRole as any)) return null;
 
   const wishlisted = isWishlisted(productId);
 
