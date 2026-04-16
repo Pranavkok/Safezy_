@@ -58,6 +58,7 @@ export async function middleware(request: NextRequest) {
       }
 
       // Role-specific redirect rules (force each role to their own portal)
+      // Manager and Safety Officer are also allowed on public (non-protected) routes
       if (
         (userRole === USER_ROLES.ADMIN &&
           !pathname.startsWith('/admin') &&
@@ -67,9 +68,11 @@ export async function middleware(request: NextRequest) {
         (userRole === USER_ROLES.PRINCIPAL_EMPLOYER &&
           !pathname.startsWith('/principal-employer')) ||
         (userRole === USER_ROLES.MANAGER &&
-          !pathname.startsWith('/manager')) ||
+          !pathname.startsWith('/manager') &&
+          isProtectedRoute(pathname)) ||
         (userRole === USER_ROLES.SAFETY_OFFICER &&
-          !pathname.startsWith('/safety-officer'))
+          !pathname.startsWith('/safety-officer') &&
+          isProtectedRoute(pathname))
       ) {
         const dashboardPath = ROLE_REDIRECT_PATHS[userRole];
         return redirectTo(dashboardPath, request.url);

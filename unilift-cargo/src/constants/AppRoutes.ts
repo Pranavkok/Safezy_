@@ -114,6 +114,10 @@ type AppRoutesType = {
   MANAGER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
   MANAGER_EHS_INCIDENT_ANALYSIS_LISTING: string;
   MANAGER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => string;
+  MANAGER_NOTIFICATION: string;
+  MANAGER_ORDER_LISTING: string;
+  MANAGER_ORDER_DETAILS: (id: string) => string;
+  MANAGER_WISHLIST: string;
 
   // Safety Officer Panel routes
   SAFETY_OFFICER_DASHBOARD: string;
@@ -121,6 +125,10 @@ type AppRoutesType = {
   SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
   SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING: string;
   SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => string;
+  SAFETY_OFFICER_NOTIFICATION: string;
+  SAFETY_OFFICER_ORDER_LISTING: string;
+  SAFETY_OFFICER_ORDER_DETAILS: (id: string) => string;
+  SAFETY_OFFICER_WISHLIST: string;
 };
 
 // Define the AppRoutes object with types
@@ -248,13 +256,21 @@ export const AppRoutes: AppRoutesType = {
   MANAGER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => `/manager/ehs/ua-uc-near-miss/${id}`,
   MANAGER_EHS_INCIDENT_ANALYSIS_LISTING: '/manager/ehs/incident-analysis',
   MANAGER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => `/manager/ehs/incident-analysis/${id}`,
+  MANAGER_NOTIFICATION: '/manager/notifications',
+  MANAGER_ORDER_LISTING: '/manager/orders',
+  MANAGER_ORDER_DETAILS: (id: string) => `/manager/orders/${id}`,
+  MANAGER_WISHLIST: '/manager/wishlist',
 
   // Safety Officer Panel
   SAFETY_OFFICER_DASHBOARD: '/safety-officer/dashboard',
   SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING: '/safety-officer/ehs/ua-uc-near-miss',
   SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => `/safety-officer/ehs/ua-uc-near-miss/${id}`,
   SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING: '/safety-officer/ehs/incident-analysis',
-  SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => `/safety-officer/ehs/incident-analysis/${id}`
+  SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_DETAILS: (id: number) => `/safety-officer/ehs/incident-analysis/${id}`,
+  SAFETY_OFFICER_NOTIFICATION: '/safety-officer/notifications',
+  SAFETY_OFFICER_ORDER_LISTING: '/safety-officer/orders',
+  SAFETY_OFFICER_ORDER_DETAILS: (id: string) => `/safety-officer/orders/${id}`,
+  SAFETY_OFFICER_WISHLIST: '/safety-officer/wishlist'
 };
 
 export const guestRoutes: string[] = [

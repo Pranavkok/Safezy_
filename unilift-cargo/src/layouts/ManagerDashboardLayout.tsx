@@ -2,7 +2,7 @@ import React from 'react';
 import Sidebar from '@/components/sidebar/Sidebar';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { SidebarMenuType } from '@/types/sidebar.types';
-import { LayoutDashboard, ShieldCheck, AlertTriangle, FileText } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck, AlertTriangle, FileText, Bell, ShoppingBag, Heart } from 'lucide-react';
 
 const MANAGER_SIDEBAR_MENU: SidebarMenuType = [
   {
@@ -30,6 +30,24 @@ const MANAGER_SIDEBAR_MENU: SidebarMenuType = [
         route: AppRoutes.MANAGER_EHS_INCIDENT_ANALYSIS_LISTING
       }
     ]
+  },
+  {
+    id: 3,
+    title: 'Notifications',
+    icon: <Bell size={18} />,
+    route: AppRoutes.MANAGER_NOTIFICATION
+  },
+  {
+    id: 4,
+    title: 'Orders',
+    icon: <ShoppingBag size={18} />,
+    route: AppRoutes.MANAGER_ORDER_LISTING
+  },
+  {
+    id: 5,
+    title: 'Wishlist',
+    icon: <Heart size={18} />,
+    route: AppRoutes.MANAGER_WISHLIST
   }
 ] as const;
 
