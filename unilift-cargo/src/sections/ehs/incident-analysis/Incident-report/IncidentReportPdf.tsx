@@ -499,6 +499,19 @@ const IncidentReportPdf = ({
           </View>
         )}
 
+        {(incidentDetails as any).closure_image_url && (
+          <View wrap={false}>
+            <Text style={styles.sectionTitle}>Closure Evidence</Text>
+            <Image
+              src={(incidentDetails as any).closure_image_url}
+              style={{ maxHeight: 220, objectFit: 'contain', borderRadius: 4 }}
+            />
+            <Text style={{ textAlign: 'center', fontSize: 8, color: '#6B7280', marginTop: 4 }}>
+              Uploaded at time of closure
+            </Text>
+          </View>
+        )}
+
         <PageFooter />
       </Page>
     </Document>

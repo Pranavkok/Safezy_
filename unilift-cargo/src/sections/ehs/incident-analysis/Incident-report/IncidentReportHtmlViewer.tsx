@@ -257,6 +257,17 @@ const IncidentReportHtmlViewer = ({
         <FieldGroup>
           <BulletList label="Corrective Actions" items={correctiveActions} />
           <BulletList label="Preventive Actions" items={preventiveActions} />
+          {(incidentDetails as any).closure_image_url && (
+            <div className="mt-3">
+              <p className="text-[10px] uppercase text-gray-500 font-medium mb-1">Closure Evidence</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={(incidentDetails as any).closure_image_url}
+                alt="Closure evidence"
+                className="max-h-64 object-contain rounded border border-gray-200"
+              />
+            </div>
+          )}
         </FieldGroup>
 
         {flowchart?.length > 0 && (

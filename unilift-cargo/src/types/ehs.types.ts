@@ -294,6 +294,7 @@ export type UaUcNearMissRecord = {
   action_date: string | null;
   assigned_to_user_id: string | null;
   assigned_to_name: string | null;
+  closure_image_url: string | null;
   created_at: string;
   updated_at: string;
 };

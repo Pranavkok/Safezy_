@@ -357,6 +357,15 @@ const UaUcReportPdf = ({ report }: { report: UaUcNearMissRecord }) => {
                 <GridField label="By Whom" value={report.action_by} />
                 <GridField label="Date" value={formatDate(report.action_date)} />
               </View>
+              {report.closure_image_url && (
+                <View style={{ marginTop: 8 }}>
+                  <Text style={[S.label, { marginBottom: 4 }]}>CLOSURE EVIDENCE</Text>
+                  <Image
+                    src={report.closure_image_url}
+                    style={{ maxHeight: 200, objectFit: 'contain', borderRadius: 4 }}
+                  />
+                </View>
+              )}
             </View>
           </View>
         )}

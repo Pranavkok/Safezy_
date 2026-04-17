@@ -550,6 +550,7 @@ export type Database = {
           witness_name: string | null
           witness_records: Database["public"]["Enums"]["confirmation"] | null
           worst_case_potential: string | null
+          closure_image_url: string | null
         }
         Insert: {
           additional_comments?: string | null
@@ -614,6 +615,7 @@ export type Database = {
           witness_name?: string | null
           witness_records?: Database["public"]["Enums"]["confirmation"] | null
           worst_case_potential?: string | null
+          closure_image_url?: string | null
         }
         Update: {
           additional_comments?: string | null
@@ -677,6 +679,7 @@ export type Database = {
           witness_name?: string | null
           witness_records?: Database["public"]["Enums"]["confirmation"] | null
           worst_case_potential?: string | null
+          closure_image_url?: string | null
         }
         Relationships: []
       }
@@ -1744,6 +1747,7 @@ export type Database = {
           action_date: string | null
           assigned_to_user_id: string | null
           assigned_to_name: string | null
+          closure_image_url: string | null
           created_at: string
           updated_at: string
         }
@@ -1776,6 +1780,7 @@ export type Database = {
           action_date?: string | null
           assigned_to_user_id?: string | null
           assigned_to_name?: string | null
+          closure_image_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -1808,6 +1813,7 @@ export type Database = {
           action_date?: string | null
           assigned_to_user_id?: string | null
           assigned_to_name?: string | null
+          closure_image_url?: string | null
           created_at?: string
           updated_at?: string
         }

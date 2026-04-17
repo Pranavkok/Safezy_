@@ -41,7 +41,7 @@ export const adminAssignUaUcReport = async (
 
 export const adminCloseUaUcReport = async (
   reportId: number,
-  closeData: { action_taken: string; action_by: string; action_date: string }
+  closeData: { action_taken: string; action_by: string; action_date: string; closure_image_url?: string | null }
 ): Promise<{ success: boolean; message: string }> => {
   const supabase = createServiceClient();
 
@@ -53,6 +53,7 @@ export const adminCloseUaUcReport = async (
         action_taken: closeData.action_taken,
         action_by: closeData.action_by,
         action_date: closeData.action_date,
+        closure_image_url: closeData.closure_image_url ?? null,
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);
@@ -106,7 +107,7 @@ export const adminAssignIncidentReport = async (
 
 export const adminCloseIncidentReport = async (
   reportId: number,
-  closeData: { corrective_actions: string; preventive_actions: string }
+  closeData: { corrective_actions: string; preventive_actions: string; closure_image_url?: string | null }
 ): Promise<{ success: boolean; message: string }> => {
   const supabase = createServiceClient();
 
@@ -117,6 +118,7 @@ export const adminCloseIncidentReport = async (
         is_completed: true,
         corrective_actions: closeData.corrective_actions ? [closeData.corrective_actions] : [],
         preventive_actions: closeData.preventive_actions ? [closeData.preventive_actions] : [],
+        closure_image_url: closeData.closure_image_url ?? null,
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);

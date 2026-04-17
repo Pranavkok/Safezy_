@@ -45,6 +45,7 @@ export type CloseUaUcInput = {
   action_taken: string;
   action_by: string;
   action_date: string;
+  closure_image_url?: string | null;
 };
 
 // Safety officer closes a UA/UC/Near Miss report
@@ -76,6 +77,7 @@ export const closeUaUcReport = async (
         action_taken: closeData.action_taken,
         action_by: closeData.action_by,
         action_date: closeData.action_date,
+        closure_image_url: closeData.closure_image_url ?? null,
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);
@@ -129,6 +131,7 @@ export const getMyAssignedIncidents = async (): Promise<{
 export type CloseIncidentInput = {
   corrective_actions: string;
   preventive_actions: string;
+  closure_image_url?: string | null;
 };
 
 // Safety officer closes an incident analysis report
@@ -158,6 +161,7 @@ export const closeIncidentReport = async (
         is_completed: true,
         corrective_actions: closeData.corrective_actions ? [closeData.corrective_actions] : [],
         preventive_actions: closeData.preventive_actions ? [closeData.preventive_actions] : [],
+        closure_image_url: closeData.closure_image_url ?? null,
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);

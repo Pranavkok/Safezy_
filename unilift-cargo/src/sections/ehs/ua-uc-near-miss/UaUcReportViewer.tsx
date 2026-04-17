@@ -217,6 +217,18 @@ const UaUcReportViewer = ({ report }: { report: UaUcNearMissRecord }) => {
             <InfoRow label="Action taken" value={report.action_taken} />
             <InfoRow label="By whom" value={report.action_by} />
             <InfoRow label="Date" value={formatDate(report.action_date)} />
+            {report.closure_image_url && (
+              <div className="pt-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
+                  Closure Evidence
+                </span>
+                <img
+                  src={report.closure_image_url}
+                  alt="Closure evidence"
+                  className="max-h-64 object-contain rounded border border-gray-200"
+                />
+              </div>
+            )}
           </div>
         )}
       </SectionCard>
