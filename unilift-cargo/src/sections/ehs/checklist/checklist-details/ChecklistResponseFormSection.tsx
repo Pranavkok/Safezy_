@@ -67,6 +67,9 @@ const ChecklistResponseFormSection = ({
   const user = useUser();
   const router = useRouter();
 
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ccEmails, setCcEmails] = useState<string[]>([]);
   const [ccInput, setCcInput] = useState('');
@@ -276,6 +279,8 @@ const ChecklistResponseFormSection = ({
                       label="Date of Inspection"
                       errorText={errors.date?.message}
                       required
+                      min={yesterday}
+                      max={today}
                       {...register('date')}
                     />
                   </div>
