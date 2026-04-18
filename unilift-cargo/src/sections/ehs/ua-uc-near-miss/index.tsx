@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -607,18 +607,33 @@ const UaUcNearMissForm = () => {
       Boolean(whatHappened) ||
       Boolean(equipmentInvolved));
 
+  const clearGeneratedFields = () => {
+    setValue('what_happened', '');
+    setValue('equipment_involved', '');
+
+    setValue('ua_classifications', []);
+    setValue('ua_other', '');
+    setValue('action_taken', '');
+
+    setValue('uc_classifications', []);
+    setValue('uc_other', '');
+    setValue('uc_severity', undefined);
+    setValue('uc_temporary_controls', '');
+
+    setValue('nm_potential_injury', '');
+    setValue('nm_what_could_happen', '');
+    setValue('nm_severity', undefined);
+  };
+
   // ── AI Analysis trigger ────────────────────────────────────────────────────
 
-  const handleItemsChange = async (items: MediaItem[]) => {
-    setMediaItems(items);
+  const runAiAnalysis = async (
+    type: UaUcNearMissFormType['observation_type'],
+    items: MediaItem[]
+  ) => {
+    if (!type || items.length === 0) return;
 
-    // Set activity time on first upload
-    if (items.length === 1) {
-      setValue('activity_at_time', formatDateTime(new Date()));
-    }
-
-    if (!observationType || items.length === 0) return;
-
+    clearGeneratedFields();
     setIsAnalyzing(true);
     try {
       const res = await fetch('/api/generate-ua-uc-analysis', {
@@ -626,7 +641,7 @@ const UaUcNearMissForm = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           media_items: items.map(i => ({ url: i.url, type: i.type })),
-          observation_type: observationType
+          observation_type: type
         })
       });
       const json = await res.json();
@@ -636,11 +651,11 @@ const UaUcNearMissForm = () => {
         setValue('what_happened', analysis.what_happened);
         setValue('equipment_involved', analysis.equipment_involved);
 
-        if (observationType === 'UA') {
+        if (type === 'UA') {
           setValue('ua_classifications', analysis.ua_classifications ?? []);
           setValue('ua_other', analysis.ua_other ?? '');
           setValue('action_taken', analysis.action_taken ?? '');
-        } else if (observationType === 'UC') {
+        } else if (type === 'UC') {
           setValue('uc_classifications', analysis.uc_classifications ?? []);
           setValue('uc_other', analysis.uc_other ?? '');
           setValue('uc_severity', analysis.uc_severity);
@@ -648,7 +663,7 @@ const UaUcNearMissForm = () => {
             'uc_temporary_controls',
             analysis.uc_temporary_controls ?? ''
           );
-        } else if (observationType === 'NearMiss') {
+        } else if (type === 'NearMiss') {
           setValue('nm_potential_injury', analysis.nm_potential_injury ?? '');
           setValue('nm_what_could_happen', analysis.nm_what_could_happen ?? '');
           setValue('nm_severity', analysis.nm_severity);
@@ -666,6 +681,22 @@ const UaUcNearMissForm = () => {
       setIsAnalyzing(false);
     }
   };
+
+  const handleItemsChange = async (items: MediaItem[]) => {
+    setMediaItems(items);
+
+    // Keep this as fallback submission metadata; it is not shown in the AI section.
+    if (items.length === 1) {
+      setValue('activity_at_time', formatDateTime(new Date()));
+    }
+
+    await runAiAnalysis(observationType, items);
+  };
+
+  useEffect(() => {
+    if (!observationType || mediaItems.length === 0) return;
+    void runAiAnalysis(observationType, mediaItems);
+  }, [observationType]);
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
