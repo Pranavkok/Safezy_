@@ -600,14 +600,12 @@ const UaUcNearMissForm = () => {
   const observationType = watch('observation_type');
   const whatHappened = watch('what_happened');
   const equipmentInvolved = watch('equipment_involved');
-  const activityAtTime = watch('activity_at_time');
 
   const showGeneratedSection =
     Boolean(observationType) &&
     (mediaItems.length > 0 ||
       Boolean(whatHappened) ||
-      Boolean(equipmentInvolved) ||
-      Boolean(activityAtTime));
+      Boolean(equipmentInvolved));
 
   // ── AI Analysis trigger ────────────────────────────────────────────────────
 
@@ -816,12 +814,6 @@ const UaUcNearMissForm = () => {
                 label="Equipment Involved"
                 placeholder="Equipment, tools, or materials involved"
                 {...register('equipment_involved')}
-              />
-
-              <InputFieldWithLabel
-                label="Activity At Time"
-                placeholder="When or during which activity this was observed"
-                {...register('activity_at_time')}
               />
 
               {observationType === 'UA' && (
