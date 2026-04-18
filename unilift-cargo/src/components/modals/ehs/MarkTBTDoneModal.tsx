@@ -46,9 +46,8 @@ const MarkTBTDoneModal = ({
   const [rating, setRating] = useState(0);
   const FIXED_EMAIL = 'Admin@safezy.in';
   const [staffEmails, setStaffEmails] = useState<string[]>([]);
-  const [selectedEmails, setSelectedEmails] = useState<string[]>([FIXED_EMAIL]);
+  const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [emailPopoverOpen, setEmailPopoverOpen] = useState(false);
-  const [emailError, setEmailError] = useState('');
 
   const {
     register,
@@ -69,17 +68,14 @@ const MarkTBTDoneModal = ({
     });
   }, []);
 
-  const toggleEmail = (email: string) => {
-    if (email === FIXED_EMAIL) return;
-    setSelectedEmails(prev =>
+  const toggleAdditionalEmail = (email: string) => {
+    setAdditionalEmails(prev =>
       prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
     );
-    setEmailError('');
   };
 
-  const removeEmail = (email: string) => {
-    if (email === FIXED_EMAIL) return;
-    setSelectedEmails(prev => prev.filter(e => e !== email));
+  const removeAdditionalEmail = (email: string) => {
+    setAdditionalEmails(prev => prev.filter(e => e !== email));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,17 +91,11 @@ const MarkTBTDoneModal = ({
   const handleReset = () => {
     reset();
     setSelectedFiles([]);
-    setSelectedEmails([FIXED_EMAIL]);
-    setEmailError('');
+    setAdditionalEmails([]);
     setRating(0);
   };
 
   const onSubmit = async (data: addToolboxUserType) => {
-    if (selectedEmails.length === 0) {
-      setEmailError("Please select at least one superior's email");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -123,7 +113,7 @@ const MarkTBTDoneModal = ({
         publicUrl: img.publicUrl
       }));
 
-      const superiorEmail = selectedEmails.join(',');
+      const superiorEmail = [FIXED_EMAIL, ...additionalEmails].join(',');
 
       const res = await addToolboxUserDetails(
         { ...data, superior_email: superiorEmail },
@@ -186,12 +176,22 @@ const MarkTBTDoneModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
-          {/* Multi-select email dropdown */}
-          <div className="space-y-2 pb-5">
+          {/* Field 1 — Superior Email (fixed) */}
+          <div className="space-y-2 pb-3">
             <label className="capitalize">
-              Add Superior&apos;s Email
+              Superior&apos;s Email
               <span className="ml-[2px] text-red-500">*</span>
             </label>
+            <div className="flex w-full items-center rounded-md border border-input bg-muted/40 px-3 py-2 text-sm min-h-[36px] cursor-not-allowed select-none">
+              <span className="flex items-center gap-1 bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5">
+                {FIXED_EMAIL}
+              </span>
+            </div>
+          </div>
+
+          {/* Field 2 — Additional Emails (multi-select) */}
+          <div className="space-y-2 pb-5">
+            <label className="capitalize">Additional Email</label>
             <Popover open={emailPopoverOpen} onOpenChange={setEmailPopoverOpen}>
               <PopoverTrigger asChild>
                 <button
@@ -199,62 +199,53 @@ const MarkTBTDoneModal = ({
                   className="flex w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[36px]"
                 >
                   <span className="text-muted-foreground">
-                    {selectedEmails.length === 0
+                    {additionalEmails.length === 0
                       ? 'Select email(s)...'
-                      : `${selectedEmails.length} selected`}
+                      : `${additionalEmails.length} selected`}
                   </span>
                   <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-2" align="start">
                 <div className="max-h-48 overflow-y-auto space-y-1">
-                  {/* Fixed mandatory email */}
-                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-sm bg-accent/50 cursor-not-allowed">
-                    <Checkbox checked disabled />
-                    <span className="text-sm font-medium">{FIXED_EMAIL}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">(required)</span>
-                  </div>
-                  {staffEmails.length === 0 ? (
+                  {staffEmails.filter(e => e !== FIXED_EMAIL).length === 0 ? (
                     <p className="text-sm text-muted-foreground px-2 py-1">No staff emails found.</p>
                   ) : (
-                    staffEmails.map(email => (
-                      <div
-                        key={email}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent cursor-pointer"
-                        onClick={() => toggleEmail(email)}
-                      >
-                        <Checkbox
-                          checked={selectedEmails.includes(email)}
-                          onCheckedChange={() => toggleEmail(email)}
-                        />
-                        <span className="text-sm">{email}</span>
-                      </div>
-                    ))
+                    staffEmails
+                      .filter(e => e !== FIXED_EMAIL)
+                      .map(email => (
+                        <div
+                          key={email}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent cursor-pointer"
+                          onClick={() => toggleAdditionalEmail(email)}
+                        >
+                          <Checkbox
+                            checked={additionalEmails.includes(email)}
+                            onCheckedChange={() => toggleAdditionalEmail(email)}
+                          />
+                          <span className="text-sm">{email}</span>
+                        </div>
+                      ))
                   )}
                 </div>
               </PopoverContent>
             </Popover>
 
-            {/* Selected email badges */}
-            {selectedEmails.length > 0 && (
+            {additionalEmails.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1">
-                {selectedEmails.map(email => (
+                {additionalEmails.map(email => (
                   <span
                     key={email}
                     className="flex items-center gap-1 bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5"
                   >
                     {email}
-                    {email !== FIXED_EMAIL && (
-                      <button type="button" onClick={() => removeEmail(email)}>
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
+                    <button type="button" onClick={() => removeAdditionalEmail(email)}>
+                      <X className="h-3 w-3" />
+                    </button>
                   </span>
                 ))}
               </div>
             )}
-
-            {emailError && <div className="text-sm text-red-500">{emailError}</div>}
           </div>
 
           {/* Comments/Remarks */}
