@@ -217,23 +217,25 @@ export const addToolboxUserDetails = async (
 
     const toolboxUserId = userData.id;
 
-    const toolboxImages = uploadImages.map(image => {
-      return {
+    const toolboxImages = uploadImages
+      .filter(image => image.publicUrl)
+      .map(image => ({
         image_url: image.publicUrl,
         toolbox_user_id: toolboxUserId
-      };
-    });
+      }));
 
-    const { error: imageError } = await supabase
-      .from('images')
-      .insert(toolboxImages);
+    if (toolboxImages.length > 0) {
+      const { error: imageError } = await supabase
+        .from('images')
+        .insert(toolboxImages);
 
-    if (imageError) {
-      console.error('Failed to add images', imageError);
-      return {
-        success: false,
-        message: ERROR_MESSAGES.TOOLBOX_IMAGE_NOT_ADDED
-      };
+      if (imageError) {
+        console.error('Failed to add images', imageError);
+        return {
+          success: false,
+          message: ERROR_MESSAGES.TOOLBOX_IMAGE_NOT_ADDED
+        };
+      }
     }
 
     const validData: toolboxValidDataType = {
