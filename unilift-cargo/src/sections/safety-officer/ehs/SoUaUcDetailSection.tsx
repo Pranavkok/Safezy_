@@ -18,8 +18,9 @@ interface Props {
 }
 
 const SoUaUcDetailSection = ({ report, officerName }: Props) => {
+  const today = new Date().toISOString().split('T')[0];
   const [actionTaken, setActionTaken] = useState('');
-  const [actionDate, setActionDate] = useState('');
+  const [actionDate, setActionDate] = useState(today);
   const [closing, setClosing] = useState(false);
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [evidencePreview, setEvidencePreview] = useState<string | null>(null);
@@ -118,7 +119,8 @@ const SoUaUcDetailSection = ({ report, officerName }: Props) => {
                 type="date"
                 value={actionDate}
                 onChange={e => setActionDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
+                min={today}
+                max={today}
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>

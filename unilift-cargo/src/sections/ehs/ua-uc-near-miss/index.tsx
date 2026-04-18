@@ -5,17 +5,36 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
+import TextareaWithLabel from '@/components/inputs-fields/TextareaWithLabel';
 import { useUser } from '@/context/UserContext';
 import {
   OBSERVATION_TYPES,
+  NEAR_MISS_SEVERITY,
+  UA_CLASSIFICATIONS,
+  UC_CLASSIFICATIONS,
   UaUcNearMissSchema
 } from '@/validations/contractor/add-ua-uc-near-miss';
-import { UaUcNearMissFormType, MediaType, UaUcAiAnalysisResponse } from '@/types/ehs.types';
+import {
+  UaUcNearMissFormType,
+  MediaType,
+  UaUcAiAnalysisResponse
+} from '@/types/ehs.types';
 import { submitUaUcReport } from '@/actions/contractor/ua-uc-near-miss';
 import { uploadFile } from '@/utils';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ImagePlus, Loader2, FileVideo, Mic, X, CheckCircle2, Camera, Video, Square, Circle } from 'lucide-react';
+import {
+  ImagePlus,
+  Loader2,
+  FileVideo,
+  Mic,
+  X,
+  CheckCircle2,
+  Camera,
+  Video,
+  Square,
+  Circle
+} from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,14 +50,26 @@ function detectMediaType(file: File): MediaType {
 
 function formatDateTime(date: Date) {
   return date.toLocaleString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', hour12: true
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
   });
 }
 
 // ─── Section Header ───────────────────────────────────────────────────────────
 
-const SectionHeader = ({ number, title, subtitle }: { number: string; title: string; subtitle?: string }) => (
+const SectionHeader = ({
+  number,
+  title,
+  subtitle
+}: {
+  number: string;
+  title: string;
+  subtitle?: string;
+}) => (
   <div className="mb-4">
     <div className="flex items-center gap-2 mb-1">
       <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
@@ -47,6 +78,74 @@ const SectionHeader = ({ number, title, subtitle }: { number: string; title: str
     </div>
     <h2 className="text-lg font-bold text-gray-900">{title}</h2>
     {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+  </div>
+);
+
+const MultiSelectChips = ({
+  value,
+  options,
+  onChange
+}: {
+  value: string[];
+  options: readonly string[];
+  onChange: (value: string[]) => void;
+}) => {
+  const selected = value ?? [];
+
+  const toggle = (option: string) => {
+    if (selected.includes(option)) {
+      onChange(selected.filter(item => item !== option));
+      return;
+    }
+    onChange([...selected, option]);
+  };
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map(option => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => toggle(option)}
+          className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+            selected.includes(option)
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const SeverityButtons = ({
+  value,
+  onChange
+}: {
+  value?: 'Low' | 'Medium' | 'High';
+  onChange: (value: 'Low' | 'Medium' | 'High') => void;
+}) => (
+  <div className="flex gap-3">
+    {NEAR_MISS_SEVERITY.map(level => (
+      <button
+        key={level}
+        type="button"
+        onClick={() => onChange(level)}
+        className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+          value === level
+            ? level === 'High'
+              ? 'bg-red-500 border-red-500 text-white'
+              : level === 'Medium'
+                ? 'bg-yellow-400 border-yellow-400 text-white'
+                : 'bg-green-500 border-green-500 text-white'
+            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
+        }`}
+      >
+        {level}
+      </button>
+    ))}
   </div>
 );
 
@@ -65,7 +164,8 @@ const PhotoCaptureModal = ({
   const [isReady, setIsReady] = useState(false);
 
   React.useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
       .then(stream => {
         streamRef.current = stream;
         if (videoRef.current) {
@@ -78,7 +178,9 @@ const PhotoCaptureModal = ({
         toast.error('Camera access denied. Please allow camera permission.');
         onClose();
       });
-    return () => { streamRef.current?.getTracks().forEach(t => t.stop()); };
+    return () => {
+      streamRef.current?.getTracks().forEach(t => t.stop());
+    };
   }, [onClose]);
 
   const handleCapture = () => {
@@ -88,12 +190,18 @@ const PhotoCaptureModal = ({
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     canvas.getContext('2d')?.drawImage(video, 0, 0);
-    canvas.toBlob(blob => {
-      if (!blob) return;
-      const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
-      onCaptured(file);
-      onClose();
-    }, 'image/jpeg', 0.92);
+    canvas.toBlob(
+      blob => {
+        if (!blob) return;
+        const file = new File([blob], `photo_${Date.now()}.jpg`, {
+          type: 'image/jpeg'
+        });
+        onCaptured(file);
+        onClose();
+      },
+      'image/jpeg',
+      0.92
+    );
   };
 
   return (
@@ -101,11 +209,21 @@ const PhotoCaptureModal = ({
       <div className="bg-white rounded-xl w-full max-w-md space-y-4 p-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-gray-800">Take Photo</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-gray-400 hover:text-gray-600"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <video ref={videoRef} muted playsInline className="w-full rounded-lg bg-black aspect-video object-cover" />
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          className="w-full rounded-lg bg-black aspect-video object-cover"
+        />
         <canvas ref={canvasRef} className="hidden" />
         <div className="flex justify-center">
           <button
@@ -139,17 +257,20 @@ const VideoRecorderModal = ({
   const [isReady, setIsReady] = useState(false);
 
   React.useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-      setIsReady(true);
-    }).catch(() => {
-      toast.error('Camera access denied. Please allow camera permission.');
-      onClose();
-    });
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+        setIsReady(true);
+      })
+      .catch(() => {
+        toast.error('Camera access denied. Please allow camera permission.');
+        onClose();
+      });
     return () => {
       streamRef.current?.getTracks().forEach(t => t.stop());
     };
@@ -163,12 +284,18 @@ const VideoRecorderModal = ({
       'video/webm;codecs=vp8,opus',
       'video/webm;codecs=vp9,opus',
       'video/webm',
-      'video/mp4',
+      'video/mp4'
     ];
-    const mimeType = preferredTypes.find(t => MediaRecorder.isTypeSupported(t)) ?? '';
-    const recorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined);
+    const mimeType =
+      preferredTypes.find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+    const recorder = new MediaRecorder(
+      streamRef.current,
+      mimeType ? { mimeType } : undefined
+    );
 
-    recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    recorder.ondataavailable = e => {
+      if (e.data.size > 0) chunksRef.current.push(e.data);
+    };
     recorder.onstop = () => {
       const type = recorder.mimeType || 'video/webm';
       const ext = type.includes('mp4') ? 'mp4' : 'webm';
@@ -192,11 +319,19 @@ const VideoRecorderModal = ({
       <div className="bg-white rounded-xl w-full max-w-md space-y-4 p-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-gray-800">Record Video</h3>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <video ref={videoRef} muted className="w-full rounded-lg bg-black aspect-video object-cover" />
+        <video
+          ref={videoRef}
+          muted
+          className="w-full rounded-lg bg-black aspect-video object-cover"
+        />
         <div className="flex justify-center">
           {!isRecording ? (
             <button
@@ -244,7 +379,7 @@ const MediaUpload = ({
     setUploading(true);
     try {
       const uploaded = await Promise.all(
-        files.map(async (file) => {
+        files.map(async file => {
           const type = detectMediaType(file);
           const url = await uploadFile(file, 'ehs-ua-uc-media', 'media');
           return { url, type, name: file.name };
@@ -281,7 +416,10 @@ const MediaUpload = ({
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium block">
-        Upload Evidence <span className="text-gray-400 text-xs">(image, video, or voice note — multiple allowed)</span>
+        Upload Evidence{' '}
+        <span className="text-gray-400 text-xs">
+          (image, video, or voice note — multiple allowed)
+        </span>
       </label>
 
       {items.length > 0 && (
@@ -289,10 +427,18 @@ const MediaUpload = ({
           {items.map((item, i) => (
             <div key={i} className="border rounded-lg p-3 bg-gray-50 space-y-2">
               {item.type === 'image' && (
-                <img src={item.url} alt="Evidence" className="w-full max-h-48 object-contain rounded" />
+                <img
+                  src={item.url}
+                  alt="Evidence"
+                  className="w-full max-h-48 object-contain rounded"
+                />
               )}
               {item.type === 'video' && (
-                <video src={item.url} controls className="w-full max-h-48 rounded" />
+                <video
+                  src={item.url}
+                  controls
+                  className="w-full max-h-48 rounded"
+                />
               )}
               {item.type === 'voice' && (
                 <div className="flex items-center gap-3 p-3 bg-white rounded border">
@@ -316,7 +462,12 @@ const MediaUpload = ({
                     </span>
                   )}
                 </div>
-                <button type="button" onClick={() => handleRemove(i)} aria-label="Remove" className="text-gray-400 hover:text-red-500">
+                <button
+                  type="button"
+                  onClick={() => handleRemove(i)}
+                  aria-label="Remove"
+                  className="text-gray-400 hover:text-red-500"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -334,14 +485,24 @@ const MediaUpload = ({
       >
         {uploading ? (
           <>
-            <Loader2 className={items.length > 0 ? 'w-4 h-4 animate-spin' : 'w-6 h-6 animate-spin'} />
+            <Loader2
+              className={
+                items.length > 0
+                  ? 'w-4 h-4 animate-spin'
+                  : 'w-6 h-6 animate-spin'
+              }
+            />
             <span className="text-sm">Uploading...</span>
           </>
         ) : items.length === 0 ? (
           <>
             <ImagePlus className="w-6 h-6" />
-            <span className="text-sm">Click to upload image, video, or voice note</span>
-            <span className="text-xs text-gray-400">Max: 10MB image · 100MB video · 25MB audio</span>
+            <span className="text-sm">
+              Click to upload image, video, or voice note
+            </span>
+            <span className="text-xs text-gray-400">
+              Max: 10MB image · 100MB video · 25MB audio
+            </span>
           </>
         ) : (
           <span className="text-sm flex items-center gap-2">
@@ -354,7 +515,11 @@ const MediaUpload = ({
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => isMobileDevice() ? nativeCameraRef.current?.click() : setShowPhotoCapture(true)}
+          onClick={() =>
+            isMobileDevice()
+              ? nativeCameraRef.current?.click()
+              : setShowPhotoCapture(true)
+          }
           disabled={uploading}
           className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
         >
@@ -370,8 +535,22 @@ const MediaUpload = ({
         </button>
       </div>
 
-      <input ref={inputRef} type="file" accept="image/*,video/*,audio/*" multiple className="hidden" onChange={handleChange} />
-      <input ref={nativeCameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleChange} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,video/*,audio/*"
+        multiple
+        className="hidden"
+        onChange={handleChange}
+      />
+      <input
+        ref={nativeCameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleChange}
+      />
 
       {showPhotoCapture && (
         <PhotoCaptureModal
@@ -419,6 +598,16 @@ const UaUcNearMissForm = () => {
   });
 
   const observationType = watch('observation_type');
+  const whatHappened = watch('what_happened');
+  const equipmentInvolved = watch('equipment_involved');
+  const activityAtTime = watch('activity_at_time');
+
+  const showGeneratedSection =
+    Boolean(observationType) &&
+    (mediaItems.length > 0 ||
+      Boolean(whatHappened) ||
+      Boolean(equipmentInvolved) ||
+      Boolean(activityAtTime));
 
   // ── AI Analysis trigger ────────────────────────────────────────────────────
 
@@ -457,7 +646,10 @@ const UaUcNearMissForm = () => {
           setValue('uc_classifications', analysis.uc_classifications ?? []);
           setValue('uc_other', analysis.uc_other ?? '');
           setValue('uc_severity', analysis.uc_severity);
-          setValue('uc_temporary_controls', analysis.uc_temporary_controls ?? '');
+          setValue(
+            'uc_temporary_controls',
+            analysis.uc_temporary_controls ?? ''
+          );
         } else if (observationType === 'NearMiss') {
           setValue('nm_potential_injury', analysis.nm_potential_injury ?? '');
           setValue('nm_what_could_happen', analysis.nm_what_could_happen ?? '');
@@ -505,17 +697,18 @@ const UaUcNearMissForm = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 max-w-3xl mx-auto">
-
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-8 max-w-3xl mx-auto"
+    >
       {/* ── SECTION 1: Basic Information ── */}
       <div>
-        <SectionHeader
-          number="1"
-          title="Basic Information"
-        />
+        <SectionHeader number="1" title="Basic Information" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-500">Reported By</label>
+            <label className="text-sm font-medium text-gray-500">
+              Reported By
+            </label>
             <p className="text-sm bg-gray-50 border rounded-md px-3 py-2 text-gray-700">
               {firstName && lastName ? `${firstName} ${lastName}` : '—'}
             </p>
@@ -568,7 +761,9 @@ const UaUcNearMissForm = () => {
           )}
         />
         {errors.observation_type && (
-          <p className="text-sm text-red-500 mt-2">{errors.observation_type.message}</p>
+          <p className="text-sm text-red-500 mt-2">
+            {errors.observation_type.message}
+          </p>
         )}
       </div>
 
@@ -581,7 +776,10 @@ const UaUcNearMissForm = () => {
           title="Upload Evidence"
           subtitle="Upload an image, video, or voice note — AI will automatically classify the observation."
         />
-        <MediaUpload onItemsChange={handleItemsChange} isAnalyzing={isAnalyzing} />
+        <MediaUpload
+          onItemsChange={handleItemsChange}
+          isAnalyzing={isAnalyzing}
+        />
         {isAnalyzing && (
           <p className="text-sm text-primary mt-3 flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -590,69 +788,160 @@ const UaUcNearMissForm = () => {
         )}
         {!observationType && (
           <p className="text-xs text-gray-400 mt-2 italic">
-            Select a type of observation first, then upload evidence for AI classification.
+            Select a type of observation first, then upload evidence for AI
+            classification.
           </p>
         )}
       </div>
 
-      {/* ── SECTION 4: UC-specific fields ── */}
-      {observationType === 'UC' && (
+      {/* ── SECTION 4: AI-generated details ── */}
+      {showGeneratedSection && (
         <>
           <hr className="border-gray-200" />
           <div>
             <SectionHeader
               number="4"
-              title="UC Assessment"
-              subtitle="AI-suggested values — review and adjust if needed."
+              title="AI Generated Details"
+              subtitle="Everything below stays on this page so the user can review and edit before submitting."
             />
             <div className="space-y-5">
+              <TextareaWithLabel
+                label="What Happened / Observed"
+                rows={3}
+                placeholder="AI-generated summary or manual description"
+                {...register('what_happened')}
+              />
 
-              {/* Risk Severity */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Risk Severity
-                </label>
-                <Controller
-                  name="uc_severity"
-                  control={control}
-                  render={({ field }) => (
-                    <div className="flex gap-3">
-                      {(['Low', 'Medium', 'High'] as const).map(level => (
-                        <button
-                          key={level}
-                          type="button"
-                          onClick={() => field.onChange(level)}
-                          className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                            field.value === level
-                              ? level === 'High'
-                                ? 'bg-red-500 border-red-500 text-white'
-                                : level === 'Medium'
-                                ? 'bg-yellow-400 border-yellow-400 text-white'
-                                : 'bg-green-500 border-green-500 text-white'
-                              : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
-                          }`}
-                        >
-                          {level}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                />
-              </div>
+              <InputFieldWithLabel
+                label="Equipment Involved"
+                placeholder="Equipment, tools, or materials involved"
+                {...register('equipment_involved')}
+              />
 
-              {/* Temporary Controls */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">
-                  Temporary Controls Applied
-                </label>
-                <textarea
-                  {...register('uc_temporary_controls')}
-                  rows={3}
-                  placeholder="Describe any immediate temporary controls applied to reduce the risk..."
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                />
-              </div>
+              <InputFieldWithLabel
+                label="Activity At Time"
+                placeholder="When or during which activity this was observed"
+                {...register('activity_at_time')}
+              />
 
+              {observationType === 'UA' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      UA Classification
+                    </label>
+                    <Controller
+                      name="ua_classifications"
+                      control={control}
+                      render={({ field }) => (
+                        <MultiSelectChips
+                          value={field.value ?? []}
+                          options={UA_CLASSIFICATIONS}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <TextareaWithLabel
+                    label="UA Other"
+                    rows={3}
+                    placeholder="Add a custom unsafe act if the suggested options do not fully match"
+                    {...register('ua_other')}
+                  />
+
+                  <TextareaWithLabel
+                    label="Immediate Corrective Action"
+                    rows={3}
+                    placeholder="Recommended or manually updated immediate action"
+                    {...register('action_taken')}
+                  />
+                </>
+              )}
+
+              {observationType === 'UC' && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      UC Classification
+                    </label>
+                    <Controller
+                      name="uc_classifications"
+                      control={control}
+                      render={({ field }) => (
+                        <MultiSelectChips
+                          value={field.value ?? []}
+                          options={UC_CLASSIFICATIONS}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <TextareaWithLabel
+                    label="UC Other"
+                    rows={3}
+                    placeholder="Add a custom unsafe condition if the suggested options do not fully match"
+                    {...register('uc_other')}
+                  />
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Risk Severity
+                    </label>
+                    <Controller
+                      name="uc_severity"
+                      control={control}
+                      render={({ field }) => (
+                        <SeverityButtons
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <TextareaWithLabel
+                    label="Temporary Controls Applied"
+                    rows={3}
+                    placeholder="Describe any immediate temporary controls applied to reduce the risk"
+                    {...register('uc_temporary_controls')}
+                  />
+                </>
+              )}
+
+              {observationType === 'NearMiss' && (
+                <>
+                  <InputFieldWithLabel
+                    label="Potential Injury"
+                    placeholder="Potential injury that could have resulted"
+                    {...register('nm_potential_injury')}
+                  />
+
+                  <TextareaWithLabel
+                    label="What Could Happen"
+                    rows={3}
+                    placeholder="Describe the potential outcome if the near miss became an incident"
+                    {...register('nm_what_could_happen')}
+                  />
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Potential Severity
+                    </label>
+                    <Controller
+                      name="nm_severity"
+                      control={control}
+                      render={({ field }) => (
+                        <SeverityButtons
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </>
@@ -660,15 +949,20 @@ const UaUcNearMissForm = () => {
 
       {/* ── Submit ── */}
       <div className="flex justify-end pt-2 pb-8">
-        <Button type="submit" disabled={isSubmitting || isAnalyzing} className="px-8">
+        <Button
+          type="submit"
+          disabled={isSubmitting || isAnalyzing}
+          className="px-8"
+        >
           {isSubmitting ? (
-            <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting...</>
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" /> Submitting...
+            </>
           ) : (
             'Submit Report'
           )}
         </Button>
       </div>
-
     </form>
   );
 };
