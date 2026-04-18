@@ -225,7 +225,8 @@ export const addToolboxUserDetails = async (
       }));
 
     if (toolboxImages.length > 0) {
-      const { error: imageError } = await supabase
+      const serviceClient = createServiceClient();
+      const { error: imageError } = await serviceClient
         .from('images')
         .insert(toolboxImages);
 
