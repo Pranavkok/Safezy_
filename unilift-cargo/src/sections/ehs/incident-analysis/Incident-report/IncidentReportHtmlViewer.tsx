@@ -15,7 +15,7 @@ const formatDate = (dateString: string) => {
 };
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <h3 className="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-2 rounded mt-6 mb-3">
+  <h3 className="text-sm font-semibold text-gray-700 bg-white px-3 py-2 rounded mt-6 mb-3">
     {children}
   </h3>
 );
@@ -86,7 +86,7 @@ const FieldGrid = ({ children }: { children: React.ReactNode }) => (
 );
 
 const FieldGroup = ({ children }: { children: React.ReactNode }) => (
-  <div className="bg-gray-50 rounded-md p-4 mb-4">{children}</div>
+  <div className="bg-white rounded-md p-4 mb-4">{children}</div>
 );
 
 const Divider = () => <hr className="border-dashed border-gray-300 my-6" />;
@@ -206,13 +206,13 @@ const IncidentReportHtmlViewer = ({
           <>
             <SectionTitle>Contributing Factors</SectionTitle>
             <div className="border border-gray-200 rounded-md overflow-hidden mb-4">
-              <div className="grid grid-cols-[120px_1fr] bg-gray-100 text-[10px] uppercase text-gray-500 font-medium px-3 py-2">
+              <div className="grid grid-cols-[120px_1fr] bg-white text-[10px] uppercase text-gray-500 font-medium px-3 py-2">
                 <span>Category</span>
                 <span>Description</span>
               </div>
               {(['people', 'process', 'equipment', 'environment'] as const).map(key =>
                 contributingFactors[key] ? (
-                  <div key={key} className="grid grid-cols-[120px_1fr] px-3 py-2 border-t border-gray-200 text-sm">
+                  <div key={key} className="grid grid-cols-[120px_1fr] px-3 py-2 text-sm">
                     <span className="capitalize text-gray-600">{key}</span>
                     <span className="text-gray-900">{contributingFactors[key]}</span>
                   </div>
@@ -226,12 +226,12 @@ const IncidentReportHtmlViewer = ({
           <>
             <SectionTitle>Root Causes (Why-Why Chain)</SectionTitle>
             <div className="border border-gray-200 rounded-md overflow-hidden mb-4">
-              <div className="grid grid-cols-2 bg-gray-100 text-[10px] uppercase text-gray-500 font-medium px-3 py-2">
+              <div className="grid grid-cols-2 bg-white text-[10px] uppercase text-gray-500 font-medium px-3 py-2">
                 <span>Cause</span>
                 <span>Effect</span>
               </div>
               {rootCauses.points.map((point, i) => (
-                <div key={i} className="grid grid-cols-2 px-3 py-2 border-t border-gray-200 text-sm">
+                <div key={i} className="grid grid-cols-2 px-3 py-2 text-sm">
                   <span className="text-gray-900 pr-2">{point.cause}</span>
                   <span className="text-gray-900">{point.effect}</span>
                 </div>

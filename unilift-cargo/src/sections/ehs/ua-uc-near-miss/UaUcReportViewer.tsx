@@ -29,7 +29,7 @@ const observationLabel: Record<string, string> = {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div className="flex flex-col sm:flex-row sm:items-start gap-1 py-2 border-b border-gray-100 last:border-0">
+  <div className="flex flex-col sm:flex-row sm:items-start gap-1 py-2">
     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide sm:w-44 flex-shrink-0">
       {label}
     </span>
@@ -38,11 +38,11 @@ const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) =>
 );
 
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="border border-gray-200 rounded-lg overflow-hidden">
-    <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+  <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+    <div className="bg-white px-4 py-2 border-b border-gray-200">
       <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">{title}</h3>
     </div>
-    <div className="px-4 py-3">{children}</div>
+    <div className="px-4 py-3 bg-white">{children}</div>
   </div>
 );
 
