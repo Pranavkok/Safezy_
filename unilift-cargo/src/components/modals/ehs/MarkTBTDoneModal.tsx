@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { addToolboxUserDetails } from '@/actions/admin/ehs/toolbox-talk';
 import { addToolboxUserType } from '@/types/ehs.types';
 import { AddToolboxTalkUserSchema } from '@/validations/admin/add-toolbox-talk';
@@ -26,6 +27,7 @@ import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel'
 import CustomRating from '@/components/CustomRating';
 import { getStaffList } from '@/actions/admin/staff';
 import { ChevronDown, X } from 'lucide-react';
+import { AppRoutes } from '@/constants/AppRoutes';
 
 const MarkTBTDoneModal = ({
   toolboxTalkId,
@@ -38,6 +40,7 @@ const MarkTBTDoneModal = ({
   sessionStartRef: React.MutableRefObject<number>;
   storageKey: string;
 }) => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [rating, setRating] = useState(0);
@@ -151,6 +154,7 @@ const MarkTBTDoneModal = ({
           toast.success(res?.message);
           localStorage.removeItem(storageKey);
           handleReset();
+          router.push(AppRoutes.EHS_TOOLBOX_TALK_REPORT(toolboxTalkId));
         } else {
           toast.error('Failed to send email');
         }

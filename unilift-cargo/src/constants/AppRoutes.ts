@@ -80,6 +80,7 @@ type AppRoutesType = {
   EHS_CHECKLIST_DETAILS: (id: number) => string;
   EHS_TOOLBOX_TALK: string;
   EHS_TOOLBOX_TALK_DETAILS: (id: number) => string;
+  EHS_TOOLBOX_TALK_REPORT: (id: number) => string;
   ADMIN_EHS_FIRST_PRINCIPLES_LISTING: string;
   ADMIN_EHS_FIRST_PRINCIPLES_ADD: string;
   ADMIN_EHS_FIRST_PRINCIPLES_UPDATE: (id: number) => string;
@@ -219,6 +220,7 @@ export const AppRoutes: AppRoutesType = {
 
   EHS_TOOLBOX_TALK: '/ehs/toolbox-talk',
   EHS_TOOLBOX_TALK_DETAILS: (id: number) => `/ehs/toolbox-talk/${id}`,
+  EHS_TOOLBOX_TALK_REPORT: (id: number) => `/ehs/toolbox-talk/${id}/report`,
   ADMIN_EHS_FIRST_PRINCIPLES_LISTING: '/admin/ehs/first-principles',
   ADMIN_EHS_FIRST_PRINCIPLES_ADD: '/admin/ehs/first-principles/add',
   ADMIN_EHS_FIRST_PRINCIPLES_UPDATE: (id: number) =>

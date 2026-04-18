@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { revalidatePath } from 'next/cache';
-import { ToolboxNoteType } from '@/types/ehs.types';
+import { ToolboxNoteType, ToolboxTalkCompletionReport } from '@/types/ehs.types';
 import { getAuthId, getUserIdFromAuth } from '../user';
 import { sendPushNotification } from '@/lib/web-push';
 
@@ -90,6 +90,63 @@ export const updateToolboxNote = async (
       success: false,
       message: ERROR_MESSAGES.UNEXPECTED_ERROR
     };
+  }
+};
+
+export const getMyToolboxCompletion = async (
+  toolboxTalkId: number
+): Promise<{ success: boolean; message: string; data?: ToolboxTalkCompletionReport }> => {
+  const supabase = await createClient();
+
+  try {
+    const userId = await getUserIdFromAuth();
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+
+    const { data, error } = await supabase
+      .from('ehs_toolbox_users')
+      .select(`
+        id,
+        created_at,
+        duration_seconds,
+        rating,
+        superior_email,
+        best_performer,
+        users (first_name, last_name, email),
+        ehs_toolbox_talk (topic_name),
+        images (image_url)
+      `)
+      .eq('toolbox_talk_id', toolboxTalkId)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) return { success: false, message: ERROR_MESSAGES.TOOLBOX_USERS_NOT_FETCHED };
+    if (!data) return { success: false, message: 'No completion record found' };
+
+    const usersData = Array.isArray(data.users) ? data.users[0] : data.users;
+    const talkData = Array.isArray(data.ehs_toolbox_talk) ? data.ehs_toolbox_talk[0] : data.ehs_toolbox_talk;
+    const imagesData = Array.isArray(data.images) ? data.images : [];
+
+    return {
+      success: true,
+      message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED,
+      data: {
+        id: data.id,
+        created_at: data.created_at,
+        duration_seconds: data.duration_seconds,
+        rating: data.rating,
+        superior_email: data.superior_email,
+        comments: data.best_performer,
+        topic_name: talkData?.topic_name ?? '',
+        first_name: usersData?.first_name ?? '',
+        last_name: usersData?.last_name ?? '',
+        email: usersData?.email ?? '',
+        attendance_images: imagesData.map((img: { image_url: string }) => img.image_url)
+      }
+    };
+  } catch {
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
   }
 };
 

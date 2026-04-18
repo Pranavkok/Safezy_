@@ -223,6 +223,20 @@ export type ChecklistType = {
 
 export type ToolboxNoteType = z.infer<typeof AddToolboxNoteSchema>;
 
+export type ToolboxTalkCompletionReport = {
+  id: number;
+  created_at: string;
+  duration_seconds: number | null;
+  rating: number | null;
+  superior_email: string;
+  comments: string;
+  topic_name: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  attendance_images: string[];
+};
+
 export type FiveWhysPointType = {
   question: string;
   answer: string;
