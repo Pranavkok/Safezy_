@@ -41,8 +41,9 @@ const MarkTBTDoneModal = ({
   const [loading, setLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [rating, setRating] = useState(0);
+  const FIXED_EMAIL = 'Admin@safezy.in';
   const [staffEmails, setStaffEmails] = useState<string[]>([]);
-  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([FIXED_EMAIL]);
   const [emailPopoverOpen, setEmailPopoverOpen] = useState(false);
   const [emailError, setEmailError] = useState('');
 
@@ -66,6 +67,7 @@ const MarkTBTDoneModal = ({
   }, []);
 
   const toggleEmail = (email: string) => {
+    if (email === FIXED_EMAIL) return;
     setSelectedEmails(prev =>
       prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
     );
@@ -73,6 +75,7 @@ const MarkTBTDoneModal = ({
   };
 
   const removeEmail = (email: string) => {
+    if (email === FIXED_EMAIL) return;
     setSelectedEmails(prev => prev.filter(e => e !== email));
   };
 
@@ -89,7 +92,7 @@ const MarkTBTDoneModal = ({
   const handleReset = () => {
     reset();
     setSelectedFiles([]);
-    setSelectedEmails([]);
+    setSelectedEmails([FIXED_EMAIL]);
     setEmailError('');
     setRating(0);
   };
@@ -201,6 +204,12 @@ const MarkTBTDoneModal = ({
               </PopoverTrigger>
               <PopoverContent className="w-full p-2" align="start">
                 <div className="max-h-48 overflow-y-auto space-y-1">
+                  {/* Fixed mandatory email */}
+                  <div className="flex items-center gap-2 px-2 py-1.5 rounded-sm bg-accent/50 cursor-not-allowed">
+                    <Checkbox checked disabled />
+                    <span className="text-sm font-medium">{FIXED_EMAIL}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">(required)</span>
+                  </div>
                   {staffEmails.length === 0 ? (
                     <p className="text-sm text-muted-foreground px-2 py-1">No staff emails found.</p>
                   ) : (
@@ -231,9 +240,11 @@ const MarkTBTDoneModal = ({
                     className="flex items-center gap-1 bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5"
                   >
                     {email}
-                    <button type="button" onClick={() => removeEmail(email)}>
-                      <X className="h-3 w-3" />
-                    </button>
+                    {email !== FIXED_EMAIL && (
+                      <button type="button" onClick={() => removeEmail(email)}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
                   </span>
                 ))}
               </div>
