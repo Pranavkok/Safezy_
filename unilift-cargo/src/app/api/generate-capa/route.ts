@@ -147,7 +147,7 @@ INCIDENT NARRATION
 IMPACT
 ====================
 - Described Impact: ${incidentData.impact_description || 'N/A'}
-- Immediate Actions Taken: ${incidentData.immediate_actions || 'N/A'}
+- Corrective Measures: ${incidentData.immediate_actions || 'N/A'}
 
 =======================
 SYSTEM ANALYSIS

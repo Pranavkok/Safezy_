@@ -23,7 +23,7 @@ const EhsTbtSummarizeModal = ({ summary }: { summary: string }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="bg-primary rounded-md px-4 sm:px-6 py-2 mt-2 text-white font-extrabold text-xs sm:text-sm md:text-base">
+        <button className="bg-primary rounded-md px-4 sm:px-6 py-2 text-white font-extrabold text-xs sm:text-sm md:text-base">
           Summarize
         </button>
       </DialogTrigger>

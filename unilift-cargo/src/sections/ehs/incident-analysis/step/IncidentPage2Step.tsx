@@ -393,9 +393,9 @@ const IncidentPage2Step = ({
 
           <div className="md:col-span-2">
             <InputFieldWithLabel
-              label="Immediate Actions Taken"
+              label="Corrective Measures"
               required
-              placeholder="What immediate steps were taken after the incident?"
+              placeholder="What corrective measures were taken after the incident?"
               errorText={errors.immediate_actions?.message}
               {...register('immediate_actions')}
             />

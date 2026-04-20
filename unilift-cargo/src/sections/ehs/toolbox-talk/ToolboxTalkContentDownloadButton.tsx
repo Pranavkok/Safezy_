@@ -58,7 +58,7 @@ const ToolboxTalkContentDownloadButton = ({ toolboxTalk }: { toolboxTalk: Toolbo
         <button
           onClick={() => handleDownload(blob!)}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-primary text-primary hover:bg-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 bg-primary rounded-md px-4 sm:px-6 py-2 text-white font-extrabold text-xs sm:text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? <Loader size={15} className="animate-spin" /> : <Download size={15} />}
           {loading ? 'Preparing PDF...' : 'Download PDF'}
