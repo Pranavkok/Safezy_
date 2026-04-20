@@ -8,6 +8,7 @@ import { ToolboxNoteType } from '@/types/ehs.types';
 import EhsTbtSummarizeModal from '@/components/modals/ehs/EhsTbtSummarize';
 import ToolboxNoteModal from '@/components/modals/ehs/AddNoteForTBT';
 import MarkTBTDoneModal from '@/components/modals/ehs/MarkTBTDoneModal';
+import ToolboxTalkContentDownloadButton from '../ToolboxTalkContentDownloadButton';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -237,7 +238,7 @@ export const EHSToolboxTalkDetailsSection = ({
         </div>
 
         <div className="w-full flex flex-col gap-2 sm:flex-row sm:justify-between items-center mt-6">
-          <div className="space-x-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <ToolboxNoteModal
               noteData={toolboxNote}
               toolboxId={toolboxTalk.id}
@@ -245,6 +246,7 @@ export const EHSToolboxTalkDetailsSection = ({
             {toolboxTalk.summarized && (
               <EhsTbtSummarizeModal summary={displaySummarize || toolboxTalk.summarized} />
             )}
+            <ToolboxTalkContentDownloadButton toolboxTalk={toolboxTalk} />
           </div>
           <div>
             <MarkTBTDoneModal

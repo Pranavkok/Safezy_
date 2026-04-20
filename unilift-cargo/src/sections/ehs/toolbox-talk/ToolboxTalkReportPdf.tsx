@@ -39,32 +39,30 @@ const formatDuration = (seconds: number | null) => {
 const S = StyleSheet.create({
   page: {
     backgroundColor: 'white',
-    paddingTop: 95,
-    paddingBottom: 55,
-    paddingHorizontal: 30,
+    paddingTop: 88,
+    paddingBottom: 48,
+    paddingHorizontal: 28,
     fontFamily: 'Inter'
   },
   header: {
     backgroundColor: '#FF914D',
-    padding: '20px 30px',
-    color: 'white',
+    paddingHorizontal: 28,
+    paddingVertical: 14,
     position: 'absolute',
     top: 0, left: 0, right: 0,
-    height: 80,
+    height: 72,
     zIndex: 3
   },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  headerTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 4, color: 'white' },
-  headerSub: { fontSize: 9, opacity: 0.9, color: 'white' },
-  headerDate: { fontSize: 9, textAlign: 'right', color: 'white' },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTitle: { fontSize: 14, fontWeight: 'bold', color: 'white', marginBottom: 2 },
+  headerSub: { fontSize: 8, color: 'white', opacity: 0.9 },
+  headerDate: { fontSize: 8, color: 'white', textAlign: 'right' },
   footer: {
     backgroundColor: '#FF914D',
-    color: '#FFFFFF',
-    fontSize: 9,
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    height: 40,
-    paddingHorizontal: 30,
+    height: 36,
+    paddingHorizontal: 28,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -77,57 +75,74 @@ const S = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  watermarkImg: { width: '70%', transform: 'rotate(-45deg)' },
+  watermarkImg: { width: '65%', transform: 'rotate(-45deg)' },
+  // Page title
   pageTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#FF914D',
-    marginBottom: 12,
-    paddingBottom: 6,
+    marginBottom: 8,
+    paddingBottom: 4,
     borderBottom: '1.5px solid #FF914D'
   },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#374151',
-    backgroundColor: '#F3F4F6',
-    padding: '6px 10px',
-    marginBottom: 8,
-    marginTop: 12,
-    borderRadius: 3
-  },
-  fieldGroup: {
-    backgroundColor: '#F9FAFB',
-    padding: 10,
-    borderRadius: 4,
-    marginBottom: 8
-  },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
-  col2: { width: '50%', paddingHorizontal: 5, marginBottom: 8 },
-  colFull: { width: '100%', paddingHorizontal: 5, marginBottom: 8 },
-  label: { fontSize: 8, color: '#6B7280', marginBottom: 2, textTransform: 'uppercase' },
-  value: { fontSize: 10, color: '#111827' },
-  chip: {
-    backgroundColor: '#FFF3EC',
-    borderWidth: 1,
-    borderColor: '#FF914D',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginRight: 4,
-    marginBottom: 4
-  },
-  chipText: { fontSize: 8, color: '#FF914D' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
+  // Status banner
   completedBanner: {
     backgroundColor: '#F0FDF4',
     borderWidth: 1,
     borderColor: '#86EFAC',
-    borderRadius: 4,
-    padding: 10,
-    marginBottom: 8
+    borderRadius: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center'
   },
-  completedBannerText: { fontSize: 11, color: '#15803D', fontWeight: 'bold' }
+  completedBannerText: { fontSize: 9, color: '#15803D', fontWeight: 'bold' },
+  // Section
+  sectionTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: '#374151',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 5,
+    marginTop: 8,
+    borderRadius: 2
+  },
+  fieldGroup: {
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 3,
+    marginBottom: 4
+  },
+  // Grid
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 },
+  col2: { width: '50%', paddingHorizontal: 4, marginBottom: 5 },
+  col3: { width: '33.33%', paddingHorizontal: 4, marginBottom: 5 },
+  colFull: { width: '100%', paddingHorizontal: 4, marginBottom: 5 },
+  // Fields
+  label: { fontSize: 7, color: '#6B7280', marginBottom: 1, textTransform: 'uppercase' },
+  value: { fontSize: 9, color: '#111827' },
+  // Chips
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  chip: {
+    backgroundColor: '#FFF3EC',
+    borderWidth: 1,
+    borderColor: '#FF914D',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: 4,
+    marginBottom: 3
+  },
+  chipText: { fontSize: 7, color: '#FF914D' },
+  // Images grid
+  imageGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -3 },
+  imageCell: { width: '50%', paddingHorizontal: 3, marginBottom: 6 },
+  imageThumb: { height: 110, objectFit: 'contain', borderRadius: 3, backgroundColor: '#F9FAFB' },
+  imageLabel: { fontSize: 7, color: '#6B7280', textAlign: 'center', marginTop: 2 }
 });
 
 const PageHeader = ({ topicName, date }: { topicName: string; date: string }) => (
@@ -137,20 +152,15 @@ const PageHeader = ({ topicName, date }: { topicName: string; date: string }) =>
         <Text style={S.headerTitle}>EHS Toolbox Talk — Completion Report</Text>
         <Text style={S.headerSub}>{topicName}</Text>
       </View>
-      <Text style={S.headerDate}>Date: {date}</Text>
+      <Text style={S.headerDate}>{date}</Text>
     </View>
   </View>
 );
 
 const PageFooter = () => (
   <View style={S.footer} fixed>
-    <Text style={{ fontSize: 8, color: '#FFF', opacity: 0.85 }}>
-      Confidential — Safezy EHS Report
-    </Text>
-    <Text
-      style={{ fontSize: 10, fontWeight: 'bold', color: '#FFFFFF', textAlign: 'right' }}
-      render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
-    />
+    <Text style={{ fontSize: 7, color: '#FFF', opacity: 0.85 }}>Confidential — Safezy EHS Report</Text>
+    <Text style={{ fontSize: 8, fontWeight: 'bold', color: '#FFFFFF' }}>Page 1 of 1</Text>
   </View>
 );
 
@@ -160,20 +170,10 @@ const Watermark = () => (
   </View>
 );
 
-const Field = ({ label, value }: { label: string; value?: string | null }) => {
+const GridField = ({ label, value, full, third }: { label: string; value?: string | null; full?: boolean; third?: boolean }) => {
   if (!value) return null;
   return (
-    <View style={{ marginBottom: 8 }}>
-      <Text style={S.label}>{label}</Text>
-      <Text style={S.value}>{value}</Text>
-    </View>
-  );
-};
-
-const GridField = ({ label, value, full }: { label: string; value?: string | null; full?: boolean }) => {
-  if (!value) return null;
-  return (
-    <View style={full ? S.colFull : S.col2}>
+    <View style={full ? S.colFull : third ? S.col3 : S.col2}>
       <Text style={S.label}>{label}</Text>
       <Text style={S.value}>{value}</Text>
     </View>
@@ -182,11 +182,10 @@ const GridField = ({ label, value, full }: { label: string; value?: string | nul
 
 const StarRatingPdf = ({ rating }: { rating: number | null }) => {
   if (!rating) return <Text style={[S.value, { color: '#9CA3AF' }]}>Not rated</Text>;
-  const filled = '★'.repeat(rating);
-  const empty = '☆'.repeat(5 - rating);
   return (
-    <Text style={{ fontSize: 14, color: '#F59E0B', letterSpacing: 2 }}>
-      {filled}{empty} <Text style={{ fontSize: 10, color: '#6B7280' }}>{rating}/5</Text>
+    <Text style={{ fontSize: 12, color: '#F59E0B', letterSpacing: 1 }}>
+      {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
+      <Text style={{ fontSize: 8, color: '#6B7280' }}> {rating}/5</Text>
     </Text>
   );
 };
@@ -194,45 +193,39 @@ const StarRatingPdf = ({ rating }: { rating: number | null }) => {
 const ToolboxTalkReportPdf = ({ report }: { report: ToolboxTalkCompletionReport }) => {
   const completionDate = formatDate(report.created_at);
   const superiorEmails = report.superior_email.split(',').map(e => e.trim()).filter(Boolean);
-  const pageProps = { size: 'A4' as const, style: S.page };
 
   return (
     <Document>
-      <Page {...pageProps}>
+      <Page size="A4" style={S.page}>
         <Watermark />
         <PageHeader topicName={report.topic_name} date={completionDate} />
 
         <Text style={S.pageTitle}>Toolbox Talk Completion Report</Text>
 
-        {/* Completed banner */}
+        {/* Status */}
         <View style={S.completedBanner}>
-          <Text style={S.completedBannerText}>Status: COMPLETED ✓</Text>
+          <Text style={S.completedBannerText}>✓  COMPLETED</Text>
         </View>
 
-        {/* Section 1 — Participant Info */}
-        <Text style={S.sectionTitle}>Section 1 — Participant Information</Text>
+        {/* Participant + Topic in one row */}
+        <Text style={S.sectionTitle}>Participant & Session Details</Text>
         <View style={S.fieldGroup}>
           <View style={S.grid}>
             <GridField label="Full Name" value={`${report.first_name} ${report.last_name}`} />
             <GridField label="Email" value={report.email} />
+            <GridField label="Topic" value={report.topic_name} />
             <GridField label="Completed On" value={completionDate} />
-            <GridField label="Session Duration" value={formatDuration(report.duration_seconds)} />
+            <GridField label="Session Duration" value={formatDuration(report.duration_seconds)} third />
+            <View style={S.col3}>
+              <Text style={S.label}>Rating</Text>
+              <StarRatingPdf rating={report.rating} />
+            </View>
+            {report.comments && <GridField label="Comments / Remarks" value={report.comments} third />}
           </View>
         </View>
 
-        {/* Section 2 — Topic Details */}
-        <Text style={S.sectionTitle}>Section 2 — Topic Details</Text>
-        <View style={S.fieldGroup}>
-          <Field label="Topic Name" value={report.topic_name} />
-          <View style={{ marginBottom: 8 }}>
-            <Text style={S.label}>Rating</Text>
-            <StarRatingPdf rating={report.rating} />
-          </View>
-          {report.comments && <Field label="Comments / Remarks" value={report.comments} />}
-        </View>
-
-        {/* Section 3 — Notified Superiors */}
-        <Text style={S.sectionTitle}>Section 3 — Notified Superiors</Text>
+        {/* Notified Superiors */}
+        <Text style={S.sectionTitle}>Notified Superiors</Text>
         <View style={S.fieldGroup}>
           <View style={S.chipRow}>
             {superiorEmails.map((email, i) => (
@@ -243,29 +236,25 @@ const ToolboxTalkReportPdf = ({ report }: { report: ToolboxTalkCompletionReport 
           </View>
         </View>
 
+        {/* Attendance Sheets — inline thumbnail grid */}
+        {report.attendance_images.length > 0 && (
+          <>
+            <Text style={S.sectionTitle}>Attendance Sheets</Text>
+            <View style={S.imageGrid}>
+              {report.attendance_images.map((url, i) => (
+                <View key={i} style={S.imageCell}>
+                  <Image src={url} style={S.imageThumb} />
+                  {report.attendance_images.length > 1 && (
+                    <Text style={S.imageLabel}>Sheet {i + 1}</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
         <PageFooter />
       </Page>
-
-      {/* Page 2 — Attendance Sheets (only if images exist) */}
-      {report.attendance_images.length > 0 && (
-        <Page {...pageProps}>
-          <Watermark />
-          <PageHeader topicName={report.topic_name} date={completionDate} />
-          <Text style={S.pageTitle}>Section 4 — Attendance Sheets</Text>
-          {report.attendance_images.map((url, i) => (
-            <View key={i} style={{ marginBottom: 16 }}>
-              <Text style={S.sectionTitle}>
-                Attendance Sheet {report.attendance_images.length > 1 ? i + 1 : ''}
-              </Text>
-              <Image
-                src={url}
-                style={{ maxHeight: 400, objectFit: 'contain', borderRadius: 4 }}
-              />
-            </View>
-          ))}
-          <PageFooter />
-        </Page>
-      )}
     </Document>
   );
 };
