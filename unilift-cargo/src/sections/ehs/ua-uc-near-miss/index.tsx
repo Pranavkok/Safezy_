@@ -812,7 +812,7 @@ const UaUcNearMissForm = () => {
         {isAnalyzing && (
           <p className="text-sm text-primary mt-3 flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            AI is analyzing and classifying your observation...
+            Safezy is analyzing and classifying your observation...
           </p>
         )}
         {!observationType && (

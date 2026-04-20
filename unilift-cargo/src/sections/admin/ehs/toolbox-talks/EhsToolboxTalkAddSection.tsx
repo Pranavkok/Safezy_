@@ -54,7 +54,7 @@ const EhsToolboxTalkAddSection = () => {
 
     try {
       setIsGenerating(true);
-      toast.loading('Generating content with AI...', { id: 'generate-toolbox' });
+      toast.loading('Generating content with Safezy...', { id: 'generate-toolbox' });
 
       // Read selected image as base64 if available
       let image_base64: string | undefined;

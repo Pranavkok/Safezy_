@@ -171,7 +171,7 @@ const IncidentPage2Step = ({
   const onSubmit = async (data: IncidentPage2Type) => {
     try {
       setIsLoading(true);
-      toast.loading('Generating CAPA report...', { id: 'capa' });
+      toast.loading('Safezy Generating CAPA report...', { id: 'capa' });
 
       // Fetch current full incident details for CAPA generation
       const capaResponse = await fetch('/api/generate-capa', {

@@ -51,7 +51,7 @@ const ToolboxTalkDetailsUpdateSection = ({
 
     try {
       setIsGenerating(true);
-      toast.loading('Generating content with AI...', { id: 'generate-toolbox' });
+      toast.loading('Generating content with Safezy...', { id: 'generate-toolbox' });
 
       // Use newly selected file as base64, or fall back to existing image URL
       const newFile = (watch('pdf_url') as unknown as FileList | null)?.[0];
