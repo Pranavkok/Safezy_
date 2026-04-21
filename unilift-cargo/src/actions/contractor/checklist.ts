@@ -362,7 +362,7 @@ export const getMyChecklistSubmissions = async (): Promise<{
       return { success: true, message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED, data: [] };
     }
 
-    const topicIds = [...new Set(submissions.map(r => r.topic_id))];
+    const topicIds = Array.from(new Set(submissions.map(r => r.topic_id)));
     const { data: topics } = await supabase
       .from('ehs_checklist_topics')
       .select('id, topic_name')
