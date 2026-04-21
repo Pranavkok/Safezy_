@@ -338,58 +338,53 @@ export const getMyChecklistSubmissions = async (): Promise<{
     progress: { date: string; progress: number }[];
   }[];
 }> => {
-  const serviceClient = createServiceClient();
+  const supabase = createServiceClient();
 
   try {
-    const anonClient = await createClient();
-    const { data: { session } } = await anonClient.auth.getSession();
-    if (!session) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
-
-    const { data: userData } = await serviceClient
-      .from('users')
-      .select('id')
-      .eq('auth_id', session.user.id)
-      .maybeSingle();
-
-    const userId = (userData as any)?.id;
+    const userId = await getUserIdFromAuth();
+    console.log('[getMyChecklistSubmissions] userId:', userId);
     if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
-    const { data: submissions, error } = await serviceClient
+    const { data: submissions, error } = await supabase
       .from('ehs_checklist_users')
-      .select('id, topic_id, date, site_name, inspected_by, progress')
+      .select(`
+        id,
+        topic_id,
+        date,
+        site_name,
+        inspected_by,
+        progress,
+        ehs_checklist_topics (topic_name)
+      `)
       .eq('user_id', userId)
       .order('date', { ascending: false });
+
+    console.log('[getMyChecklistSubmissions] rows:', submissions?.length, 'error:', error);
 
     if (error) {
       console.error('Error fetching checklist submissions', error);
       return { success: false, message: ERROR_MESSAGES.CHECKLIST_FETCH_FAILED };
     }
 
-    if (!submissions || submissions.length === 0) {
-      return { success: true, message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED, data: [] };
-    }
-
-    const topicIds = Array.from(new Set(submissions.map((r: any) => r.topic_id).filter((id: any): id is number => id !== null)));
-    const { data: topics } = await serviceClient
-      .from('ehs_checklist_topics')
-      .select('id, topic_name')
-      .in('id', topicIds);
-
-    const topicMap: Record<number, string> = {};
-    (topics ?? []).forEach((t: any) => { topicMap[t.id] = t.topic_name; });
+    const rows = submissions ?? [];
 
     return {
       success: true,
       message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED,
-      data: submissions.map((row: any) => ({
-        id: row.id,
-        topic_id: row.topic_id,
-        topic_name: topicMap[row.topic_id] ?? '',
-        date: row.date,
-        site_name: row.site_name,
-        inspected_by: row.inspected_by,
-        progress: row.progress ?? []
-      }))
+      data: rows.map((row: any) => {
+        const topic = Array.isArray(row.ehs_checklist_topics)
+          ? row.ehs_checklist_topics[0]
+          : row.ehs_checklist_topics;
+        return {
+          id: row.id,
+          topic_id: row.topic_id,
+          topic_name: topic?.topic_name ?? '',
+          date: row.date,
+          site_name: row.site_name,
+          inspected_by: row.inspected_by,
+          progress: row.progress ?? []
+        };
+      })
     };
   } catch (error) {
     console.error('Unexpected error fetching checklist submissions', error);
