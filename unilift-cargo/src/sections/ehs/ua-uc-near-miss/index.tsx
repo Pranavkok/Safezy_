@@ -669,14 +669,14 @@ const UaUcNearMissForm = () => {
           setValue('nm_severity', analysis.nm_severity);
         }
 
-        toast.success('AI classification complete');
+        toast.success('Safezy classification complete');
       } else if (res.status === 429) {
-        toast('AI quota exceeded. Please try again later.');
+        toast('Safezy quota exceeded. Please try again later.');
       } else {
-        toast('AI analysis unavailable. Please try again.');
+        toast('Safezy analysis unavailable. Please try again.');
       }
     } catch {
-      toast.error('AI analysis failed. Please try again.');
+      toast.error('Safezy analysis failed. Please try again.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -803,7 +803,7 @@ const UaUcNearMissForm = () => {
         <SectionHeader
           number="3"
           title="Upload Evidence"
-          subtitle="Upload an image, video, or voice note — AI will automatically classify the observation."
+          subtitle="Upload an image, video, or voice note — Safezy will automatically classify the observation."
         />
         <MediaUpload
           onItemsChange={handleItemsChange}
@@ -817,7 +817,7 @@ const UaUcNearMissForm = () => {
         )}
         {!observationType && (
           <p className="text-xs text-gray-400 mt-2 italic">
-            Select a type of observation first, then upload evidence for AI
+            Select a type of observation first, then upload evidence for Safezy
             classification.
           </p>
         )}
@@ -830,14 +830,14 @@ const UaUcNearMissForm = () => {
           <div>
             <SectionHeader
               number="4"
-              title="AI Generated Details"
+              title="Safezy Generated Details"
               subtitle="Everything below stays on this page so the user can review and edit before submitting."
             />
             <div className="space-y-5">
               <TextareaWithLabel
                 label="What Happened / Observed"
                 rows={3}
-                placeholder="AI-generated summary or manual description"
+                placeholder="Safezy-generated summary or manual description"
                 {...register('what_happened')}
               />
 

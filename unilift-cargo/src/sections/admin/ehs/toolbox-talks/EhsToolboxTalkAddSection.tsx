@@ -176,7 +176,7 @@ const EhsToolboxTalkAddSection = () => {
                 className="w-full flex items-center gap-2 text-primary border-primary hover:bg-primary hover:text-white"
               >
                 <Sparkles className="w-4 h-4" />
-                {isGenerating ? 'Generating...' : 'Generate with AI'}
+                {isGenerating ? 'Generating...' : 'Generate with Safezy'}
               </Button>
             </div>
           </div>
