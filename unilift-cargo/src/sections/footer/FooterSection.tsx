@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { AppRoutes } from '@/constants/AppRoutes';
 import ASSETS from '@/assets';
-import { MailsIcon, PhoneCall } from 'lucide-react';
+import { MailsIcon, MapPin, PhoneCall } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 
 export const CATEGORIES = [
@@ -114,6 +114,16 @@ const FooterSection = () => {
                 >
                   support@safezy.in
                 </a>
+              </div>
+              <div className="flex items-start gap-2 mt-2">
+                <MapPin className="w-5 h-5 mt-0.5 shrink-0" />
+                <div className="text-sm font-semibold leading-snug">
+                  <p>Unit Number 721, Tulsiani Chamber,</p>
+                  <p>7, Free Press Journal Marg,</p>
+                  <p>Nariman Point, Mumbai,</p>
+                  <p>Maharashtra 400021, India</p>
+                  <p className="mt-1">Phone: +91 22 6654 8266</p>
+                </div>
               </div>
             </>
           )}
