@@ -148,6 +148,7 @@ IMPACT
 ====================
 - Described Impact: ${incidentData.impact_description || 'N/A'}
 - Corrective Measures: ${incidentData.immediate_actions || 'N/A'}
+- Initial Investigation Findings: ${incidentData.initial_investigation_findings || 'N/A'}
 
 =======================
 SYSTEM ANALYSIS
