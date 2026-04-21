@@ -296,7 +296,7 @@ const IncidentReportPdf = ({
         <Watermark />
         <PageHeader title={incidentDetails.title} refId={refId} date={createdDate} />
 
-        <Text style={styles.pageTitle}>Incident Snapshot & Narration</Text>
+        <Text style={styles.pageTitle}>Incident Assessment Report</Text>
 
         {/* Section 1 */}
         <Text style={styles.sectionTitle}>Section 1 — Incident Snapshot</Text>

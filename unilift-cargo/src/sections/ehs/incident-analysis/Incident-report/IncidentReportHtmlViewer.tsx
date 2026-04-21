@@ -21,7 +21,7 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 );
 
 const PageTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-base font-bold text-primary border-b-2 border-primary pb-2 mb-4">
+  <h2 className="text-xl font-bold text-primary border-b-2 border-primary pb-2 mb-4">
     {children}
   </h2>
 );
@@ -122,7 +122,7 @@ const IncidentReportHtmlViewer = ({
 
       <div className="p-6 space-y-2">
         {/* ── Page 1: Incident Snapshot & Narration ── */}
-        <PageTitle>Incident Snapshot &amp; Narration</PageTitle>
+        <PageTitle>Incident Assessment Report</PageTitle>
 
         <SectionTitle>Section 1 — Incident Snapshot</SectionTitle>
         <FieldGroup>

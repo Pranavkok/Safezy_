@@ -14,7 +14,7 @@ export const INCIDENT_ANALYSIS_STEPS = [
     stepId: 1,
     name: 'Incident Details',
     icon: FileText,
-    description: 'Snapshot & Narration'
+    description: 'Incident Assessment Report'
   },
   {
     stepId: 2,
