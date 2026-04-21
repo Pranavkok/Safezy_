@@ -1,25 +1,36 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { getMyChecklistSubmissions } from '@/actions/contractor/checklist';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight, ClipboardList } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
-import EhsListingSkeleton from '@/skeleton/EhsListingSkeleton';
 
-const ChecklistMySubmissionsSection = () => {
+type ChecklistSubmission = {
+  id: number;
+  topic_id: number;
+  topic_name: string;
+  date: string;
+  site_name: string;
+  inspected_by: string;
+  progress: { date: string; progress: number }[];
+};
+
+type ChecklistSubmissionsResponse = {
+  success: boolean;
+  message: string;
+  data?: ChecklistSubmission[];
+};
+
+const ChecklistMySubmissionsSection = ({
+  initialResponse
+}: {
+  initialResponse: ChecklistSubmissionsResponse;
+}) => {
   const router = useRouter();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['my-checklist-submissions'],
-    queryFn: getMyChecklistSubmissions,
-    refetchOnWindowFocus: false
-  });
-
-  const hasFetchError = !!data && !data.success;
-  const submissions = data?.data ?? [];
+  const hasFetchError = !initialResponse.success;
+  const submissions = initialResponse.data ?? [];
 
   const latestProgress = (progress: { date: string; progress: number }[]) => {
     if (!progress?.length) return null;
@@ -31,26 +42,22 @@ const ChecklistMySubmissionsSection = () => {
       <div className="flex items-center gap-3 mb-8">
         <ClipboardList className="w-6 h-6 text-primary" />
         <h2 className="text-2xl font-bold text-gray-800">My Checklist Submissions</h2>
-        {!isLoading && (
-          <span className="bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
-            {submissions.length}
-          </span>
-        )}
+        <span className="bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
+          {submissions.length}
+        </span>
       </div>
 
-      {isLoading && <EhsListingSkeleton />}
-
-      {!isLoading && hasFetchError && (
+      {hasFetchError && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-          {data.message || 'Failed to load your checklist submissions.'}
+          {initialResponse.message || 'Failed to load your checklist submissions.'}
         </div>
       )}
 
-      {!isLoading && !hasFetchError && submissions.length === 0 && (
+      {!hasFetchError && submissions.length === 0 && (
         <EmptyState searchQuery="" contentType="Checklist Submissions" />
       )}
 
-      {!isLoading && !hasFetchError && submissions.length > 0 && (
+      {!hasFetchError && submissions.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {submissions.map(item => {
             const score = latestProgress(item.progress);
