@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
 import { revalidatePath } from 'next/cache';
 import { ToolboxNoteType, ToolboxTalkCompletionReport } from '@/types/ehs.types';
@@ -162,7 +163,7 @@ export const getMyToolboxSubmissions = async (): Promise<{
     duration_seconds: number | null;
   }[];
 }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const userId = await getUserIdFromAuth();

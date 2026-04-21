@@ -18,6 +18,8 @@ const ChecklistMySubmissionsSection = () => {
     refetchOnWindowFocus: false
   });
 
+  console.log('[ChecklistMySubmissions] raw response:', data);
+
   const submissions = data?.data ?? [];
 
   const latestProgress = (progress: { date: string; progress: number }[]) => {

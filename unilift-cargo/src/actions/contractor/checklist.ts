@@ -338,10 +338,11 @@ export const getMyChecklistSubmissions = async (): Promise<{
     progress: { date: string; progress: number }[];
   }[];
 }> => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const userId = await getUserIdFromAuth();
+    console.log('[getMyChecklistSubmissions] userId:', userId);
 
     if (!userId) {
       return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
@@ -352,6 +353,8 @@ export const getMyChecklistSubmissions = async (): Promise<{
       .select('id, topic_id, date, site_name, inspected_by, progress')
       .eq('user_id', userId)
       .order('date', { ascending: false });
+
+    console.log('[getMyChecklistSubmissions] submissions:', submissions, 'error:', error);
 
     if (error) {
       console.error('Error fetching checklist submissions', error);
