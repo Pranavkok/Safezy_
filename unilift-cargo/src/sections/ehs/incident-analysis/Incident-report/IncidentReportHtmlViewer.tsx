@@ -173,6 +173,10 @@ const IncidentReportHtmlViewer = ({
           <Field label="Described Impact" value={incidentDetails.impact_description} />
           <Field label="Worst-Case Potential" value={incidentDetails.worst_case_potential} />
           <Field label="Corrective Measures" value={incidentDetails.immediate_actions} />
+          <Field
+            label="Any Findings From Initial Investigations"
+            value={incidentDetails.initial_investigation_findings}
+          />
         </FieldGroup>
 
         <Divider />

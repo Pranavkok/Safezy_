@@ -572,6 +572,7 @@ export const savePage2 = async (
       impact_description: data.impact_description,
       worst_case_potential: data.worst_case_potential,
       immediate_actions: data.immediate_actions,
+      initial_investigation_findings: data.initial_investigation_findings?.trim() || null,
       is_completed: false,
       updated_at: new Date().toISOString(),
       ...(correctives ? { corrective_actions: correctives } : {}),

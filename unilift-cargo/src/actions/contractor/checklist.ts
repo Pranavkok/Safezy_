@@ -344,7 +344,7 @@ export const getMyChecklistSubmissions = async (): Promise<{
     const userId = await getUserIdFromAuth();
 
     if (!userId) {
-      return { success: false, message: `USER_NOT_FOUND` };
+      return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
     }
 
     const { data: submissions, error } = await supabase
@@ -359,7 +359,7 @@ export const getMyChecklistSubmissions = async (): Promise<{
     }
 
     if (!submissions || submissions.length === 0) {
-      return { success: true, message: `NO_DATA_FOR_USER:${userId}`, data: [] };
+      return { success: true, message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED, data: [] };
     }
 
     const topicIds = Array.from(new Set(submissions.map(r => r.topic_id).filter((id): id is number => id !== null)));

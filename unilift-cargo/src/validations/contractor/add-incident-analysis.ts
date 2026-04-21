@@ -74,7 +74,8 @@ export const IncidentPage2Schema = z.object({
     .nonempty('Please select worst-case potential'),
   immediate_actions: z
     .string({ required_error: 'Please describe immediate actions taken' })
-    .nonempty('Please describe immediate actions taken')
+    .nonempty('Please describe immediate actions taken'),
+  initial_investigation_findings: z.string().optional()
 });
 
 // ─── Legacy schemas (kept for backward compat, not used in new form) ─────────

@@ -513,6 +513,7 @@ export type Database = {
           immediate_cause: string | null
           impact_description: string | null
           immediate_actions: string | null
+          initial_investigation_findings: string | null
           incident_type: string | null
           instructions_communicated:
             | Database["public"]["Enums"]["confirmation"]
@@ -576,6 +577,7 @@ export type Database = {
           immediate_cause?: string | null
           impact_description?: string | null
           immediate_actions?: string | null
+          initial_investigation_findings?: string | null
           incident_type?: string | null
           instructions_communicated?:
             | Database["public"]["Enums"]["confirmation"]
@@ -641,6 +643,7 @@ export type Database = {
           immediate_cause?: string | null
           impact_description?: string | null
           immediate_actions?: string | null
+          initial_investigation_findings?: string | null
           incident_type?: string | null
           instructions_communicated?:
             | Database["public"]["Enums"]["confirmation"]
@@ -2109,4 +2112,3 @@ export const Constants = {
     },
   },
 } as const
-

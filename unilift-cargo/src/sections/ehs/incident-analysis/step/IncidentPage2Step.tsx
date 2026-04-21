@@ -160,7 +160,8 @@ const IncidentPage2Step = ({
       past_incidents_text: incidentDetails.past_incidents_text ?? '',
       impact_description: incidentDetails.impact_description ?? '',
       worst_case_potential: incidentDetails.worst_case_potential ?? '',
-      immediate_actions: incidentDetails.immediate_actions ?? ''
+      immediate_actions: incidentDetails.immediate_actions ?? '',
+      initial_investigation_findings: incidentDetails.initial_investigation_findings ?? ''
     }
   });
 
@@ -399,6 +400,22 @@ const IncidentPage2Step = ({
               errorText={errors.immediate_actions?.message}
               {...register('immediate_actions')}
             />
+          </div>
+
+          <div className="md:col-span-2 space-y-1">
+            <label className="text-sm font-medium">
+              Any findings from initial investigations
+            </label>
+            <Textarea
+              placeholder="Enter any findings from the initial investigation..."
+              className="min-h-28"
+              {...register('initial_investigation_findings')}
+            />
+            {errors.initial_investigation_findings && (
+              <p className="text-sm text-red-500">
+                {errors.initial_investigation_findings.message}
+              </p>
+            )}
           </div>
         </div>
       </div>
