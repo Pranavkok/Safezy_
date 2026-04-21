@@ -80,11 +80,11 @@ ${UA_CLASSIFICATION_OPTIONS.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 Based on your analysis, respond with ONLY this exact JSON structure — no explanation, no markdown, no extra text:
 {
-  "what_happened": "<1-2 sentences describing the unsafe act observed>",
-  "equipment_involved": "<comma-separated list of equipment, tools, or materials involved — write 'None identified' if nothing is visible>",
+  "what_happened": "<Write 4-6 sentences. Describe: (1) exactly what unsafe act was observed and who is performing it, (2) what specific safety rule, PPE requirement, or procedure is being violated, (3) the environment or context where this is happening, (4) the immediate risk or potential harm this act poses to the worker and others nearby, and (5) any contributing factors such as lack of supervision, time pressure, or inadequate training that may have led to this behavior.>",
+  "equipment_involved": "<comma-separated list of equipment, tools, PPE, or materials involved — write 'None identified' if nothing is visible>",
   "ua_classifications": ["<select all that apply from the list above — use the exact text>"],
   "ua_other": "<only if none of the above classifications fit, briefly describe the unsafe act; otherwise leave as empty string>",
-  "action_taken": "<recommended immediate corrective action to address this unsafe act, written as a short actionable instruction>"
+  "action_taken": "<Write 5-7 detailed corrective action points as a numbered list. Include: (1) immediate stop-work or isolation step, (2) what must be corrected on the spot right now, (3) replacement or provision of correct PPE or tools, (4) supervisory or management notification required, (5) retraining or toolbox talk needed, (6) root cause to investigate and address, and (7) long-term preventive measure such as a procedure update, signage, or periodic audit to prevent recurrence.>"
 }`;
   }
 
@@ -100,12 +100,12 @@ ${UC_CLASSIFICATION_OPTIONS.map((c, i) => `${i + 1}. ${c}`).join('\n')}
 
 Based on your analysis, respond with ONLY this exact JSON structure — no explanation, no markdown, no extra text:
 {
-  "what_happened": "<1-2 sentences describing the unsafe condition observed>",
-  "equipment_involved": "<comma-separated list of equipment, tools, or materials involved — write 'None identified' if nothing is visible>",
+  "what_happened": "<Write 4-6 sentences. Describe: (1) exactly what unsafe condition exists and where it is located, (2) how long it appears to have existed or what may have caused it, (3) which specific safety standard or regulation is being violated, (4) which workers or activities are directly exposed to this hazard, and (5) the potential injury or damage that could result if this condition is not corrected immediately.>",
+  "equipment_involved": "<comma-separated list of equipment, tools, structures, or materials involved — write 'None identified' if nothing is visible>",
   "uc_classifications": ["<select all that apply from the list above — use the exact text>"],
   "uc_other": "<only if none of the above classifications fit, briefly describe the condition; otherwise leave as empty string>",
   "uc_severity": "<one of: Low | Medium | High — based on the potential harm this unsafe condition could cause>",
-  "uc_temporary_controls": "<immediate temporary control measures that should be applied right now to reduce the risk, written as short actionable instructions>"
+  "uc_temporary_controls": "<Write 5-7 detailed control measures as a numbered list. Include: (1) immediate area isolation or barricading step, (2) warning signs or barriers to be placed, (3) which personnel must be evacuated or kept away, (4) who must be notified (supervisor, maintenance, safety officer), (5) interim fix or workaround until permanent repair is done, (6) permanent corrective action required such as repair, replacement, or maintenance work order, and (7) follow-up inspection schedule to confirm the hazard has been eliminated.>"
 }`;
   }
 
@@ -118,10 +118,10 @@ Describe the near miss situation that is visible or described. Focus on what alm
 
 Based on your analysis, respond with ONLY this exact JSON structure — no explanation, no markdown, no extra text:
 {
-  "what_happened": "<1-2 sentences describing the near miss event observed>",
+  "what_happened": "<Write 4-6 sentences. Describe: (1) exactly what near miss event occurred and who was involved, (2) what activity was being performed at the time, (3) what specific unsafe act or condition contributed to the near miss, (4) what immediate factor prevented an actual injury or incident, and (5) how frequently this type of near miss might occur in this environment if left unaddressed.>",
   "equipment_involved": "<comma-separated list of equipment, tools, or materials involved — write 'None identified' if nothing is visible>",
-  "nm_potential_injury": "<type of potential injury, e.g. Head injury, Fall, Burns, Crush injury>",
-  "nm_what_could_happen": "<1-2 sentences describing what could have happened if the near miss had resulted in an incident>",
+  "nm_potential_injury": "<specific type of potential injury, e.g. Head injury from falling object, Fall from height, Burns from chemical splash, Crush injury from machinery>",
+  "nm_what_could_happen": "<Write 3-4 sentences describing: (1) the worst-case scenario injury or fatality that could have resulted, (2) secondary consequences such as equipment damage or production shutdown, (3) regulatory or legal implications if it had become an actual incident, and (4) how this near miss is a warning sign of a systemic safety gap that requires immediate attention.>",
   "nm_severity": "<one of: Low | Medium | High — based on potential consequences>"
 }`;
 }
