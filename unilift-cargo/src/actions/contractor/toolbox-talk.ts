@@ -186,7 +186,7 @@ export const getMyToolboxSubmissions = async (): Promise<{
       return { success: true, message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED, data: [] };
     }
 
-    const talkIds = Array.from(new Set(submissions.map(r => r.toolbox_talk_id)));
+    const talkIds = Array.from(new Set(submissions.map(r => r.toolbox_talk_id).filter((id): id is number => id !== null)));
     const { data: talks } = await supabase
       .from('ehs_toolbox_talk')
       .select('id, topic_name')
