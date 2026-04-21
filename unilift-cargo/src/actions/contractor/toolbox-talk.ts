@@ -171,18 +171,9 @@ export const getMyToolboxSubmissions = async (): Promise<{
       return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
     }
 
-    const { data, error } = await supabase
+    const { data: submissions, error } = await supabase
       .from('ehs_toolbox_users')
-      .select(
-        `
-        id,
-        toolbox_talk_id,
-        created_at,
-        rating,
-        duration_seconds,
-        ehs_toolbox_talk (topic_name)
-      `
-      )
+      .select('id, toolbox_talk_id, created_at, rating, duration_seconds')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -191,13 +182,26 @@ export const getMyToolboxSubmissions = async (): Promise<{
       return { success: false, message: ERROR_MESSAGES.TOOLBOX_USERS_NOT_FETCHED };
     }
 
+    if (!submissions || submissions.length === 0) {
+      return { success: true, message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED, data: [] };
+    }
+
+    const talkIds = [...new Set(submissions.map(r => r.toolbox_talk_id))];
+    const { data: talks } = await supabase
+      .from('ehs_toolbox_talk')
+      .select('id, topic_name')
+      .in('id', talkIds);
+
+    const talkMap: Record<number, string> = {};
+    (talks ?? []).forEach((t: any) => { talkMap[t.id] = t.topic_name; });
+
     return {
       success: true,
       message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED,
-      data: (data ?? []).map((row: any) => ({
+      data: submissions.map((row: any) => ({
         id: row.id,
         toolbox_talk_id: row.toolbox_talk_id,
-        topic_name: row.ehs_toolbox_talk?.topic_name ?? '',
+        topic_name: talkMap[row.toolbox_talk_id] ?? '',
         created_at: row.created_at,
         rating: row.rating,
         duration_seconds: row.duration_seconds

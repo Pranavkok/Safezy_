@@ -347,19 +347,9 @@ export const getMyChecklistSubmissions = async (): Promise<{
       return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
     }
 
-    const { data, error } = await supabase
+    const { data: submissions, error } = await supabase
       .from('ehs_checklist_users')
-      .select(
-        `
-        id,
-        topic_id,
-        date,
-        site_name,
-        inspected_by,
-        progress,
-        ehs_checklist_topics (topic_name)
-      `
-      )
+      .select('id, topic_id, date, site_name, inspected_by, progress')
       .eq('user_id', userId)
       .order('date', { ascending: false });
 
@@ -368,13 +358,26 @@ export const getMyChecklistSubmissions = async (): Promise<{
       return { success: false, message: ERROR_MESSAGES.CHECKLIST_FETCH_FAILED };
     }
 
+    if (!submissions || submissions.length === 0) {
+      return { success: true, message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED, data: [] };
+    }
+
+    const topicIds = [...new Set(submissions.map(r => r.topic_id))];
+    const { data: topics } = await supabase
+      .from('ehs_checklist_topics')
+      .select('id, topic_name')
+      .in('id', topicIds);
+
+    const topicMap: Record<number, string> = {};
+    (topics ?? []).forEach((t: any) => { topicMap[t.id] = t.topic_name; });
+
     return {
       success: true,
       message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED,
-      data: (data ?? []).map((row: any) => ({
+      data: submissions.map((row: any) => ({
         id: row.id,
         topic_id: row.topic_id,
-        topic_name: row.ehs_checklist_topics?.topic_name ?? '',
+        topic_name: topicMap[row.topic_id] ?? '',
         date: row.date,
         site_name: row.site_name,
         inspected_by: row.inspected_by,
