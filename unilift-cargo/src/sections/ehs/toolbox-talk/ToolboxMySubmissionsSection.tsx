@@ -1,13 +1,10 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { getMyToolboxSubmissions } from '@/actions/contractor/toolbox-talk';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight, BookOpen, Star, Clock } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
-import EhsListingSkeleton from '@/skeleton/EhsListingSkeleton';
 
 const formatDuration = (seconds: number | null) => {
   if (!seconds) return null;
@@ -16,36 +13,52 @@ const formatDuration = (seconds: number | null) => {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
-const ToolboxMySubmissionsSection = () => {
+type ToolboxSubmission = {
+  id: number;
+  toolbox_talk_id: number;
+  topic_name: string;
+  created_at: string;
+  rating: number | null;
+  duration_seconds: number | null;
+};
+
+type ToolboxSubmissionsResponse = {
+  success: boolean;
+  message: string;
+  data?: ToolboxSubmission[];
+};
+
+const ToolboxMySubmissionsSection = ({
+  initialResponse
+}: {
+  initialResponse: ToolboxSubmissionsResponse;
+}) => {
   const router = useRouter();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['my-toolbox-submissions'],
-    queryFn: getMyToolboxSubmissions,
-    refetchOnWindowFocus: false
-  });
-
-  const submissions = data?.data ?? [];
+  const hasFetchError = !initialResponse.success;
+  const submissions = initialResponse.data ?? [];
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-8">
         <BookOpen className="w-6 h-6 text-primary" />
         <h2 className="text-2xl font-bold text-gray-800">My Toolbox Talk Submissions</h2>
-        {!isLoading && (
-          <span className="bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
-            {submissions.length}
-          </span>
-        )}
+        <span className="bg-primary text-white text-sm font-semibold px-3 py-1 rounded-full">
+          {submissions.length}
+        </span>
       </div>
 
-      {isLoading && <EhsListingSkeleton />}
+      {hasFetchError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          {initialResponse.message || 'Failed to load your toolbox talk submissions.'}
+        </div>
+      )}
 
-      {!isLoading && submissions.length === 0 && (
+      {!hasFetchError && submissions.length === 0 && (
         <EmptyState searchQuery="" contentType="Toolbox Talk Submissions" />
       )}
 
-      {!isLoading && submissions.length > 0 && (
+      {!hasFetchError && submissions.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {submissions.map(item => {
             const duration = formatDuration(item.duration_seconds);

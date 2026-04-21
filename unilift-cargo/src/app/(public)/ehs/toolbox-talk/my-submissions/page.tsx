@@ -1,6 +1,7 @@
 import ASSETS from '@/assets';
 import PageBanner from '@/components/PageBanner';
 import { AppRoutes } from '@/constants/AppRoutes';
+import { getMyToolboxSubmissions } from '@/actions/contractor/toolbox-talk';
 import ToolboxMySubmissionsSection from '@/sections/ehs/toolbox-talk/ToolboxMySubmissionsSection';
 import { Metadata } from 'next';
 
@@ -15,7 +16,9 @@ const BREADCRUMBS = [
   { label: 'MY SUBMISSIONS', route: AppRoutes.EHS_TOOLBOX_TALK_MY_SUBMISSIONS }
 ] as const;
 
-const ToolboxMySubmissionsPage = () => {
+const ToolboxMySubmissionsPage = async () => {
+  const submissionsResponse = await getMyToolboxSubmissions();
+
   return (
     <div className="bg-gray-50">
       <PageBanner
@@ -23,7 +26,7 @@ const ToolboxMySubmissionsPage = () => {
         pageHeading="My Toolbox Talk Submissions"
         breadcrumbs={BREADCRUMBS}
       />
-      <ToolboxMySubmissionsSection />
+      <ToolboxMySubmissionsSection initialResponse={submissionsResponse} />
     </div>
   );
 };
