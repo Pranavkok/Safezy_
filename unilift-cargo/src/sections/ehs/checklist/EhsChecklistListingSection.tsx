@@ -13,6 +13,7 @@ import debounce from 'lodash.debounce';
 import Image from 'next/image';
 import ASSETS from '@/assets';
 import { AppRoutes } from '@/constants/AppRoutes';
+import Link from 'next/link';
 import EhsListingSkeleton from '@/skeleton/EhsListingSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import EHSChecklistModal from '@/components/modals/ehs/EHSChecklistModal';
@@ -121,7 +122,7 @@ const EhsChecklistListingSection = () => {
       <div className="w-full max-w-7xl mx-auto px-4 py-8 ">
         {/* Header and Search */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               className="bg-primary py-2 px-4 rounded-sm text-white font-bold text-sm sm:text-base uppercase cursor-pointer"
               onClick={handleSuggestionClick}
@@ -130,6 +131,15 @@ const EhsChecklistListingSection = () => {
             </button>
 
             <EHSChecklistModal />
+
+            {user.userId && (
+              <Link
+                href={AppRoutes.EHS_CHECKLIST_MY_SUBMISSIONS}
+                className="bg-white border border-primary py-2 px-4 rounded-sm text-primary font-bold text-sm sm:text-base uppercase"
+              >
+                My Submissions
+              </Link>
+            )}
           </div>
 
           <div className="relative w-full md:w-72">

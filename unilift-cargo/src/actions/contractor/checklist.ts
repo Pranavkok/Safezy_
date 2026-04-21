@@ -325,6 +325,68 @@ export const getChecklistProgressByContractor = async (topicId: number) => {
   }
 };
 
+export const getMyChecklistSubmissions = async (): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    id: number;
+    topic_id: number;
+    topic_name: string;
+    date: string;
+    site_name: string;
+    inspected_by: string;
+    progress: { date: string; progress: number }[];
+  }[];
+}> => {
+  const supabase = await createClient();
+
+  try {
+    const userId = await getUserIdFromAuth();
+
+    if (!userId) {
+      return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+    }
+
+    const { data, error } = await supabase
+      .from('ehs_checklist_users')
+      .select(
+        `
+        id,
+        topic_id,
+        date,
+        site_name,
+        inspected_by,
+        progress,
+        ehs_checklist_topics (topic_name)
+      `
+      )
+      .eq('user_id', userId)
+      .order('date', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching checklist submissions', error);
+      return { success: false, message: ERROR_MESSAGES.CHECKLIST_FETCH_FAILED };
+    }
+
+    return {
+      success: true,
+      message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED,
+      data: (data ?? []).map((row: any) => ({
+        id: row.id,
+        topic_id: row.topic_id,
+        topic_name: row.ehs_checklist_topics?.topic_name ?? '',
+        date: row.date,
+        site_name: row.site_name,
+        inspected_by: row.inspected_by,
+        progress: row.progress ?? []
+      }))
+    };
+  } catch (error) {
+    console.error('Unexpected error fetching checklist submissions', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 export const sendChecklistCompleteEmail = async (
   superiorEmail: string,
   emailContext: sendChecklistMailType,

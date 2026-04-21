@@ -150,6 +150,65 @@ export const getMyToolboxCompletion = async (
   }
 };
 
+export const getMyToolboxSubmissions = async (): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    id: number;
+    toolbox_talk_id: number;
+    topic_name: string;
+    created_at: string;
+    rating: number | null;
+    duration_seconds: number | null;
+  }[];
+}> => {
+  const supabase = await createClient();
+
+  try {
+    const userId = await getUserIdFromAuth();
+
+    if (!userId) {
+      return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+    }
+
+    const { data, error } = await supabase
+      .from('ehs_toolbox_users')
+      .select(
+        `
+        id,
+        toolbox_talk_id,
+        created_at,
+        rating,
+        duration_seconds,
+        ehs_toolbox_talk (topic_name)
+      `
+      )
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching toolbox submissions', error);
+      return { success: false, message: ERROR_MESSAGES.TOOLBOX_USERS_NOT_FETCHED };
+    }
+
+    return {
+      success: true,
+      message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED,
+      data: (data ?? []).map((row: any) => ({
+        id: row.id,
+        toolbox_talk_id: row.toolbox_talk_id,
+        topic_name: row.ehs_toolbox_talk?.topic_name ?? '',
+        created_at: row.created_at,
+        rating: row.rating,
+        duration_seconds: row.duration_seconds
+      }))
+    };
+  } catch (error) {
+    console.error('Unexpected error fetching toolbox submissions', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 export const getToolboxNoteByUserId = async (
   toolboxId: number
 ): Promise<{ success: boolean; message: string; data?: ToolboxNoteType }> => {
