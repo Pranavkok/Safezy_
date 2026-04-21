@@ -163,16 +163,23 @@ export const getMyToolboxSubmissions = async (): Promise<{
     duration_seconds: number | null;
   }[];
 }> => {
-  const supabase = createServiceClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const userId = await getUserIdFromAuth();
+    const anonClient = await createClient();
+    const { data: { session } } = await anonClient.auth.getSession();
+    if (!session) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
-    if (!userId) {
-      return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
-    }
+    const { data: userData } = await serviceClient
+      .from('users')
+      .select('id')
+      .eq('auth_id', session.user.id)
+      .maybeSingle();
 
-    const { data: submissions, error } = await supabase
+    const userId = (userData as any)?.id;
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+
+    const { data: submissions, error } = await serviceClient
       .from('ehs_toolbox_users')
       .select('id, toolbox_talk_id, created_at, rating, duration_seconds')
       .eq('user_id', userId)
@@ -187,8 +194,8 @@ export const getMyToolboxSubmissions = async (): Promise<{
       return { success: true, message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED, data: [] };
     }
 
-    const talkIds = Array.from(new Set(submissions.map(r => r.toolbox_talk_id).filter((id): id is number => id !== null)));
-    const { data: talks } = await supabase
+    const talkIds = Array.from(new Set(submissions.map((r: any) => r.toolbox_talk_id).filter((id: any): id is number => id !== null)));
+    const { data: talks } = await serviceClient
       .from('ehs_toolbox_talk')
       .select('id, topic_name')
       .in('id', talkIds);

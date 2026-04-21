@@ -338,16 +338,23 @@ export const getMyChecklistSubmissions = async (): Promise<{
     progress: { date: string; progress: number }[];
   }[];
 }> => {
-  const supabase = createServiceClient();
+  const serviceClient = createServiceClient();
 
   try {
-    const userId = await getUserIdFromAuth();
+    const anonClient = await createClient();
+    const { data: { session } } = await anonClient.auth.getSession();
+    if (!session) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
-    if (!userId) {
-      return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
-    }
+    const { data: userData } = await serviceClient
+      .from('users')
+      .select('id')
+      .eq('auth_id', session.user.id)
+      .maybeSingle();
 
-    const { data: submissions, error } = await supabase
+    const userId = (userData as any)?.id;
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+
+    const { data: submissions, error } = await serviceClient
       .from('ehs_checklist_users')
       .select('id, topic_id, date, site_name, inspected_by, progress')
       .eq('user_id', userId)
@@ -362,8 +369,8 @@ export const getMyChecklistSubmissions = async (): Promise<{
       return { success: true, message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED, data: [] };
     }
 
-    const topicIds = Array.from(new Set(submissions.map(r => r.topic_id).filter((id): id is number => id !== null)));
-    const { data: topics } = await supabase
+    const topicIds = Array.from(new Set(submissions.map((r: any) => r.topic_id).filter((id: any): id is number => id !== null)));
+    const { data: topics } = await serviceClient
       .from('ehs_checklist_topics')
       .select('id, topic_name')
       .in('id', topicIds);
