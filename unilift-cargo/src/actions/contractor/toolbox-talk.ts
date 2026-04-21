@@ -163,51 +163,50 @@ export const getMyToolboxSubmissions = async (): Promise<{
     duration_seconds: number | null;
   }[];
 }> => {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   try {
     const userId = await getUserIdFromAuth();
-    console.log('[getMyToolboxSubmissions] userId:', userId);
     if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
     const { data: submissions, error } = await supabase
       .from('ehs_toolbox_users')
-      .select(`
-        id,
-        toolbox_talk_id,
-        created_at,
-        rating,
-        duration_seconds,
-        ehs_toolbox_talk (topic_name)
-      `)
+      .select('id, toolbox_talk_id, created_at, rating, duration_seconds')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-
-    console.log('[getMyToolboxSubmissions] rows:', submissions?.length, 'error:', error);
 
     if (error) {
       console.error('Error fetching toolbox submissions', error);
       return { success: false, message: ERROR_MESSAGES.TOOLBOX_USERS_NOT_FETCHED };
     }
 
-    const rows = submissions ?? [];
+    if (!submissions || submissions.length === 0) {
+      return { success: true, message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED, data: [] };
+    }
+
+    const talkIds = Array.from(new Set(
+      submissions.map((r: any) => r.toolbox_talk_id).filter((id: any): id is number => id !== null)
+    ));
+
+    const { data: talks } = await supabase
+      .from('ehs_toolbox_talk')
+      .select('id, topic_name')
+      .in('id', talkIds);
+
+    const talkMap: Record<number, string> = {};
+    (talks ?? []).forEach((t: any) => { talkMap[t.id] = t.topic_name; });
 
     return {
       success: true,
       message: SUCCESS_MESSAGES.TOOLBOX_USERS_FETCHED,
-      data: rows.map((row: any) => {
-        const talk = Array.isArray(row.ehs_toolbox_talk)
-          ? row.ehs_toolbox_talk[0]
-          : row.ehs_toolbox_talk;
-        return {
-          id: row.id,
-          toolbox_talk_id: row.toolbox_talk_id,
-          topic_name: talk?.topic_name ?? '',
-          created_at: row.created_at,
-          rating: row.rating,
-          duration_seconds: row.duration_seconds
-        };
-      })
+      data: submissions.map((row: any) => ({
+        id: row.id,
+        toolbox_talk_id: row.toolbox_talk_id,
+        topic_name: talkMap[row.toolbox_talk_id] ?? '',
+        created_at: row.created_at,
+        rating: row.rating,
+        duration_seconds: row.duration_seconds
+      }))
     };
   } catch (error) {
     console.error('Unexpected error fetching toolbox submissions', error);
