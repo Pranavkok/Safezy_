@@ -105,12 +105,20 @@ export const getChecklistDetailsById = async (
 
 export const addChecklistResponseByContractor = async (
   checklist: ChecklistResponseByContractorType,
-  userId: string,
   totalWeightage: number
 ) => {
   const supabase = await createClient();
 
   try {
+    const userId = await getUserIdFromAuth();
+
+    if (!userId) {
+      return {
+        success: false,
+        message: ERROR_MESSAGES.USER_NOT_FOUND
+      };
+    }
+
     const { data: addedChecklist, error: addChecklistError } = await supabase
       .from('ehs_checklist_users')
       .insert({
@@ -189,13 +197,21 @@ export const addChecklistResponseByContractor = async (
 
 export const updateChecklistResponseByContractor = async (
   checklist: ChecklistResponseByContractorType,
-  userId: string,
   prevProgress: ChecklistProgressType,
   totalWeightage: number
 ) => {
   const supabase = createServiceClient();
 
   try {
+    const userId = await getUserIdFromAuth();
+
+    if (!userId) {
+      return {
+        success: false,
+        message: ERROR_MESSAGES.USER_NOT_FOUND
+      };
+    }
+
     const prevProgressArray = Array.isArray(prevProgress.progress) ? prevProgress.progress : [];
 
     // First, update the main checklist entry

@@ -18,6 +18,7 @@ const ChecklistMySubmissionsSection = () => {
     refetchOnWindowFocus: false
   });
 
+  const hasFetchError = !!data && !data.success;
   const submissions = data?.data ?? [];
 
   const latestProgress = (progress: { date: string; progress: number }[]) => {
@@ -39,11 +40,17 @@ const ChecklistMySubmissionsSection = () => {
 
       {isLoading && <EhsListingSkeleton />}
 
-      {!isLoading && submissions.length === 0 && (
+      {!isLoading && hasFetchError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          {data.message || 'Failed to load your checklist submissions.'}
+        </div>
+      )}
+
+      {!isLoading && !hasFetchError && submissions.length === 0 && (
         <EmptyState searchQuery="" contentType="Checklist Submissions" />
       )}
 
-      {!isLoading && submissions.length > 0 && (
+      {!isLoading && !hasFetchError && submissions.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {submissions.map(item => {
             const score = latestProgress(item.progress);

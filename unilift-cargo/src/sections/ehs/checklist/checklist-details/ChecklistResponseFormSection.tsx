@@ -116,25 +116,23 @@ const ChecklistResponseFormSection = ({
         return;
       }
 
-      if (!user?.userId) {
-        toast.error('User ID is required');
-        return;
-      }
-
       let response;
       if (checklistProgress) {
         response = await updateChecklistResponseByContractor(
           data,
-          user.userId,
           checklistProgress,
           hasAnsweredQuestionWeightage.totalYesAnswered
         );
       } else {
         response = await addChecklistResponseByContractor(
           data,
-          user.userId,
           hasAnsweredQuestionWeightage.totalYesAnswered
         );
+      }
+
+      if (!response.success) {
+        toast.error(response.message);
+        return;
       }
 
       const res = await sendChecklistCompleteEmail(
@@ -151,12 +149,12 @@ const ChecklistResponseFormSection = ({
         ccEmails.filter(e => e.trim() !== '')
       );
 
-      if (response.success && res.success) {
+      if (res.success) {
         toast.success(res.message);
         reset();
         router.push(AppRoutes.EHS_CHECKLIST_LISTING);
       } else {
-        toast.error(response.message);
+        toast.error(res.message);
       }
     } catch (error) {
       console.error('Error submitting checklist:', error);
