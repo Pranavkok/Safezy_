@@ -182,22 +182,33 @@ const IncidentPage2Step = ({
       });
 
       const capaResult = await capaResponse.json();
-      toast.dismiss('capa');
+
+      if (!capaResponse.ok || !capaResult.success) {
+        toast.dismiss('capa');
+        toast.error(
+          capaResult.message ||
+            capaResult.error ||
+            'Failed to generate AI analysis. Please try again.'
+        );
+        return;
+      }
 
       const res = await savePage2(
         data,
         incidentDetails.id,
-        capaResult.success ? capaResult.data.corrective.points : undefined,
-        capaResult.success ? capaResult.data.preventive.points : undefined,
-        capaResult.success ? capaResult.data.severity_level : undefined,
-        capaResult.success ? capaResult.data.five_whys_analysis : undefined,
-        capaResult.success ? capaResult.data.flowchart.points : undefined,
-        capaResult.success ? capaResult.data.immediate_cause : undefined,
-        capaResult.success ? capaResult.data.contributing_factors : undefined,
-        capaResult.success ? capaResult.data.root_causes : undefined,
-        capaResult.success ? capaResult.data.system_gaps : undefined,
-        capaResult.success ? capaResult.data.rca_conclusion : undefined
+        capaResult.data.corrective.points,
+        capaResult.data.preventive.points,
+        capaResult.data.severity_level,
+        capaResult.data.five_whys_analysis,
+        capaResult.data.flowchart.points,
+        capaResult.data.immediate_cause,
+        capaResult.data.contributing_factors,
+        capaResult.data.root_causes,
+        capaResult.data.system_gaps,
+        capaResult.data.rca_conclusion
       );
+
+      toast.dismiss('capa');
 
       if (res.success) {
         toast.success('Report generated successfully!');
