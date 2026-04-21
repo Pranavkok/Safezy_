@@ -342,10 +342,9 @@ export const getMyChecklistSubmissions = async (): Promise<{
 
   try {
     const userId = await getUserIdFromAuth();
-    console.log('[getMyChecklistSubmissions] userId:', userId);
 
     if (!userId) {
-      return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+      return { success: false, message: `USER_NOT_FOUND` };
     }
 
     const { data: submissions, error } = await supabase
@@ -354,15 +353,13 @@ export const getMyChecklistSubmissions = async (): Promise<{
       .eq('user_id', userId)
       .order('date', { ascending: false });
 
-    console.log('[getMyChecklistSubmissions] submissions:', submissions, 'error:', error);
-
     if (error) {
       console.error('Error fetching checklist submissions', error);
       return { success: false, message: ERROR_MESSAGES.CHECKLIST_FETCH_FAILED };
     }
 
     if (!submissions || submissions.length === 0) {
-      return { success: true, message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED, data: [] };
+      return { success: true, message: `NO_DATA_FOR_USER:${userId}`, data: [] };
     }
 
     const topicIds = Array.from(new Set(submissions.map(r => r.topic_id).filter((id): id is number => id !== null)));
