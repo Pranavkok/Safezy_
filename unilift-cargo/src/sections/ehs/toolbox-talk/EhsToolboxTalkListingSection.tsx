@@ -137,7 +137,7 @@ export const EHSToolboxTalkListingSection = () => {
               className="bg-primary py-2 px-4 rounded-sm text-white font-bold text-sm sm:text-base uppercase cursor-pointer"
               onClick={handleSuggestionClick}
             >
-              Have a Topic? Share with us!
+              Add Suggestion
             </button>
 
             <EHSToolboxModal />
