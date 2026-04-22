@@ -1,21 +1,14 @@
 import React from 'react';
-import {
-  getChecklistDetailsById,
-  getChecklistProgressByContractor
-} from '@/actions/contractor/checklist';
+import { getChecklistDetailsById } from '@/actions/contractor/checklist';
 import { notFound } from 'next/navigation';
 import ChecklistResponseFormSection from './ChecklistResponseFormSection';
-import { ChecklistProgressType } from '@/types/ehs.types';
 
 const EhsChecklistDetails = async ({
   checklistTopicId
 }: {
   checklistTopicId: number;
 }) => {
-  const [res, checklistRes] = await Promise.all([
-    getChecklistDetailsById(checklistTopicId),
-    getChecklistProgressByContractor(checklistTopicId)
-  ]);
+  const res = await getChecklistDetailsById(checklistTopicId);
 
   if (!res.success || !res.data) {
     notFound();
@@ -23,7 +16,6 @@ const EhsChecklistDetails = async ({
   return (
     <ChecklistResponseFormSection
       checklistQuestions={res.data}
-      checklistProgress={checklistRes.data as ChecklistProgressType}
     />
   );
 };

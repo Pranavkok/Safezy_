@@ -9,15 +9,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import TextAreaWithLabel from '@/components/inputs-fields/TextareaWithLabel';
 import {
-  ChecklistProgressType,
   ChecklistResponseByContractorType,
   ChecklistTopicAndQuestionsType
 } from '@/types/ehs.types';
 import { Input } from '@/components/ui/input';
 import {
   addChecklistResponseByContractor,
-  sendChecklistCompleteEmail,
-  updateChecklistResponseByContractor
+  sendChecklistCompleteEmail
 } from '@/actions/contractor/checklist';
 import { useUser } from '@/context/UserContext';
 import toast from 'react-hot-toast';
@@ -30,18 +28,11 @@ import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel'
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formSchema } from '@/validations/admin/add-checklist';
 import { CheckCircle, AlertTriangle, Plus, X } from 'lucide-react';
-import dynamic from 'next/dynamic';
-const ProgressDashboard = dynamic(() => import('@/components/ProgressChart'), {
-  ssr: false, // Ensures it only runs on the client
-  loading: () => <p>Loading Chart...</p> // Optional loading fallback
-});
 
 const ChecklistResponseFormSection = ({
-  checklistQuestions,
-  checklistProgress
+  checklistQuestions
 }: {
   checklistQuestions: ChecklistTopicAndQuestionsType;
-  checklistProgress: ChecklistProgressType;
 }) => {
   const {
     register,
@@ -116,19 +107,10 @@ const ChecklistResponseFormSection = ({
         return;
       }
 
-      let response;
-      if (checklistProgress) {
-        response = await updateChecklistResponseByContractor(
-          data,
-          checklistProgress,
-          hasAnsweredQuestionWeightage.totalYesAnswered
-        );
-      } else {
-        response = await addChecklistResponseByContractor(
-          data,
-          hasAnsweredQuestionWeightage.totalYesAnswered
-        );
-      }
+      const response = await addChecklistResponseByContractor(
+        data,
+        hasAnsweredQuestionWeightage.totalYesAnswered
+      );
 
       if (!response.success) {
         toast.error(response.message);
@@ -493,14 +475,6 @@ const ChecklistResponseFormSection = ({
           </CardContent>
         </Card>
 
-        <div className="my-5">
-          {checklistProgress && (
-            <ProgressDashboard
-              checklistProgress={checklistProgress}
-              totalWeightage={totalWeightage}
-            />
-          )}
-        </div>
       </div>
     </div>
   );
