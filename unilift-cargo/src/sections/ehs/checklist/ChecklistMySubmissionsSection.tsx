@@ -65,7 +65,7 @@ const ChecklistMySubmissionsSection = ({
               <Card
                 key={item.id}
                 className="group cursor-pointer border-primary hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                onClick={() => router.push(AppRoutes.EHS_CHECKLIST_DETAILS(item.topic_id))}
+                onClick={() => router.push(AppRoutes.EHS_CHECKLIST_SUBMISSION_VIEW(item.id))}
               >
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">

@@ -79,6 +79,7 @@ type AppRoutesType = {
   EHS_CHECKLIST_LISTING: string;
   EHS_CHECKLIST_DETAILS: (id: number) => string;
   EHS_CHECKLIST_MY_SUBMISSIONS: string;
+  EHS_CHECKLIST_SUBMISSION_VIEW: (id: number) => string;
   EHS_TOOLBOX_TALK: string;
   EHS_TOOLBOX_TALK_DETAILS: (id: number) => string;
   EHS_TOOLBOX_TALK_REPORT: (id: number) => string;
@@ -220,6 +221,7 @@ export const AppRoutes: AppRoutesType = {
   EHS_CHECKLIST_LISTING: '/ehs/checklist',
   EHS_CHECKLIST_DETAILS: (id: number) => `/ehs/checklist/${id}`,
   EHS_CHECKLIST_MY_SUBMISSIONS: '/ehs/checklist/my-submissions',
+  EHS_CHECKLIST_SUBMISSION_VIEW: (id: number) => `/ehs/checklist/my-submissions/${id}`,
 
   EHS_TOOLBOX_TALK: '/ehs/toolbox-talk',
   EHS_TOOLBOX_TALK_DETAILS: (id: number) => `/ehs/toolbox-talk/${id}`,

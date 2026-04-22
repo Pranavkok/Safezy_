@@ -406,6 +406,80 @@ export const getMyChecklistSubmissions = async (): Promise<{
   }
 };
 
+export const getChecklistSubmissionById = async (submissionId: number): Promise<{
+  success: boolean;
+  message: string;
+  data?: {
+    id: number;
+    topic_name: string;
+    date: string;
+    site_name: string;
+    inspected_by: string;
+    progress: { date: string; progress: number }[];
+    answers: {
+      question: string;
+      weightage: number;
+      answer: string;
+      remark: string;
+    }[];
+  };
+}> => {
+  const supabase = await createClient();
+
+  try {
+    const userId = await getUserIdFromAuth();
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+
+    const { data, error } = await supabase
+      .from('ehs_checklist_users')
+      .select(`
+        id,
+        date,
+        site_name,
+        inspected_by,
+        progress,
+        ehs_checklist_topics(topic_name),
+        ehs_checklist_done_questions(
+          is_completed,
+          remarks,
+          ehs_checklist_questions(question, weightage)
+        )
+      `)
+      .eq('id', submissionId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) {
+      console.error('Error fetching checklist submission', error);
+      return { success: false, message: ERROR_MESSAGES.CHECKLIST_FETCH_FAILED };
+    }
+
+    const answers = ((data as any).ehs_checklist_done_questions ?? []).map((dq: any) => ({
+      question: dq.ehs_checklist_questions?.question ?? '',
+      weightage: dq.ehs_checklist_questions?.weightage ?? 0,
+      answer: dq.is_completed ?? 'N/A',
+      remark: dq.remarks ?? ''
+    }));
+
+    return {
+      success: true,
+      message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED,
+      data: {
+        id: (data as any).id,
+        topic_name: (data as any).ehs_checklist_topics?.topic_name ?? '',
+        date: (data as any).date,
+        site_name: (data as any).site_name,
+        inspected_by: (data as any).inspected_by,
+        progress: (data as any).progress ?? [],
+        answers
+      }
+    };
+  } catch (error) {
+    console.error('Unexpected error fetching checklist submission', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 export const sendChecklistCompleteEmail = async (
   superiorEmail: string,
   emailContext: sendChecklistMailType,
