@@ -494,13 +494,13 @@ export const getMyChecklistSuggestions = async (): Promise<{
   message: string;
   data?: SuggestionType[];
 }> => {
-  const supabase = await createClient();
+  const serviceClient = createServiceClient();
 
   try {
     const userId = await getAuthId();
     if (!userId) return { success: false, message: 'Not authenticated', data: [] };
 
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('ehs_suggestions')
       .select('*')
       .eq('suggestion_type', 'checklist')
