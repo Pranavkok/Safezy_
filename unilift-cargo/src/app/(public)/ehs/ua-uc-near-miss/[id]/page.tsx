@@ -1,6 +1,5 @@
 import { getUaUcReportById } from '@/actions/contractor/ua-uc-near-miss';
-import UaUcReportViewer from '@/sections/ehs/ua-uc-near-miss/UaUcReportViewer';
-import UaUcReportDownloadButton from '@/sections/ehs/ua-uc-near-miss/UaUcReportDownloadButton';
+import UaUcReportPage from '@/sections/ehs/ua-uc-near-miss/UaUcReportPage';
 import { notFound } from 'next/navigation';
 
 export const metadata = {
@@ -17,12 +16,7 @@ const UaUcNearMissDetailsPage = async ({ params }: { params: { id: string } }) =
 
   return (
     <div className="bg-gray-50 min-h-screen">
-    <div className="w-full max-w-3xl mx-auto px-4 py-6 space-y-6">
-      <div className="flex justify-end">
-        <UaUcReportDownloadButton report={report} />
-      </div>
-      <UaUcReportViewer report={report} />
-    </div>
+      <UaUcReportPage report={report} />
     </div>
   );
 };

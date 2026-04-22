@@ -202,6 +202,34 @@ export const getUaUcReportById = async (
   }
 };
 
+// ─── updateUaUcReportFull ─────────────────────────────────────────────────────
+
+export const updateUaUcReportFull = async (
+  id: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: Record<string, any>
+): Promise<{ success: boolean; message: string }> => {
+  const supabase = await createClient();
+
+  try {
+    const { error } = await supabase
+      .from('ehs_ua_uc_near_miss')
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('[updateUaUcReportFull] error:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath(REVALIDATE_PATH);
+    return { success: true, message: 'Report updated successfully' };
+  } catch (error) {
+    console.error('[updateUaUcReportFull] unexpected error:', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 // ─── getUaUcReportsList ───────────────────────────────────────────────────────
 
 export const getUaUcReportsList = async (): Promise<{
