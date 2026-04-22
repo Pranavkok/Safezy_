@@ -125,17 +125,7 @@ const ChecklistSubmissionViewer = ({ submission }: { submission: ChecklistSubmis
         {latestScore !== null && (
           <InfoRow
             label="Score"
-            value={
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-40 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-2 bg-primary rounded-full"
-                    style={{ width: `${Math.min(latestScore, 100)}%` }}
-                  />
-                </div>
-                <span className="text-sm font-semibold text-primary">{latestScore}%</span>
-              </div>
-            }
+            value={<span className="text-sm font-semibold text-primary">{latestScore}%</span>}
           />
         )}
       </SectionCard>
