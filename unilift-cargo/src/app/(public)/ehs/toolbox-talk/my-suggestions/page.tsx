@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import ASSETS from '@/assets';
 import PageBanner from '@/components/PageBanner';
 import { AppRoutes } from '@/constants/AppRoutes';
