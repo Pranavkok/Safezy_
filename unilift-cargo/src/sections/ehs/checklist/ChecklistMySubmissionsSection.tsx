@@ -83,17 +83,7 @@ const ChecklistMySubmissionsSection = ({
                         <p className="text-sm text-gray-600">Inspected by: {item.inspected_by}</p>
                       )}
                       {score !== null && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-2 bg-primary rounded-full"
-                              style={{ width: `${Math.min(score, 100)}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-semibold text-primary whitespace-nowrap">
-                            {score}%
-                          </span>
-                        </div>
+                        <p className="text-sm font-semibold text-primary">Score: {score}</p>
                       )}
                     </div>
                     <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors group-hover:translate-x-1 duration-300 ml-3 mt-1 shrink-0" />

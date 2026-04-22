@@ -125,7 +125,7 @@ const ChecklistSubmissionViewer = ({ submission }: { submission: ChecklistSubmis
         {latestScore !== null && (
           <InfoRow
             label="Score"
-            value={<span className="text-sm font-semibold text-primary">{latestScore}%</span>}
+            value={<span className="text-sm font-semibold text-primary">{latestScore}</span>}
           />
         )}
       </SectionCard>
