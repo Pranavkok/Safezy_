@@ -1,12 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { IncidentAnalysisWithImageType } from '@/types/index.types';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { Pencil } from 'lucide-react';
 import IncidentReportHtmlViewer from './Incident-report/IncidentReportHtmlViewer';
-import { AppRoutes } from '@/constants/AppRoutes';
+import ResubmitReportButton from './Incident-report/ResubmitReportButton';
+import IncidentReportInlineEditor from './Incident-report/IncidentReportInlineEditor';
 
 const PDFDownloadButton = dynamic(
   () =>
@@ -27,30 +27,38 @@ const IncidentReport = ({
   canEdit?: boolean;
   hideActions?: boolean;
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   return (
     <div className="w-full max-w-screen-lg mx-auto p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <h2 className="text-2xl font-bold text-primary">
           Incident Investigation Report
         </h2>
-        {!hideActions && (
+        {!hideActions && !isEditing && (
           <div className="flex items-center gap-3">
-            {canEdit && (
-              <Link
-                href={AppRoutes.EHS_INCIDENT_ANALYSIS_UPDATE(incidentDetails.id)}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition-colors"
-              >
-                <Pencil size={14} />
-                Edit Report
-              </Link>
-            )}
+            <ResubmitReportButton incidentId={incidentDetails.id} />
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition-colors"
+            >
+              <Pencil size={14} />
+              Edit Report
+            </button>
             <PDFDownloadButton incidentDetails={incidentDetails} />
           </div>
         )}
       </div>
 
       <div className="mb-8 border border-gray-200 rounded-lg overflow-hidden">
-        <IncidentReportHtmlViewer incidentDetails={incidentDetails} />
+        {isEditing ? (
+          <IncidentReportInlineEditor
+            incidentDetails={incidentDetails}
+            onCancel={() => setIsEditing(false)}
+          />
+        ) : (
+          <IncidentReportHtmlViewer incidentDetails={incidentDetails} />
+        )}
       </div>
     </div>
   );

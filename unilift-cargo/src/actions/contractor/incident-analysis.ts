@@ -688,6 +688,56 @@ export const addIncidentWitnessDetails = async (
   }
 };
 
+export const updateIncidentReportFull = async (
+  incidentId: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: Record<string, any>
+): Promise<{ success: boolean; message: string }> => {
+  const supabase = await createClient();
+
+  try {
+    const { error } = await supabase
+      .from('ehs_incident_analysis')
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq('id', incidentId);
+
+    if (error) {
+      console.error('Error updating incident report', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath('/ehs/incident-analysis');
+    return { success: true, message: 'Report updated successfully' };
+  } catch (error) {
+    console.error('Unexpected error updating incident report', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
+export const resubmitIncidentReport = async (
+  incidentId: number
+): Promise<{ success: boolean; message: string }> => {
+  const supabase = await createClient();
+
+  try {
+    const { error } = await supabase
+      .from('ehs_incident_analysis')
+      .update({ is_completed: false, assigned_to_user_id: null })
+      .eq('id', incidentId);
+
+    if (error) {
+      console.error('Error while resubmitting incident report', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath('/ehs/incident-analysis');
+    return { success: true, message: 'Report reopened for resubmission' };
+  } catch (error) {
+    console.error('Unexpected error while resubmitting incident report', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 // ─── getIncidentAnalysisList ──────────────────────────────────────────────────
 
 export const getIncidentAnalysisList = async (): Promise<{
