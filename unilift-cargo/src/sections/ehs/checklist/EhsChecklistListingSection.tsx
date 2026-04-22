@@ -140,6 +140,14 @@ const EhsChecklistListingSection = () => {
                 My Submissions
               </Link>
             )}
+            {user.userId && (
+              <Link
+                href={AppRoutes.EHS_CHECKLIST_MY_SUGGESTIONS}
+                className="bg-white border border-primary py-2 px-4 rounded-sm text-primary font-bold text-sm sm:text-base uppercase"
+              >
+                My Suggestions
+              </Link>
+            )}
           </div>
 
           <div className="relative w-full md:w-72">

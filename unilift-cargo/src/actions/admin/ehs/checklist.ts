@@ -12,6 +12,7 @@ import {
 import { SuggestionType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
 import { createServiceClient } from '@/utils/supabase/service';
+import { getAuthId } from '@/actions/user';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
 import { revalidatePath } from 'next/cache';
 
@@ -454,11 +455,13 @@ export const addChecklistSuggestion = async (suggestion: addSuggestionType) => {
   const serviceClient = createServiceClient();
 
   try {
+    const userId = await getAuthId();
     const { error } = await serviceClient
       .from('ehs_suggestions')
       .insert({
         topic_name: suggestion.topic_name,
-        suggestion_type: 'checklist'
+        suggestion_type: 'checklist',
+        user_id: userId ?? null
       })
       .single();
 
@@ -483,6 +486,36 @@ export const addChecklistSuggestion = async (suggestion: addSuggestionType) => {
       success: false,
       message: ERROR_MESSAGES.UNEXPECTED_ERROR
     };
+  }
+};
+
+export const getMyChecklistSuggestions = async (): Promise<{
+  success: boolean;
+  message: string;
+  data?: SuggestionType[];
+}> => {
+  const supabase = await createClient();
+
+  try {
+    const userId = await getAuthId();
+    if (!userId) return { success: false, message: 'Not authenticated', data: [] };
+
+    const { data, error } = await supabase
+      .from('ehs_suggestions')
+      .select('*')
+      .eq('suggestion_type', 'checklist')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching my checklist suggestions', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    return { success: true, message: 'Fetched successfully', data: data as SuggestionType[] };
+  } catch (error) {
+    console.error('Unexpected error fetching my checklist suggestions', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
   }
 };
 
