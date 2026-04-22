@@ -115,25 +115,6 @@ const SeverityButtons = ({
   </div>
 );
 
-// ─── Status select ────────────────────────────────────────────────────────────
-
-const StatusSelect = ({
-  value,
-  onChange
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) => (
-  <select
-    value={value}
-    onChange={e => onChange(e.target.value)}
-    className="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-primary"
-  >
-    <option value="Open">Open</option>
-    <option value="Assigned">Assigned</option>
-    <option value="Closed">Closed</option>
-  </select>
-);
 
 // ─── Main Editor ──────────────────────────────────────────────────────────────
 
@@ -167,11 +148,6 @@ const UaUcReportInlineEditor = ({
   const [nmWhatCouldHappen, setNmWhatCouldHappen] = useState(report.nm_what_could_happen ?? '');
   const [nmSeverity, setNmSeverity] = useState<'Low' | 'Medium' | 'High' | null>(report.nm_severity ?? null);
 
-  // Status & Action fields
-  const [status, setStatus] = useState<string>(report.status ?? 'Open');
-  const [actionTaken, setActionTaken] = useState(report.action_taken ?? '');
-  const [actionBy, setActionBy] = useState(report.action_by ?? '');
-  const [actionDate, setActionDate] = useState(report.action_date ?? '');
 
   const handleSave = async () => {
     setSaving(true);
@@ -180,11 +156,7 @@ const UaUcReportInlineEditor = ({
       location_department: locationDepartment,
       what_happened: whatHappened || null,
       equipment_involved: equipmentInvolved || null,
-      activity_at_time: activityAtTime || null,
-      status,
-      action_taken: actionTaken || null,
-      action_by: actionBy || null,
-      action_date: actionDate || null
+      activity_at_time: activityAtTime || null
     };
 
     if (report.observation_type === 'UA') {
@@ -376,41 +348,6 @@ const UaUcReportInlineEditor = ({
         )}
       </SectionCard>
 
-      {/* Status & Action */}
-      <SectionCard title="Status & Action">
-        <div>
-          <Label>Status</Label>
-          <StatusSelect value={status} onChange={setStatus} />
-        </div>
-        {status === 'Closed' && (
-          <>
-            <div>
-              <Label>Action Taken</Label>
-              <EditTextarea
-                value={actionTaken}
-                onChange={e => setActionTaken(e.target.value)}
-                placeholder="Describe the corrective action taken..."
-              />
-            </div>
-            <div>
-              <Label>Action By</Label>
-              <EditInput
-                value={actionBy}
-                onChange={e => setActionBy(e.target.value)}
-                placeholder="Name of person who took action"
-              />
-            </div>
-            <div>
-              <Label>Action Date</Label>
-              <EditInput
-                type="date"
-                value={actionDate}
-                onChange={e => setActionDate(e.target.value)}
-              />
-            </div>
-          </>
-        )}
-      </SectionCard>
 
       {/* Bottom save bar */}
       <div className="flex justify-end gap-2 pb-6">
