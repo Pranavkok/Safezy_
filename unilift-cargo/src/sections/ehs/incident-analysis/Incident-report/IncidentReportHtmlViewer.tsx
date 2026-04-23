@@ -131,8 +131,8 @@ const IncidentReportHtmlViewer = ({
             <Field label="Incident Type" value={incidentDetails.incident_type} />
             <Field label="Severity" value={incidentDetails.severity_level} />
             <Field label="Location" value={incidentDetails.location} />
-            <Field label="Date" value={incidentDetails.date} />
-            <Field label="Time" value={incidentDetails.time} />
+            <Field label="Date of Report" value={incidentDetails.date} />
+            <Field label="Time of Report" value={incidentDetails.time} />
           </FieldGrid>
         </FieldGroup>
 

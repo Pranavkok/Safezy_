@@ -131,8 +131,6 @@ INCIDENT SNAPSHOT
 - Severity: ${incidentData.severity_level || 'N/A'}
 - Worst-Case Potential: ${incidentData.worst_case_potential || 'N/A'}
 - Location: ${incidentData.location || 'N/A'}
-- Date: ${incidentData.date || 'N/A'}
-- Time: ${incidentData.time || 'N/A'}
 
 ====================
 INCIDENT NARRATION

@@ -306,8 +306,8 @@ const IncidentReportPdf = ({
             <GridField label="Incident Type" value={incidentDetails.incident_type} />
             <GridField label="Severity" value={incidentDetails.severity_level} />
             <GridField label="Location" value={incidentDetails.location} />
-            <GridField label="Date" value={incidentDetails.date} />
-            <GridField label="Time" value={incidentDetails.time} />
+            <GridField label="Date of Report" value={incidentDetails.date} />
+            <GridField label="Time of Report" value={incidentDetails.time} />
           </FieldGrid>
         </View>
 

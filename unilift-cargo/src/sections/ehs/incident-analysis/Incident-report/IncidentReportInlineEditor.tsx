@@ -383,12 +383,12 @@ const IncidentReportInlineEditor = ({
               <EditInput value={location} onChange={e => setLocation(e.target.value)} placeholder="Location" />
             </div>
             <div>
-              <Label>Date</Label>
-              <EditInput type="date" value={date} onChange={e => setDate(e.target.value)} />
+              <Label>Date of Report</Label>
+              <EditInput type="date" value={date} readOnly className="cursor-not-allowed bg-muted text-muted-foreground" />
             </div>
             <div>
-              <Label>Time</Label>
-              <EditInput type="time" value={time} onChange={e => setTime(e.target.value)} />
+              <Label>Time of Report</Label>
+              <EditInput type="time" value={time} readOnly className="cursor-not-allowed bg-muted text-muted-foreground" />
             </div>
           </FieldGrid>
         </FieldGroup>
