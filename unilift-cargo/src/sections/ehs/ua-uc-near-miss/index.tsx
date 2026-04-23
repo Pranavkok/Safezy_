@@ -748,7 +748,7 @@ const UaUcNearMissForm = () => {
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-8 max-w-3xl mx-auto"
     >
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:mt-8 sm:p-6">
         {/* ── SECTION 1: Basic Information ── */}
         <div>
           <SectionHeader number="1" title="Basic Information" />
