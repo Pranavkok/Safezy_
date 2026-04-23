@@ -7,14 +7,21 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import {
+  approveToolboxSuggestion,
+  getToolboxTalkSuggestions,
+  rejectToolboxSuggestion
+} from '@/actions/admin/ehs/toolbox-talk';
 import { DialogTrigger } from '@radix-ui/react-dialog';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { getToolboxTalkSuggestions } from '@/actions/admin/ehs/toolbox-talk';
 import Spinner from '@/components/loaders/Spinner';
+import { Check, Loader2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const ToolboxTalkSugggestionModal = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const {
     data: response,
@@ -28,6 +35,38 @@ const ToolboxTalkSugggestionModal = () => {
   });
 
   const isDataValid = response?.success && response.data;
+
+  const reviewMutation = useMutation({
+    mutationFn: async ({
+      suggestionId,
+      action
+    }: {
+      suggestionId: number;
+      action: 'approve' | 'reject';
+    }) => {
+      const res =
+        action === 'approve'
+          ? await approveToolboxSuggestion(suggestionId)
+          : await rejectToolboxSuggestion(suggestionId);
+
+      if (!res.success) {
+        throw new Error(res.message);
+      }
+
+      return res;
+    },
+    onSuccess: response => {
+      toast.success(response.message);
+      queryClient.invalidateQueries({
+        queryKey: ['toolboxSuggestion', true]
+      });
+    },
+    onError: error => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to review suggestion.'
+      );
+    }
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -63,14 +102,72 @@ const ToolboxTalkSugggestionModal = () => {
 
         {!isFetching && isDataValid && (
           <div className="space-y-4 max-h-96 overflow-y-auto">
-            {response?.data?.map((item, index) => (
+            {response?.data?.map(item => (
               <div
-                key={index}
-                className="border rounded-lg p-2 bg-gray-50 shadow-sm"
+                key={item.id}
+                className="border rounded-lg p-3 bg-gray-50 shadow-sm"
               >
-                <p className="text-md font-semibold text-gray-600">
-                  {item.topic_name}
-                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-md font-semibold text-gray-700">
+                      {item.topic_name}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Submitted on{' '}
+                      {new Date(item.created_at).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8 border-green-200 text-green-600 hover:bg-green-50"
+                      disabled={reviewMutation.isPending}
+                      onClick={() =>
+                        reviewMutation.mutate({
+                          suggestionId: item.id,
+                          action: 'approve'
+                        })
+                      }
+                    >
+                      {reviewMutation.isPending &&
+                      reviewMutation.variables?.suggestionId === item.id &&
+                      reviewMutation.variables?.action === 'approve' ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <Check />
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8 border-red-200 text-red-600 hover:bg-red-50"
+                      disabled={reviewMutation.isPending}
+                      onClick={() =>
+                        reviewMutation.mutate({
+                          suggestionId: item.id,
+                          action: 'reject'
+                        })
+                      }
+                    >
+                      {reviewMutation.isPending &&
+                      reviewMutation.variables?.suggestionId === item.id &&
+                      reviewMutation.variables?.action === 'reject' ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <X />
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

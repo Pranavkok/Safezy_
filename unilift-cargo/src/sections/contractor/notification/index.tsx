@@ -28,6 +28,8 @@ const NOTIFICATION_ICONS: Record<string, string> = {
   portal_checklist: '📋',
   checklist_suggestion_completed: '✅',
   checklist_suggestion_rejected: '❌',
+  toolbox_suggestion_completed: '✅',
+  toolbox_suggestion_rejected: '❌',
   order_placed: '📦',
   order_delivered: '🚚'
 };

@@ -19,6 +19,10 @@ import { revalidatePath } from 'next/cache';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
 import { sendPushNotification } from '@/lib/web-push';
 
+type ToolboxSuggestionReviewStatus = 'completed' | 'rejected';
+
+const TOOLBOX_SUGGESTIONS_PATH = '/ehs/toolbox-talk/my-suggestions';
+
 export const getAllToolboxTalkDetails = async (
   searchQuery: string,
   page: number = 1,
@@ -556,7 +560,9 @@ export const getToolboxTalkSuggestions = async (): Promise<{
     const { data, error } = await serviceClient
       .from('ehs_suggestions')
       .select('*')
-      .eq('suggestion_type', 'toolbox_talk');
+      .eq('suggestion_type', 'toolbox_talk')
+      .eq('review_status', 'pending')
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error while fetching toolbox talk suggestions', error);
@@ -582,6 +588,104 @@ export const getToolboxTalkSuggestions = async (): Promise<{
     };
   }
 };
+
+const reviewToolboxSuggestion = async (
+  suggestionId: number,
+  reviewStatus: ToolboxSuggestionReviewStatus
+) => {
+  const serviceClient = createServiceClient();
+
+  try {
+    const { data: suggestion, error: fetchError } = await serviceClient
+      .from('ehs_suggestions')
+      .select('id, topic_name, user_id, review_status')
+      .eq('id', suggestionId)
+      .eq('suggestion_type', 'toolbox_talk')
+      .maybeSingle();
+
+    if (fetchError || !suggestion) {
+      console.error('Error while fetching toolbox suggestion', fetchError);
+      return {
+        success: false,
+        message: 'Toolbox talk suggestion not found.'
+      };
+    }
+
+    if (suggestion.review_status !== 'pending') {
+      return {
+        success: false,
+        message: 'Toolbox talk suggestion has already been reviewed.'
+      };
+    }
+
+    const { error: updateError } = await serviceClient
+      .from('ehs_suggestions')
+      .update({
+        review_status: reviewStatus,
+        reviewed_at: new Date().toISOString()
+      })
+      .eq('id', suggestionId);
+
+    if (updateError) {
+      console.error('Error while reviewing toolbox suggestion', updateError);
+      return {
+        success: false,
+        message: 'Failed to update toolbox talk suggestion. Please try again.'
+      };
+    }
+
+    if (suggestion.user_id) {
+      const isCompleted = reviewStatus === 'completed';
+
+      await sendPushNotification(
+        suggestion.user_id,
+        isCompleted
+          ? 'toolbox_suggestion_completed'
+          : 'toolbox_suggestion_rejected',
+        {
+          title: isCompleted
+            ? 'Toolbox Suggestion Completed'
+            : 'Toolbox Suggestion Rejected',
+          body: isCompleted
+            ? `Your toolbox talk suggestion "${suggestion.topic_name}" has been marked as completed.`
+            : `Your toolbox talk suggestion "${suggestion.topic_name}" has been rejected.`,
+          url: TOOLBOX_SUGGESTIONS_PATH
+        },
+        {
+          suggestion_id: suggestion.id,
+          suggestion_type: 'toolbox_talk',
+          review_status: reviewStatus
+        }
+      );
+    }
+
+    revalidatePath('/admin/ehs/toolbox-talk');
+    revalidatePath(TOOLBOX_SUGGESTIONS_PATH);
+
+    return {
+      success: true,
+      message:
+        reviewStatus === 'completed'
+          ? 'Toolbox talk suggestion marked as completed.'
+          : 'Toolbox talk suggestion rejected.'
+    };
+  } catch (error) {
+    console.error(
+      'An unexpected error occurred while reviewing toolbox suggestion',
+      error
+    );
+    return {
+      success: false,
+      message: ERROR_MESSAGES.UNEXPECTED_ERROR
+    };
+  }
+};
+
+export const approveToolboxSuggestion = async (suggestionId: number) =>
+  reviewToolboxSuggestion(suggestionId, 'completed');
+
+export const rejectToolboxSuggestion = async (suggestionId: number) =>
+  reviewToolboxSuggestion(suggestionId, 'rejected');
 
 export type ToolboxTalkReportEntry = {
   topic: string;

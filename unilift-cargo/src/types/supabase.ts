@@ -1957,6 +1957,8 @@ export type Database = {
         | "portal_checklist"
         | "checklist_suggestion_completed"
         | "checklist_suggestion_rejected"
+        | "toolbox_suggestion_completed"
+        | "toolbox_suggestion_rejected"
         | "order_placed"
         | "order_delivered"
         | "wishlist_back_in_stock"
@@ -2114,6 +2116,8 @@ export const Constants = {
         "portal_checklist",
         "checklist_suggestion_completed",
         "checklist_suggestion_rejected",
+        "toolbox_suggestion_completed",
+        "toolbox_suggestion_rejected",
         "order_placed",
         "order_delivered",
         "wishlist_back_in_stock",
