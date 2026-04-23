@@ -337,6 +337,7 @@ const IncidentPage1Step = ({
       pre_incident_activity: incidentDetails?.pre_incident_activity ?? '',
       failure_type: incidentDetails?.failure_type ?? '',
       failure_type_other: (incidentDetails as any)?.failure_type_other ?? '',
+      initial_investigation_findings: incidentDetails?.initial_investigation_findings ?? '',
       narrative: incidentDetails?.narrative ?? '',
       how_stopped: incidentDetails?.how_stopped ?? ''
     }
@@ -574,6 +575,20 @@ const IncidentPage1Step = ({
               errorText={errors.pre_incident_activity?.message}
               {...register('pre_incident_activity')}
             />
+          </div>
+
+          <div className="md:col-span-2 space-y-1">
+            <label className="text-sm font-medium">
+              Any findings from initial investigations
+            </label>
+            <Textarea
+              placeholder="Enter any findings from the initial investigation..."
+              className="min-h-28"
+              {...register('initial_investigation_findings')}
+            />
+            {errors.initial_investigation_findings && (
+              <p className="text-sm text-red-500">{errors.initial_investigation_findings.message}</p>
+            )}
           </div>
 
           <div className="md:col-span-2 space-y-1">

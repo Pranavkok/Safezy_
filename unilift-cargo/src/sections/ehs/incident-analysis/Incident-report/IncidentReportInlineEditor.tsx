@@ -202,8 +202,8 @@ const IncidentReportInlineEditor = ({
   const [incidentTypeOther, setIncidentTypeOther] = useState((incidentDetails as any).incident_type_other ?? '');
   const [severityLevel, setSeverityLevel] = useState(incidentDetails.severity_level ?? '');
   const [location, setLocation] = useState(incidentDetails.location ?? '');
-  const [date, setDate] = useState(incidentDetails.date ?? '');
-  const [time, setTime] = useState((incidentDetails as any).time ?? '');
+  const date = incidentDetails.date ?? '';
+  const time = (incidentDetails as any).time ?? '';
 
   const [activityType, setActivityType] = useState((incidentDetails as any).activity_type ?? '');
   const [failureType, setFailureType] = useState((incidentDetails as any).failure_type ?? '');

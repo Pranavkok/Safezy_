@@ -26,6 +26,7 @@ export const IncidentPage1Schema = z.object({
     .nonempty('This field is required'),
   failure_type: z.string({ required_error: 'Please select what failed' }).nonempty('Please select what failed'),
   failure_type_other: z.string().optional(),
+  initial_investigation_findings: z.string().optional(),
   narrative: z
     .string({ required_error: 'Please describe the incident' })
     .min(10, 'Description must be at least 10 characters'),
@@ -74,8 +75,7 @@ export const IncidentPage2Schema = z.object({
     .nonempty('Please select worst-case potential'),
   immediate_actions: z
     .string({ required_error: 'Please describe immediate actions taken' })
-    .nonempty('Please describe immediate actions taken'),
-  initial_investigation_findings: z.string().optional()
+    .nonempty('Please describe immediate actions taken')
 });
 
 // ─── Legacy schemas (kept for backward compat, not used in new form) ─────────

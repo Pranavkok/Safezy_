@@ -477,6 +477,7 @@ export const savePage1 = async (
       pre_incident_activity: data.pre_incident_activity,
       failure_type: data.failure_type,
       failure_type_other: data.failure_type === 'Other' ? (data.failure_type_other || null) : null,
+      initial_investigation_findings: data.initial_investigation_findings?.trim() || null,
       narrative: data.narrative,
       how_stopped: data.how_stopped,
       updated_at: new Date().toISOString()
@@ -572,7 +573,6 @@ export const savePage2 = async (
       impact_description: data.impact_description,
       worst_case_potential: data.worst_case_potential,
       immediate_actions: data.immediate_actions,
-      initial_investigation_findings: data.initial_investigation_findings?.trim() || null,
       is_completed: false,
       updated_at: new Date().toISOString(),
       ...(correctives ? { corrective_actions: correctives } : {}),
