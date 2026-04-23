@@ -748,97 +748,99 @@ const UaUcNearMissForm = () => {
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-8 max-w-3xl mx-auto"
     >
-      {/* ── SECTION 1: Basic Information ── */}
-      <div>
-        <SectionHeader number="1" title="Basic Information" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-500">
-              Reported By
-            </label>
-            <p className="text-sm bg-gray-50 border rounded-md px-3 py-2 text-gray-700">
-              {firstName && lastName ? `${firstName} ${lastName}` : '—'}
-            </p>
-          </div>
-          <div className="md:col-span-2">
-            <InputFieldWithLabel
-              label="Location / Department"
-              required
-              placeholder="e.g. Warehouse B, Production Floor"
-              errorText={errors.location_department?.message}
-              {...register('location_department')}
-            />
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+        {/* ── SECTION 1: Basic Information ── */}
+        <div>
+          <SectionHeader number="1" title="Basic Information" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-500">
+                Reported By
+              </label>
+              <p className="text-sm bg-gray-50 border rounded-md px-3 py-2 text-gray-700">
+                {firstName && lastName ? `${firstName} ${lastName}` : '—'}
+              </p>
+            </div>
+            <div className="md:col-span-2">
+              <InputFieldWithLabel
+                label="Location / Department"
+                required
+                placeholder="e.g. Warehouse B, Production Floor"
+                errorText={errors.location_department?.message}
+                {...register('location_department')}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <hr className="border-gray-200" />
+        <hr className="my-8 border-gray-200" />
 
-      {/* ── SECTION 2: Type of Observation ── */}
-      <div>
-        <SectionHeader
-          number="2"
-          title="Type of Observation"
-          subtitle="Select one type"
-        />
-        <Controller
-          name="observation_type"
-          control={control}
-          render={({ field }) => (
-            <div className="flex flex-col sm:flex-row gap-3">
-              {OBSERVATION_TYPES.map(({ value, label }) => (
-                <label
-                  key={value}
-                  className={`flex-1 flex items-center gap-3 border rounded-lg px-4 py-3 cursor-pointer transition-colors ${
-                    field.value === value
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    className="accent-primary"
-                    checked={field.value === value}
-                    onChange={() => field.onChange(value)}
-                  />
-                  <span className="text-sm font-medium">{label}</span>
-                </label>
-              ))}
-            </div>
+        {/* ── SECTION 2: Type of Observation ── */}
+        <div>
+          <SectionHeader
+            number="2"
+            title="Type of Observation"
+            subtitle="Select one type"
+          />
+          <Controller
+            name="observation_type"
+            control={control}
+            render={({ field }) => (
+              <div className="flex flex-col sm:flex-row gap-3">
+                {OBSERVATION_TYPES.map(({ value, label }) => (
+                  <label
+                    key={value}
+                    className={`flex-1 flex items-center gap-3 border rounded-lg px-4 py-3 cursor-pointer transition-colors ${
+                      field.value === value
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      className="accent-primary"
+                      checked={field.value === value}
+                      onChange={() => field.onChange(value)}
+                    />
+                    <span className="text-sm font-medium">{label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          />
+          {errors.observation_type && (
+            <p className="text-sm text-red-500 mt-2">
+              {errors.observation_type.message}
+            </p>
           )}
-        />
-        {errors.observation_type && (
-          <p className="text-sm text-red-500 mt-2">
-            {errors.observation_type.message}
-          </p>
-        )}
-      </div>
+        </div>
 
-      <hr className="border-gray-200" />
+        <hr className="my-8 border-gray-200" />
 
-      {/* ── SECTION 3: Media Upload ── */}
-      <div>
-        <SectionHeader
-          number="3"
-          title="Upload Evidence"
-          subtitle="Upload an image, video, or voice note — Safezy will automatically classify the observation."
-        />
-        <MediaUpload
-          onItemsChange={handleItemsChange}
-          isAnalyzing={isAnalyzing}
-        />
-        {isAnalyzing && (
-          <p className="text-sm text-primary mt-3 flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Safezy is analyzing and classifying your observation...
-          </p>
-        )}
-        {!observationType && (
-          <p className="text-xs text-gray-400 mt-2 italic">
-            Select a type of observation first, then upload evidence for Safezy
-            classification.
-          </p>
-        )}
+        {/* ── SECTION 3: Media Upload ── */}
+        <div>
+          <SectionHeader
+            number="3"
+            title="Upload Evidence"
+            subtitle="Upload an image, video, or voice note — Safezy will automatically classify the observation."
+          />
+          <MediaUpload
+            onItemsChange={handleItemsChange}
+            isAnalyzing={isAnalyzing}
+          />
+          {isAnalyzing && (
+            <p className="text-sm text-primary mt-3 flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Safezy is analyzing and classifying your observation...
+            </p>
+          )}
+          {!observationType && (
+            <p className="text-xs text-gray-400 mt-2 italic">
+              Select a type of observation first, then upload evidence for Safezy
+              classification.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* ── SECTION 4: AI-generated details ── */}
