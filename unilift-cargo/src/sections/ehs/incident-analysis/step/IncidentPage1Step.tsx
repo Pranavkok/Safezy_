@@ -374,11 +374,11 @@ const IncidentPage1Step = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* ── Section 1: Incident Snapshot ── */}
+      {/* ── Section 1: Incident Assessment Report ── */}
       <div>
         <SectionHeader
           number="1"
-          title="Incident Snapshot (Facts)"
+          title="Incident Assessment Report"
           subtitle="Establish context, severity and narration of the incident"
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
