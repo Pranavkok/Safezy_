@@ -720,23 +720,35 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          review_status:
+            | Database["public"]["Enums"]["ehs_suggestion_review_status"]
+          reviewed_at: string | null
           suggestion_type: Database["public"]["Enums"]["ehs_suggestion_type"]
           topic_name: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: never
+          review_status?:
+            | Database["public"]["Enums"]["ehs_suggestion_review_status"]
+          reviewed_at?: string | null
           suggestion_type: Database["public"]["Enums"]["ehs_suggestion_type"]
           topic_name: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: never
+          review_status?:
+            | Database["public"]["Enums"]["ehs_suggestion_review_status"]
+          reviewed_at?: string | null
           suggestion_type?: Database["public"]["Enums"]["ehs_suggestion_type"]
           topic_name?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1932,6 +1944,7 @@ export type Database = {
       app_role: "admin" | "contractor" | "principle" | "warehouse_operator" | "manager" | "safety_officer"
       checklist_options: "Yes" | "No" | "N/A"
       confirmation: "Yes" | "No"
+      ehs_suggestion_review_status: "pending" | "completed" | "rejected"
       ehs_suggestion_type: "checklist" | "first_principle" | "toolbox_talk"
       notification_type:
         | "registration"
@@ -1942,6 +1955,8 @@ export type Database = {
         | "portal_news"
         | "portal_toolbox_talk"
         | "portal_checklist"
+        | "checklist_suggestion_completed"
+        | "checklist_suggestion_rejected"
         | "order_placed"
         | "order_delivered"
         | "wishlist_back_in_stock"
@@ -2086,6 +2101,7 @@ export const Constants = {
       app_role: ["admin", "contractor", "principle", "warehouse_operator", "manager", "safety_officer"],
       checklist_options: ["Yes", "No", "N/A"],
       confirmation: ["Yes", "No"],
+      ehs_suggestion_review_status: ["pending", "completed", "rejected"],
       ehs_suggestion_type: ["checklist", "first_principle", "toolbox_talk"],
       notification_type: [
         "registration",
@@ -2096,6 +2112,8 @@ export const Constants = {
         "portal_news",
         "portal_toolbox_talk",
         "portal_checklist",
+        "checklist_suggestion_completed",
+        "checklist_suggestion_rejected",
         "order_placed",
         "order_delivered",
         "wishlist_back_in_stock",

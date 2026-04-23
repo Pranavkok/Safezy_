@@ -14,7 +14,12 @@ import { createClient } from '@/utils/supabase/server';
 import { createServiceClient } from '@/utils/supabase/service';
 import { getAuthId } from '@/actions/user';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
+import { sendPushNotification } from '@/lib/web-push';
 import { revalidatePath } from 'next/cache';
+
+type ChecklistSuggestionReviewStatus = 'completed' | 'rejected';
+
+const CHECKLIST_SUGGESTIONS_PATH = '/ehs/checklist/my-suggestions';
 
 export const addChecklistTopic = async (
   checklist: EhsChecklistFormType
@@ -530,7 +535,9 @@ export const getChecklistSuggestions = async (): Promise<{
     const { data, error } = await serviceClient
       .from('ehs_suggestions')
       .select('*')
-      .eq('suggestion_type', 'checklist');
+      .eq('suggestion_type', 'checklist')
+      .eq('review_status', 'pending')
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error while fetching checklist suggestions', error);
@@ -556,3 +563,101 @@ export const getChecklistSuggestions = async (): Promise<{
     };
   }
 };
+
+const reviewChecklistSuggestion = async (
+  suggestionId: number,
+  reviewStatus: ChecklistSuggestionReviewStatus
+) => {
+  const serviceClient = createServiceClient();
+
+  try {
+    const { data: suggestion, error: fetchError } = await serviceClient
+      .from('ehs_suggestions')
+      .select('id, topic_name, user_id, review_status')
+      .eq('id', suggestionId)
+      .eq('suggestion_type', 'checklist')
+      .maybeSingle();
+
+    if (fetchError || !suggestion) {
+      console.error('Error while fetching checklist suggestion', fetchError);
+      return {
+        success: false,
+        message: 'Checklist suggestion not found.'
+      };
+    }
+
+    if (suggestion.review_status !== 'pending') {
+      return {
+        success: false,
+        message: 'Checklist suggestion has already been reviewed.'
+      };
+    }
+
+    const { error: updateError } = await serviceClient
+      .from('ehs_suggestions')
+      .update({
+        review_status: reviewStatus,
+        reviewed_at: new Date().toISOString()
+      })
+      .eq('id', suggestionId);
+
+    if (updateError) {
+      console.error('Error while reviewing checklist suggestion', updateError);
+      return {
+        success: false,
+        message: 'Failed to update checklist suggestion. Please try again.'
+      };
+    }
+
+    if (suggestion.user_id) {
+      const isCompleted = reviewStatus === 'completed';
+
+      await sendPushNotification(
+        suggestion.user_id,
+        isCompleted
+          ? 'checklist_suggestion_completed'
+          : 'checklist_suggestion_rejected',
+        {
+          title: isCompleted
+            ? 'Checklist Suggestion Completed'
+            : 'Checklist Suggestion Rejected',
+          body: isCompleted
+            ? `Your checklist suggestion "${suggestion.topic_name}" has been marked as completed.`
+            : `Your checklist suggestion "${suggestion.topic_name}" has been rejected.`,
+          url: CHECKLIST_SUGGESTIONS_PATH
+        },
+        {
+          suggestion_id: suggestion.id,
+          suggestion_type: 'checklist',
+          review_status: reviewStatus
+        }
+      );
+    }
+
+    revalidatePath('/admin/ehs/checklist');
+    revalidatePath(CHECKLIST_SUGGESTIONS_PATH);
+
+    return {
+      success: true,
+      message:
+        reviewStatus === 'completed'
+          ? 'Checklist suggestion marked as completed.'
+          : 'Checklist suggestion rejected.'
+    };
+  } catch (error) {
+    console.error(
+      'An unexpected error occurred while reviewing checklist suggestion',
+      error
+    );
+    return {
+      success: false,
+      message: ERROR_MESSAGES.UNEXPECTED_ERROR
+    };
+  }
+};
+
+export const approveChecklistSuggestion = async (suggestionId: number) =>
+  reviewChecklistSuggestion(suggestionId, 'completed');
+
+export const rejectChecklistSuggestion = async (suggestionId: number) =>
+  reviewChecklistSuggestion(suggestionId, 'rejected');
