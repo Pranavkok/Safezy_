@@ -81,6 +81,24 @@ const SectionHeader = ({
   </div>
 );
 
+const FieldGroupCard = ({
+  title,
+  subtitle,
+  children
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) => (
+  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="mb-4">
+      <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+      {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+    </div>
+    <div className="space-y-5">{children}</div>
+  </div>
+);
+
 const MultiSelectChips = ({
   value,
   options,
@@ -834,21 +852,29 @@ const UaUcNearMissForm = () => {
               subtitle="Everything below stays on this page so the user can review and edit before submitting."
             />
             <div className="space-y-5">
-              <TextareaWithLabel
-                label="What Happened / Observed"
-                rows={3}
-                placeholder="Safezy-generated summary or manual description"
-                {...register('what_happened')}
-              />
+              <FieldGroupCard
+                title="Background"
+                subtitle="General observation details shown for every report type."
+              >
+                <TextareaWithLabel
+                  label="What Happened / Observed"
+                  rows={3}
+                  placeholder="Safezy-generated summary or manual description"
+                  {...register('what_happened')}
+                />
 
-              <InputFieldWithLabel
-                label="Equipment Involved"
-                placeholder="Equipment, tools, or materials involved"
-                {...register('equipment_involved')}
-              />
+                <InputFieldWithLabel
+                  label="Equipment Involved"
+                  placeholder="Equipment, tools, or materials involved"
+                  {...register('equipment_involved')}
+                />
+              </FieldGroupCard>
 
               {observationType === 'UA' && (
-                <>
+                <FieldGroupCard
+                  title="UA"
+                  subtitle="Unsafe Act specific fields."
+                >
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
                       UA Classification
@@ -879,11 +905,14 @@ const UaUcNearMissForm = () => {
                     placeholder="Recommended or manually updated immediate action"
                     {...register('action_taken')}
                   />
-                </>
+                </FieldGroupCard>
               )}
 
               {observationType === 'UC' && (
-                <>
+                <FieldGroupCard
+                  title="UC"
+                  subtitle="Unsafe Condition specific fields."
+                >
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
                       UC Classification
@@ -930,11 +959,14 @@ const UaUcNearMissForm = () => {
                     placeholder="Describe any immediate temporary controls applied to reduce the risk"
                     {...register('uc_temporary_controls')}
                   />
-                </>
+                </FieldGroupCard>
               )}
 
               {observationType === 'NearMiss' && (
-                <>
+                <FieldGroupCard
+                  title="NM"
+                  subtitle="Near Miss specific fields."
+                >
                   <InputFieldWithLabel
                     label="Potential Injury"
                     placeholder="Potential injury that could have resulted"
@@ -963,7 +995,7 @@ const UaUcNearMissForm = () => {
                       )}
                     />
                   </div>
-                </>
+                </FieldGroupCard>
               )}
             </div>
           </div>
