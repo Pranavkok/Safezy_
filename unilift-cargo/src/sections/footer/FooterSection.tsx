@@ -60,7 +60,9 @@ const EHS_LINKS = [
   { title: 'EHS Toolbox Talks', href: AppRoutes.EHS_TOOLBOX_TALK },
   { title: 'EHS Checklists', href: AppRoutes.EHS_CHECKLIST_LISTING },
   { title: 'EHS First Principles', href: AppRoutes.EHS_FIRST_PRINCIPLES },
-  { title: 'EHS Incident Analysis', href: AppRoutes.EHS_INCIDENT_ANALYSIS_ADD }
+  { title: 'EHS Incident Analysis', href: AppRoutes.EHS_INCIDENT_ANALYSIS_ADD },
+  { title: 'News & Updates', href: '/ehs-news' },
+  { title: 'Near Miss / UA/UC', href: AppRoutes.EHS_UA_UC_NEAR_MISS_LISTING }
 ];
 
 const QUICK_LINKS = [
@@ -92,7 +94,7 @@ const FooterSection = () => {
           className="absolute w-full h-full object-cover brightness-50"
           priority
         />
-        <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 bg-primary/90 w-full p-4 pb-16 sm:p-8 lg:p-14 lg:pb-20">
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 bg-primary/90 w-full p-4 pb-16 sm:p-8 lg:p-14 lg:pb-20">
           {/* Contact Information */}
           {renderFooterColumn(
             'Contact Us',
@@ -115,23 +117,45 @@ const FooterSection = () => {
                   support@safezy.in
                 </a>
               </div>
+              <div className="flex items-center gap-2 group">
+                <MailsIcon className="w-5 h-5" />
+                <a
+                  href="mailto:Admin@safezy.in"
+                  className="text-base font-semibold hover:text-white"
+                >
+                  Admin@safezy.in
+                </a>
+              </div>
               <div className="flex items-start gap-2 mt-2">
                 <MapPin className="w-5 h-5 mt-0.5 shrink-0" />
                 <div className="text-sm font-semibold leading-snug">
-                  <p>Unit Number 721, Tulsiani Chamber,</p>
+                  <p>721, Tulsiani Chamber,</p>
                   <p>7, Free Press Journal Marg,</p>
                   <p>Nariman Point, Mumbai,</p>
                   <p>Maharashtra 400021, India</p>
-                  <p className="mt-1">Phone: +91 22 6654 8266</p>
                 </div>
               </div>
             </>
           )}
 
-          {/* Categories */}
+          {/* Categories Part 1 */}
           {renderFooterColumn(
             'Categories',
-            CATEGORIES.map(item => (
+            CATEGORIES.slice(0, 5).map(item => (
+              <Link
+                key={item.id}
+                href={item.route}
+                className="text-base hover:text-white transition-colors"
+              >
+                {item.title}
+              </Link>
+            ))
+          )}
+
+          {/* Categories Part 2 */}
+          {renderFooterColumn(
+            ' ',
+            CATEGORIES.slice(5).map(item => (
               <Link
                 key={item.id}
                 href={item.route}
