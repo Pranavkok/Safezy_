@@ -51,13 +51,13 @@ export const EHSToolboxTalkDetailsSection = ({
   const translationCache = useRef<Partial<Record<Language, { description: string; summarize: string }>>>({});
 
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey);
+    const stored = sessionStorage.getItem(storageKey);
     if (stored) {
       sessionStartRef.current = parseInt(stored, 10);
     } else {
       const now = Date.now();
       sessionStartRef.current = now;
-      localStorage.setItem(storageKey, String(now));
+      sessionStorage.setItem(storageKey, String(now));
     }
 
     setElapsed(Math.floor((Date.now() - sessionStartRef.current) / 1000));

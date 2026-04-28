@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const lastName = formData.get('lastName') as string;
     const topicName = formData.get('topicName') as string;
     const comments = formData.get('comments') as string;
-    const sessionDate = new Date().toLocaleString();
+    const sessionDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
     const files: File[] = [];
     formData.forEach((value, key) => {

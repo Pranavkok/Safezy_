@@ -72,14 +72,14 @@ export const checklistCompletionEmailHTML = (
            margin-bottom: 10px;
        }
        .stats-cols {
-           display: flex;
-           gap: 0;
+           width: 100%;
+           border-collapse: collapse;
        }
        .stat-item {
-           flex: 1;
            text-align: center;
            padding: 8px 0;
            border-right: 1px solid #FFD5B0;
+           width: 25%;
        }
        .stat-item:last-child {
            border-right: none;
@@ -176,24 +176,26 @@ export const checklistCompletionEmailHTML = (
            <h1>${userName} has performed the Checklist</h1>
            <div class="stats-box">
                <div class="stats-title">Summary</div>
-               <div class="stats-cols">
-                   <div class="stat-item">
-                       <div class="stat-label">Attempted</div>
-                       <div class="stat-val">${attempted} / ${totalQuestions}</div>
-                   </div>
-                   <div class="stat-item">
-                       <div class="stat-label">Yes</div>
-                       <div class="stat-val yes">${yesCount}</div>
-                   </div>
-                   <div class="stat-item">
-                       <div class="stat-label">No</div>
-                       <div class="stat-val no">${noCount}</div>
-                   </div>
-                   <div class="stat-item">
-                       <div class="stat-label">Score %</div>
-                       <div class="stat-val score">${scorePercentage}%</div>
-                   </div>
-               </div>
+               <table class="stats-cols">
+                   <tr>
+                       <td class="stat-item">
+                           <div class="stat-label">Attempted</div>
+                           <div class="stat-val">${attempted} / ${totalQuestions}</div>
+                       </td>
+                       <td class="stat-item">
+                           <div class="stat-label">Yes</div>
+                           <div class="stat-val yes">${yesCount}</div>
+                       </td>
+                       <td class="stat-item">
+                           <div class="stat-label">No</div>
+                           <div class="stat-val no">${noCount}</div>
+                       </td>
+                       <td class="stat-item">
+                           <div class="stat-label">Score %</div>
+                           <div class="stat-val score">${scorePercentage}%</div>
+                       </td>
+                   </tr>
+               </table>
            </div>
        </div>
        <div class="info-section">

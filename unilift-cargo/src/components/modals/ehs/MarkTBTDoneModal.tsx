@@ -142,7 +142,7 @@ const MarkTBTDoneModal = ({
 
         if (result.ok) {
           toast.success(res?.message);
-          localStorage.removeItem(storageKey);
+          sessionStorage.removeItem(storageKey);
           handleReset();
           router.push(AppRoutes.EHS_TOOLBOX_TALK_REPORT(toolboxTalkId));
         } else {
