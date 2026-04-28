@@ -53,7 +53,7 @@ export const activateUser = async (
 
   const { error } = await supabase
     .from('users')
-    .update({ is_active: true })
+    .update({ is_active: true, is_deleted: false })
     .eq('id', userId);
 
   if (error) {
