@@ -116,7 +116,7 @@ export const getStaffList = async (): Promise<{
     const { data, error } = await serviceClient
       .from('users')
       .select('id, first_name, last_name, email, contact_number, is_active, created_at, user_roles!inner(role)')
-      .in('user_roles.role', [USER_ROLES.MANAGER, USER_ROLES.SAFETY_OFFICER])
+      .in('user_roles.role', [USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.SAFETY_OFFICER])
       .order('created_at', { ascending: false });
 
     if (error) {
