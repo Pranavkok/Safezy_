@@ -138,32 +138,34 @@ const FooterSection = () => {
             </>
           )}
 
-          {/* Categories — two parts stacked vertically */}
+          {/* Categories — two columns side by side */}
           <div className="flex flex-col gap-2">
-            <h3 className="text-lg sm:text-xl font-bold uppercase border-b border-white/20 pb-2 mb-2">
+            <h3 className="text-lg sm:text-xl font-bold uppercase border-b border-white/20 pb-2 mb-2 text-center">
               Categories
             </h3>
-            <div className="flex flex-col gap-1 sm:gap-2">
-              {CATEGORIES.slice(0, 5).map(item => (
-                <Link
-                  key={item.id}
-                  href={item.route}
-                  className="text-base hover:text-white transition-colors"
-                >
-                  {item.title}
-                </Link>
-              ))}
-            </div>
-            <div className="flex flex-col gap-1 sm:gap-2 mt-4">
-              {CATEGORIES.slice(5).map(item => (
-                <Link
-                  key={item.id}
-                  href={item.route}
-                  className="text-base hover:text-white transition-colors"
-                >
-                  {item.title}
-                </Link>
-              ))}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 sm:gap-y-2">
+              <div className="flex flex-col gap-1 sm:gap-2">
+                {CATEGORIES.slice(0, 5).map(item => (
+                  <Link
+                    key={item.id}
+                    href={item.route}
+                    className="text-base hover:text-white transition-colors"
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
+              <div className="flex flex-col gap-1 sm:gap-2">
+                {CATEGORIES.slice(5).map(item => (
+                  <Link
+                    key={item.id}
+                    href={item.route}
+                    className="text-base hover:text-white transition-colors"
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
 
