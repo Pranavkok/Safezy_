@@ -25,7 +25,7 @@ export async function GET() {
         id,
         quantity,
         created_at,
-        product:product_id (id, ppe_name, ppe_category, image),
+        product:product_id (id, ppe_name, ppe_category, image, use_life),
         admin:assigned_by (first_name, last_name)
       `)
       .eq('contractor_id', publicUser.id)
