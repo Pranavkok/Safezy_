@@ -2,7 +2,7 @@ import React from 'react';
 import Sidebar from '@/components/sidebar/Sidebar';
 import { AppRoutes } from '@/constants/AppRoutes';
 import { SidebarMenuType } from '@/types/sidebar.types';
-import { LayoutDashboard, ShieldCheck, AlertTriangle, FileText, Bell, ShoppingBag, Heart } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck, AlertTriangle, FileText, Bell, ShoppingBag, Heart, HardHat } from 'lucide-react';
 
 const MANAGER_SIDEBAR_MENU: SidebarMenuType = [
   {
@@ -48,6 +48,12 @@ const MANAGER_SIDEBAR_MENU: SidebarMenuType = [
     title: 'Wishlist',
     icon: <Heart size={18} />,
     route: AppRoutes.MANAGER_WISHLIST
+  },
+  {
+    id: 6,
+    title: 'PPE Assignments',
+    icon: <HardHat size={18} />,
+    route: AppRoutes.MANAGER_PPE_ASSIGNMENTS
   }
 ] as const;
 

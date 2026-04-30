@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       .single();
 
     const role = (adminUser?.user_roles as { role: string } | null)?.role;
-    if (role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (role !== 'admin' && role !== 'manager') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const contractorId = req.nextUrl.searchParams.get('contractor_id');
     if (!contractorId) return NextResponse.json({ error: 'contractor_id is required' }, { status: 400 });
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     const role = (adminUser?.user_roles as { role: string } | null)?.role;
-    if (role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (role !== 'admin' && role !== 'manager') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
     const { contractor_id, product_id, quantity } = body;

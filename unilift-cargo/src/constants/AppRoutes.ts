@@ -118,6 +118,7 @@ type AppRoutesType = {
 
   // Manager Panel routes
   MANAGER_DASHBOARD: string;
+  MANAGER_PPE_ASSIGNMENTS: string;
   MANAGER_EHS_UA_UC_NEAR_MISS_LISTING: string;
   MANAGER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => string;
   MANAGER_EHS_INCIDENT_ANALYSIS_LISTING: string;
@@ -268,6 +269,7 @@ export const AppRoutes: AppRoutesType = {
 
   // Manager Panel
   MANAGER_DASHBOARD: '/manager/dashboard',
+  MANAGER_PPE_ASSIGNMENTS: '/manager/ppe-assignments',
   MANAGER_EHS_UA_UC_NEAR_MISS_LISTING: '/manager/ehs/ua-uc-near-miss',
   MANAGER_EHS_UA_UC_NEAR_MISS_DETAILS: (id: string) => `/manager/ehs/ua-uc-near-miss/${id}`,
   MANAGER_EHS_INCIDENT_ANALYSIS_LISTING: '/manager/ehs/incident-analysis',

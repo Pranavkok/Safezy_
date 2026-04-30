@@ -22,7 +22,7 @@ export async function PATCH(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const role = await getAdminRole(user.id);
-    if (role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (role !== 'admin' && role !== 'manager') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
     const { quantity } = body;
@@ -59,7 +59,7 @@ export async function DELETE(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const role = await getAdminRole(user.id);
-    if (role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (role !== 'admin' && role !== 'manager') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
     const serviceClient = createServiceClient();
     const { error } = await serviceClient
