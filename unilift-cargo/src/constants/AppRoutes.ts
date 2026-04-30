@@ -27,6 +27,7 @@ type AppRoutesType = {
   ADMIN_WAREHOUSE: string;
   ADMIN_COMPLAINTS: string;
   ADMIN_BLOG: string;
+  ADMIN_PPE_ASSIGNMENTS: string;
 
   // Contractor Panel routes
   CONTRACTOR_DASHBOARD: string;
@@ -38,6 +39,7 @@ type AppRoutesType = {
   CONTRACTOR_WORKSITE_LISTING: string;
   CONTRACTOR_EQUIPMENT_DETAILS: (id: string) => string;
   CONTRACTOR_ASSIGNMENTS: string;
+  CONTRACTOR_ASSIGNED_PPE: string;
   CONTRACTOR_NOTIFICATION: string;
   CONTRACTOR_WISHLIST: string;
   CONTRACTOR_CART: string;
@@ -168,6 +170,7 @@ export const AppRoutes: AppRoutesType = {
   ADMIN_WAREHOUSE: '/admin/warehouse',
   ADMIN_COMPLAINTS: '/admin/complaints',
   ADMIN_BLOG: '/admin/blog',
+  ADMIN_PPE_ASSIGNMENTS: '/admin/ppe-assignments',
 
   // Contractor Panel routes
   CONTRACTOR_DASHBOARD: '/contractor/dashboard',
@@ -179,6 +182,7 @@ export const AppRoutes: AppRoutesType = {
   CONTRACTOR_WORKSITE_LISTING: '/contractor/worksites',
   CONTRACTOR_EQUIPMENT_DETAILS: (id: string) => `/contractor/equipments/${id}`,
   CONTRACTOR_ASSIGNMENTS: '/contractor/assignments',
+  CONTRACTOR_ASSIGNED_PPE: '/contractor/assigned-ppe',
   CONTRACTOR_NOTIFICATION: '/contractor/notifications',
   CONTRACTOR_WISHLIST: '/contractor/wishlist',
   CONTRACTOR_INVOICE_DOWNLOAD: (id: string) => `/invoice/${id}`,

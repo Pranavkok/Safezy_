@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -90,6 +95,61 @@ export type Database = {
             columns: ["worksite_id"]
             isOneToOne: false
             referencedRelation: "worksite"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_ppe_assignments: {
+        Row: {
+          assigned_by: string
+          contractor_id: string
+          created_at: string | null
+          id: string
+          is_deleted: boolean
+          product_id: string
+          quantity: number
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_by: string
+          contractor_id: string
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean
+          product_id: string
+          quantity: number
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_by?: string
+          contractor_id?: string
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean
+          product_id?: string
+          quantity?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_ppe_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_ppe_assignments_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_ppe_assignments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
             referencedColumns: ["id"]
           },
         ]
@@ -490,10 +550,17 @@ export type Database = {
       }
       ehs_incident_analysis: {
         Row: {
+          activity_type: string | null
           additional_comments: string | null
           affected_entity: Json | null
+          assigned_to_name: string | null
+          assigned_to_user_id: string | null
+          authorization_competence: boolean | null
+          authorization_competence_remarks: string | null
           cause_to_entity: string | null
+          closure_image_url: string | null
           contributing_factors: Json | null
+          controls_failed: Json | null
           corrective_actions: string[] | null
           created_at: string
           custom_affected_entity: string | null
@@ -502,19 +569,19 @@ export type Database = {
           entity_shift_date: string | null
           entity_shift_details: string | null
           evidence_employee_list: Json | null
-          flowchart_points: Json | null
-          activity_type: string | null
-          authorization_competence: boolean | null
-          controls_failed: Json | null
           failure_type: string | null
+          failure_type_other: string | null
+          flowchart_points: Json | null
+          has_incident_occurred: boolean | null
           historical_incident_date: string | null
           how_stopped: string | null
           id: number
+          immediate_actions: string | null
           immediate_cause: string | null
           impact_description: string | null
-          immediate_actions: string | null
-          initial_investigation_findings: string | null
           incident_type: string | null
+          incident_type_other: string | null
+          initial_investigation_findings: string | null
           instructions_communicated:
             | Database["public"]["Enums"]["confirmation"]
             | null
@@ -532,12 +599,11 @@ export type Database = {
           process_frequency: string | null
           rca_conclusion: string | null
           regular_process: Database["public"]["Enums"]["confirmation"] | null
-          assigned_to_user_id: string | null
-          assigned_to_name: string | null
           reported_by_user_id: string | null
           root_causes: Json | null
           severity_level: string | null
           sop_deviation: boolean | null
+          sop_deviation_remarks: string | null
           system_gaps: string[] | null
           team_involved: Json | null
           time: string | null
@@ -551,34 +617,40 @@ export type Database = {
           witness_name: string | null
           witness_records: Database["public"]["Enums"]["confirmation"] | null
           worst_case_potential: string | null
-          closure_image_url: string | null
         }
         Insert: {
+          activity_type?: string | null
           additional_comments?: string | null
           affected_entity?: Json | null
+          assigned_to_name?: string | null
+          assigned_to_user_id?: string | null
+          authorization_competence?: boolean | null
+          authorization_competence_remarks?: string | null
           cause_to_entity?: string | null
+          closure_image_url?: string | null
           contributing_factors?: Json | null
+          controls_failed?: Json | null
           corrective_actions?: string[] | null
           created_at?: string
           custom_affected_entity?: string | null
           date?: string | null
           entity_details?: Json | null
-          activity_type?: string | null
-          authorization_competence?: boolean | null
-          controls_failed?: Json | null
           entity_shift_date?: string | null
           entity_shift_details?: string | null
           evidence_employee_list?: Json | null
           failure_type?: string | null
+          failure_type_other?: string | null
           flowchart_points?: Json | null
+          has_incident_occurred?: boolean | null
           historical_incident_date?: string | null
           how_stopped?: string | null
           id?: never
+          immediate_actions?: string | null
           immediate_cause?: string | null
           impact_description?: string | null
-          immediate_actions?: string | null
-          initial_investigation_findings?: string | null
           incident_type?: string | null
+          incident_type_other?: string | null
+          initial_investigation_findings?: string | null
           instructions_communicated?:
             | Database["public"]["Enums"]["confirmation"]
             | null
@@ -597,13 +669,12 @@ export type Database = {
           process_before_incident?: string | null
           process_frequency?: string | null
           rca_conclusion?: string | null
-          assigned_to_user_id?: string | null
-          assigned_to_name?: string | null
           regular_process?: Database["public"]["Enums"]["confirmation"] | null
           reported_by_user_id?: string | null
           root_causes?: Json | null
           severity_level?: string | null
           sop_deviation?: boolean | null
+          sop_deviation_remarks?: string | null
           system_gaps?: string[] | null
           team_involved?: Json | null
           time?: string | null
@@ -617,13 +688,19 @@ export type Database = {
           witness_name?: string | null
           witness_records?: Database["public"]["Enums"]["confirmation"] | null
           worst_case_potential?: string | null
-          closure_image_url?: string | null
         }
         Update: {
+          activity_type?: string | null
           additional_comments?: string | null
           affected_entity?: Json | null
+          assigned_to_name?: string | null
+          assigned_to_user_id?: string | null
+          authorization_competence?: boolean | null
+          authorization_competence_remarks?: string | null
           cause_to_entity?: string | null
+          closure_image_url?: string | null
           contributing_factors?: Json | null
+          controls_failed?: Json | null
           corrective_actions?: string[] | null
           created_at?: string
           custom_affected_entity?: string | null
@@ -632,19 +709,19 @@ export type Database = {
           entity_shift_date?: string | null
           entity_shift_details?: string | null
           evidence_employee_list?: Json | null
-          flowchart_points?: Json | null
-          activity_type?: string | null
-          authorization_competence?: boolean | null
-          controls_failed?: Json | null
           failure_type?: string | null
+          failure_type_other?: string | null
+          flowchart_points?: Json | null
+          has_incident_occurred?: boolean | null
           historical_incident_date?: string | null
           how_stopped?: string | null
           id?: never
+          immediate_actions?: string | null
           immediate_cause?: string | null
           impact_description?: string | null
-          immediate_actions?: string | null
-          initial_investigation_findings?: string | null
           incident_type?: string | null
+          incident_type_other?: string | null
+          initial_investigation_findings?: string | null
           instructions_communicated?:
             | Database["public"]["Enums"]["confirmation"]
             | null
@@ -663,12 +740,12 @@ export type Database = {
           process_before_incident?: string | null
           process_frequency?: string | null
           rca_conclusion?: string | null
-          assigned_to_user_id?: string | null
-          assigned_to_name?: string | null
           regular_process?: Database["public"]["Enums"]["confirmation"] | null
+          reported_by_user_id?: string | null
           root_causes?: Json | null
           severity_level?: string | null
           sop_deviation?: boolean | null
+          sop_deviation_remarks?: string | null
           system_gaps?: string[] | null
           team_involved?: Json | null
           time?: string | null
@@ -682,7 +759,6 @@ export type Database = {
           witness_name?: string | null
           witness_records?: Database["public"]["Enums"]["confirmation"] | null
           worst_case_potential?: string | null
-          closure_image_url?: string | null
         }
         Relationships: []
       }
@@ -720,8 +796,7 @@ export type Database = {
         Row: {
           created_at: string
           id: number
-          review_status:
-            | Database["public"]["Enums"]["ehs_suggestion_review_status"]
+          review_status: Database["public"]["Enums"]["ehs_suggestion_review_status"]
           reviewed_at: string | null
           suggestion_type: Database["public"]["Enums"]["ehs_suggestion_type"]
           topic_name: string
@@ -731,8 +806,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: never
-          review_status?:
-            | Database["public"]["Enums"]["ehs_suggestion_review_status"]
+          review_status?: Database["public"]["Enums"]["ehs_suggestion_review_status"]
           reviewed_at?: string | null
           suggestion_type: Database["public"]["Enums"]["ehs_suggestion_type"]
           topic_name: string
@@ -742,8 +816,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: never
-          review_status?:
-            | Database["public"]["Enums"]["ehs_suggestion_review_status"]
+          review_status?: Database["public"]["Enums"]["ehs_suggestion_review_status"]
           reviewed_at?: string | null
           suggestion_type?: Database["public"]["Enums"]["ehs_suggestion_type"]
           topic_name?: string
@@ -877,6 +950,114 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ehs_ua_uc_near_miss: {
+        Row: {
+          action_by: string | null
+          action_date: string | null
+          action_taken: string | null
+          activity_at_time: string | null
+          assigned_to_name: string | null
+          assigned_to_user_id: string | null
+          closure_image_url: string | null
+          created_at: string
+          employee_id: string | null
+          equipment_involved: string | null
+          id: number
+          location_department: string
+          media_type: string | null
+          media_types: string[] | null
+          media_url: string | null
+          media_urls: string[] | null
+          nm_potential_injury: string | null
+          nm_severity: string | null
+          nm_what_could_happen: string | null
+          observation_type: string
+          report_no: string
+          reported_at: string
+          reported_by_name: string | null
+          reported_by_user_id: string | null
+          status: string
+          ua_classifications: Json | null
+          ua_other: string | null
+          uc_classifications: Json | null
+          uc_other: string | null
+          uc_severity: string | null
+          uc_temporary_controls: string | null
+          updated_at: string
+          what_happened: string | null
+        }
+        Insert: {
+          action_by?: string | null
+          action_date?: string | null
+          action_taken?: string | null
+          activity_at_time?: string | null
+          assigned_to_name?: string | null
+          assigned_to_user_id?: string | null
+          closure_image_url?: string | null
+          created_at?: string
+          employee_id?: string | null
+          equipment_involved?: string | null
+          id?: never
+          location_department: string
+          media_type?: string | null
+          media_types?: string[] | null
+          media_url?: string | null
+          media_urls?: string[] | null
+          nm_potential_injury?: string | null
+          nm_severity?: string | null
+          nm_what_could_happen?: string | null
+          observation_type: string
+          report_no: string
+          reported_at?: string
+          reported_by_name?: string | null
+          reported_by_user_id?: string | null
+          status?: string
+          ua_classifications?: Json | null
+          ua_other?: string | null
+          uc_classifications?: Json | null
+          uc_other?: string | null
+          uc_severity?: string | null
+          uc_temporary_controls?: string | null
+          updated_at?: string
+          what_happened?: string | null
+        }
+        Update: {
+          action_by?: string | null
+          action_date?: string | null
+          action_taken?: string | null
+          activity_at_time?: string | null
+          assigned_to_name?: string | null
+          assigned_to_user_id?: string | null
+          closure_image_url?: string | null
+          created_at?: string
+          employee_id?: string | null
+          equipment_involved?: string | null
+          id?: never
+          location_department?: string
+          media_type?: string | null
+          media_types?: string[] | null
+          media_url?: string | null
+          media_urls?: string[] | null
+          nm_potential_injury?: string | null
+          nm_severity?: string | null
+          nm_what_could_happen?: string | null
+          observation_type?: string
+          report_no?: string
+          reported_at?: string
+          reported_by_name?: string | null
+          reported_by_user_id?: string | null
+          status?: string
+          ua_classifications?: Json | null
+          ua_other?: string | null
+          uc_classifications?: Json | null
+          uc_other?: string | null
+          uc_severity?: string | null
+          uc_temporary_controls?: string | null
+          updated_at?: string
+          what_happened?: string | null
+        }
+        Relationships: []
       }
       employee: {
         Row: {
@@ -1021,15 +1202,7 @@ export type Database = {
           url?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       order: {
         Row: {
@@ -1501,15 +1674,7 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       transaction: {
         Row: {
@@ -1688,6 +1853,42 @@ export type Database = {
           },
         ]
       }
+      wishlist: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       worksite: {
         Row: {
           contact_number: string | null
@@ -1728,144 +1929,6 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ehs_ua_uc_near_miss: {
-        Row: {
-          id: number
-          report_no: string
-          observation_type: 'UA' | 'UC' | 'NearMiss'
-          reported_at: string
-          location_department: string
-          reported_by_user_id: string
-          reported_by_name: string
-          employee_id: string
-          what_happened: string | null
-          equipment_involved: string | null
-          activity_at_time: string | null
-          media_url: string | null
-          media_type: 'image' | 'video' | 'voice' | null
-          ua_classifications: string[]
-          ua_other: string | null
-          uc_classifications: string[]
-          uc_other: string | null
-          uc_severity: 'Low' | 'Medium' | 'High' | null
-          uc_temporary_controls: string | null
-          nm_potential_injury: string | null
-          nm_what_could_happen: string | null
-          nm_severity: 'Low' | 'Medium' | 'High' | null
-          status: 'Open' | 'Assigned' | 'Closed'
-          action_taken: string | null
-          action_by: string | null
-          action_date: string | null
-          assigned_to_user_id: string | null
-          assigned_to_name: string | null
-          closure_image_url: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          report_no: string
-          observation_type: 'UA' | 'UC' | 'NearMiss'
-          reported_at?: string
-          location_department: string
-          reported_by_user_id: string
-          reported_by_name: string
-          employee_id: string
-          what_happened?: string | null
-          equipment_involved?: string | null
-          activity_at_time?: string | null
-          media_url?: string | null
-          media_type?: 'image' | 'video' | 'voice' | null
-          ua_classifications?: string[]
-          ua_other?: string | null
-          uc_classifications?: string[]
-          uc_other?: string | null
-          uc_severity?: 'Low' | 'Medium' | 'High' | null
-          uc_temporary_controls?: string | null
-          nm_potential_injury?: string | null
-          nm_what_could_happen?: string | null
-          nm_severity?: 'Low' | 'Medium' | 'High' | null
-          status?: 'Open' | 'Assigned' | 'Closed'
-          action_taken?: string | null
-          action_by?: string | null
-          action_date?: string | null
-          assigned_to_user_id?: string | null
-          assigned_to_name?: string | null
-          closure_image_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          report_no?: string
-          observation_type?: 'UA' | 'UC' | 'NearMiss'
-          reported_at?: string
-          location_department?: string
-          reported_by_user_id?: string
-          reported_by_name?: string
-          employee_id?: string
-          what_happened?: string | null
-          equipment_involved?: string | null
-          activity_at_time?: string | null
-          media_url?: string | null
-          media_type?: 'image' | 'video' | 'voice' | null
-          ua_classifications?: string[]
-          ua_other?: string | null
-          uc_classifications?: string[]
-          uc_other?: string | null
-          uc_severity?: 'Low' | 'Medium' | 'High' | null
-          uc_temporary_controls?: string | null
-          nm_potential_injury?: string | null
-          nm_what_could_happen?: string | null
-          nm_severity?: 'Low' | 'Medium' | 'High' | null
-          status?: 'Open' | 'Assigned' | 'Closed'
-          action_taken?: string | null
-          action_by?: string | null
-          action_date?: string | null
-          assigned_to_user_id?: string | null
-          assigned_to_name?: string | null
-          closure_image_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      wishlist: {
-        Row: {
-          id: string
-          user_id: string
-          product_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          product_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          product_id?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "wishlist_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "wishlist_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "product"
             referencedColumns: ["id"]
           },
         ]
@@ -1941,7 +2004,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "contractor" | "principle" | "warehouse_operator" | "manager" | "safety_officer"
+      app_role:
+        | "admin"
+        | "contractor"
+        | "principle"
+        | "warehouse_operator"
+        | "manager"
+        | "safety_officer"
       checklist_options: "Yes" | "No" | "N/A"
       confirmation: "Yes" | "No"
       ehs_suggestion_review_status: "pending" | "completed" | "rejected"
@@ -1955,13 +2024,14 @@ export type Database = {
         | "portal_news"
         | "portal_toolbox_talk"
         | "portal_checklist"
+        | "order_placed"
+        | "order_delivered"
+        | "wishlist_back_in_stock"
         | "checklist_suggestion_completed"
         | "checklist_suggestion_rejected"
         | "toolbox_suggestion_completed"
         | "toolbox_suggestion_rejected"
-        | "order_placed"
-        | "order_delivered"
-        | "wishlist_back_in_stock"
+        | "ppe_assigned"
       orderStatus:
         | "Processing"
         | "Returned"
@@ -2100,7 +2170,14 @@ export const Constants = {
   },
   public: {
     Enums: {
-      app_role: ["admin", "contractor", "principle", "warehouse_operator", "manager", "safety_officer"],
+      app_role: [
+        "admin",
+        "contractor",
+        "principle",
+        "warehouse_operator",
+        "manager",
+        "safety_officer",
+      ],
       checklist_options: ["Yes", "No", "N/A"],
       confirmation: ["Yes", "No"],
       ehs_suggestion_review_status: ["pending", "completed", "rejected"],
@@ -2114,13 +2191,14 @@ export const Constants = {
         "portal_news",
         "portal_toolbox_talk",
         "portal_checklist",
+        "order_placed",
+        "order_delivered",
+        "wishlist_back_in_stock",
         "checklist_suggestion_completed",
         "checklist_suggestion_rejected",
         "toolbox_suggestion_completed",
         "toolbox_suggestion_rejected",
-        "order_placed",
-        "order_delivered",
-        "wishlist_back_in_stock",
+        "ppe_assigned",
       ],
       orderStatus: [
         "Processing",

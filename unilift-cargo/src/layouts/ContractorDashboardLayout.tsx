@@ -9,7 +9,8 @@ import {
   MapPin,
   Users,
   ClipboardList,
-  Heart
+  Heart,
+  ShieldCheck
 } from 'lucide-react';
 
 const CONTRACTOR_SIDEBAR_MENU: SidebarMenuType = [
@@ -54,6 +55,12 @@ const CONTRACTOR_SIDEBAR_MENU: SidebarMenuType = [
     title: 'Wishlist',
     icon: <Heart size={18} />,
     route: AppRoutes.CONTRACTOR_WISHLIST
+  },
+  {
+    id: 9,
+    title: 'My Assigned PPE',
+    icon: <ShieldCheck size={18} />,
+    route: AppRoutes.CONTRACTOR_ASSIGNED_PPE
   }
 ] as const;
 

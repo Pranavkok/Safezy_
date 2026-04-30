@@ -26,8 +26,10 @@ CREATE INDEX IF NOT EXISTS idx_ehs_suggestions_type_status_created_at
 CREATE INDEX IF NOT EXISTS idx_ehs_suggestions_user_id
   ON public.ehs_suggestions (user_id);
 
+DROP POLICY IF EXISTS "Enable read access to suggestion owners" ON public.ehs_suggestions;
+
 CREATE POLICY "Enable read access to suggestion owners"
 ON public.ehs_suggestions
 FOR SELECT
 TO authenticated
-USING (auth.uid() = user_id);
+USING (auth.uid()::text = user_id::text);

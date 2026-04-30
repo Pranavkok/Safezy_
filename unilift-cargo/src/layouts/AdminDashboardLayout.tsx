@@ -17,7 +17,8 @@ import {
   BookOpen,
   UserCog,
   Eye,
-  FileWarning
+  FileWarning,
+  HardHat
 } from 'lucide-react';
 import BlogIcon from '@/components/svgs/BlogIcon';
 
@@ -113,6 +114,12 @@ const ADMIN_SIDEBAR_MENU: SidebarMenuType = [
     title: 'Blogs',
     icon: <BlogIcon className="w-4 h-4" />,
     route: AppRoutes.ADMIN_BLOG
+  },
+  {
+    id: 10,
+    title: 'PPE Assignments',
+    icon: <HardHat size={18} />,
+    route: AppRoutes.ADMIN_PPE_ASSIGNMENTS
   }
 ] as const;
 
