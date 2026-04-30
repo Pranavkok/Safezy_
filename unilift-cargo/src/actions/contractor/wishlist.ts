@@ -53,7 +53,7 @@ export const getWishlistItems = async (): Promise<{
       price: item.product?.price ?? 0,
       avgRating: item.product?.avg_rating ?? 0,
       isOutOfStock: item.product?.is_out_of_stock ?? false,
-      createdAt: item.created_at
+      createdAt: item.created_at ?? ''
     }));
 
     return {
@@ -158,7 +158,7 @@ export const addToWishlist = async (
       price: data.product?.price ?? 0,
       avgRating: data.product?.avg_rating ?? 0,
       isOutOfStock: data.product?.is_out_of_stock ?? false,
-      createdAt: data.created_at
+      createdAt: data.created_at ?? ''
     };
 
     return {

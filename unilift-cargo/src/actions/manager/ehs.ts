@@ -39,7 +39,7 @@ export const getAllUaUcReports = async (filters?: {
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    return { success: true, message: 'Reports fetched successfully.', data: data ?? [] };
+    return { success: true, message: 'Reports fetched successfully.', data: (data ?? []) as UaUcNearMissRecord[] };
   } catch (err) {
     console.error('Unexpected error:', err);
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };

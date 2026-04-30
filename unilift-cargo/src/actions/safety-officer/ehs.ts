@@ -34,7 +34,7 @@ export const getMyAssignedUaUcReports = async (): Promise<{
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    return { success: true, message: 'Reports fetched.', data: data ?? [] };
+    return { success: true, message: 'Reports fetched.', data: (data ?? []) as UaUcNearMissRecord[] };
   } catch (err) {
     console.error('Unexpected error:', err);
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };

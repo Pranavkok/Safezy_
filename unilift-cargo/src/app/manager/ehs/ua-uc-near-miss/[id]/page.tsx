@@ -5,6 +5,7 @@ import { AppRoutes } from '@/constants/AppRoutes';
 import { createServiceClient } from '@/utils/supabase/service';
 import { getSafetyOfficersList } from '@/actions/manager/ehs';
 import ManagerUaUcDetailSection from '@/sections/manager/ehs/ManagerUaUcDetailSection';
+import { UaUcNearMissRecord } from '@/types/ehs.types';
 
 interface Props {
   params: { id: string };
@@ -40,7 +41,7 @@ const ManagerUaUcDetailPage = async ({ params }: Props) => {
 
   return (
     <AdminTopbarLayout title={report.report_no} breadcrumbOptions={BREADCRUMBS}>
-      <ManagerUaUcDetailSection report={report} safetyOfficers={safetyOfficers} />
+      <ManagerUaUcDetailSection report={report as UaUcNearMissRecord} safetyOfficers={safetyOfficers} />
     </AdminTopbarLayout>
   );
 };
