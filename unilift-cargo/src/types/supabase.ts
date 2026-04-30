@@ -1,4 +1,3 @@
-export type Json =
   | string
   | number
   | boolean
@@ -104,31 +103,37 @@ export type Database = {
           assigned_by: string
           contractor_id: string
           created_at: string | null
+          expiry_notified: boolean
           id: string
           is_deleted: boolean
           product_id: string
           quantity: number
           updated_at: string | null
+          warning_notified: boolean
         }
         Insert: {
           assigned_by: string
           contractor_id: string
           created_at?: string | null
+          expiry_notified?: boolean
           id?: string
           is_deleted?: boolean
           product_id: string
           quantity: number
           updated_at?: string | null
+          warning_notified?: boolean
         }
         Update: {
           assigned_by?: string
           contractor_id?: string
           created_at?: string | null
+          expiry_notified?: boolean
           id?: string
           is_deleted?: boolean
           product_id?: string
           quantity?: number
           updated_at?: string | null
+          warning_notified?: boolean
         }
         Relationships: [
           {
@@ -2032,6 +2037,9 @@ export type Database = {
         | "toolbox_suggestion_completed"
         | "toolbox_suggestion_rejected"
         | "ppe_assigned"
+        | "ppe_expired"
+        | "ppe_expiry_warning"
+        | "new_order_admin"
       orderStatus:
         | "Processing"
         | "Returned"
@@ -2199,6 +2207,9 @@ export const Constants = {
         "toolbox_suggestion_completed",
         "toolbox_suggestion_rejected",
         "ppe_assigned",
+        "ppe_expired",
+        "ppe_expiry_warning",
+        "new_order_admin",
       ],
       orderStatus: [
         "Processing",

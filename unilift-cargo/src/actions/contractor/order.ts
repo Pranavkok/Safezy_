@@ -17,6 +17,7 @@ import {
   OrderDetailsForAdmin
 } from '@/types/order.types';
 import { createAdminClient, createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 import { revalidatePath } from 'next/cache';
 import { getUserIdFromAuth, getAuthId } from '../user';
 import { sendPushNotification } from '@/lib/web-push';
@@ -395,6 +396,7 @@ export const placeOrder = async (
         )
     ).catch(() => {});
 
+    // Notify the contractor who placed the order
     getAuthId()
       .then((authId) => {
         if (authId) {
@@ -406,6 +408,50 @@ export const placeOrder = async (
         }
       })
       .catch(() => {});
+
+    // Notify all admin users about the new order
+    Promise.resolve().then(async () => {
+      try {
+        const serviceClient = createServiceClient();
+        const { data: adminRole } = await serviceClient
+          .from('user_roles')
+          .select('id')
+          .eq('role', 'admin')
+          .single();
+
+        if (!adminRole) return;
+
+        const { data: admins } = await serviceClient
+          .from('users')
+          .select('auth_id')
+          .eq('role_id', adminRole.id)
+          .eq('is_active', true);
+
+        if (!admins || admins.length === 0) return;
+
+        const contractorName = `${userDetails.firstName} ${userDetails.lastName}`.trim();
+        const totalAmount = orderDetails.totalAmount.toLocaleString('en-IN');
+
+        await Promise.allSettled(
+          admins.map((admin) =>
+            admin.auth_id
+              ? sendPushNotification(
+                  admin.auth_id,
+                  'new_order_admin',
+                  {
+                    title: 'New Order Received',
+                    body: `Order #${orderId} placed by ${contractorName} for ₹${totalAmount}.`,
+                    url: `/admin/orders/${orderId}`,
+                  },
+                  { order_id: orderId, contractor_name: contractorName }
+                )
+              : Promise.resolve()
+          )
+        );
+      } catch (err) {
+        console.error('[push] admin new order notification failed:', err);
+      }
+    });
 
     return {
       success: true,
