@@ -80,26 +80,28 @@ export async function POST(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Fetch product name for notification
-    const { data: product } = await serviceClient
-      .from('product')
-      .select('ppe_name')
-      .eq('id', product_id)
-      .single();
+    // Fetch product name and contractor auth_id for notification
+    const [{ data: product }, { data: contractor }] = await Promise.all([
+      serviceClient.from('product').select('ppe_name').eq('id', product_id).single(),
+      serviceClient.from('users').select('auth_id').eq('id', contractor_id).single(),
+    ]);
 
     const productName = product?.ppe_name ?? 'PPE';
     const adminName = `${adminUser!.first_name} ${adminUser!.last_name}`.trim();
 
-    await sendPushNotification(
-      contractor_id,
-      'ppe_assigned',
-      {
-        title: 'PPE Assigned',
-        body: `${adminName} has assigned ${quantity} ${productName} to you.`,
-        url: '/contractor/assigned-ppe',
-      },
-      { assignment_id: assignment.id, product_id, quantity }
-    );
+    // sendPushNotification requires auth_id (auth.uid()), not public users.id
+    if (contractor?.auth_id) {
+      await sendPushNotification(
+        contractor.auth_id,
+        'ppe_assigned',
+        {
+          title: 'PPE Assigned',
+          body: `${adminName} has assigned ${quantity} ${productName} to you.`,
+          url: '/contractor/assigned-ppe',
+        },
+        { assignment_id: assignment.id, product_id, quantity }
+      );
+    }
 
     return NextResponse.json({ data: assignment }, { status: 201 });
   } catch (err) {
