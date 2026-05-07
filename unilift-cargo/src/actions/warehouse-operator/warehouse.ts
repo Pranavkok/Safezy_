@@ -8,6 +8,7 @@ import {
 import { WarehouseOperatorSignUpType } from '@/sections/auth/SignUpWarehouseOperatorSection';
 import { SearchPaginationProps } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
+import { createServiceClient } from '@/utils/supabase/service';
 
 export interface WarehouseWithAddressType {
   address: string;
@@ -101,15 +102,6 @@ export const addWarehouseOperatorDetails = async (
   authId: string,
   roleId: number
 ): Promise<{ success: boolean; message: string }> => {
-  const warehouseOperatorDetails = {
-    first_name: userDetails.storeName,
-    last_name: userDetails.storeName,
-    contact_number: userDetails.contactNumber,
-    email: userDetails.email,
-    auth_id: authId,
-    role_id: roleId
-  };
-
   const addressDetails = {
     street1: userDetails.address1,
     street2: userDetails.address2,
@@ -120,29 +112,50 @@ export const addWarehouseOperatorDetails = async (
     zipcode: userDetails.zipcode
   };
 
-  const supabase = await createClient();
+  // Use service client to bypass RLS — a DB trigger may have already created
+  // this user with contractor role, so we upsert on auth_id to correct the role.
+  const serviceClient = createServiceClient();
 
   try {
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await serviceClient
       .from('users')
-      .insert(warehouseOperatorDetails)
-      .select('*')
+      .upsert(
+        {
+          first_name: userDetails.storeName,
+          last_name: userDetails.storeName,
+          contact_number: userDetails.contactNumber,
+          email: userDetails.email,
+          auth_id: authId,
+          role_id: roleId
+        },
+        { onConflict: 'auth_id' }
+      )
+      .select('id')
       .single();
 
     if (userError) {
-      console.error('Error inserting warehouse operator details:', userError);
+      console.error('Error upserting warehouse operator details:', userError);
       return { success: false, message: ERROR_MESSAGES.WAREHOUSE_NOT_ADDED };
     }
 
     const userId = userData.id;
 
-    const { error: addressError } = await supabase
+    // Only insert address if not already present
+    const { data: existingAddress } = await serviceClient
       .from('address')
-      .insert({ ...addressDetails, user_id: userId });
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-    if (addressError) {
-      console.error('Error inserting address details:', addressError);
-      return { success: false, message: ERROR_MESSAGES.ADDRESS_NOT_ADDED };
+    if (!existingAddress) {
+      const { error: addressError } = await serviceClient
+        .from('address')
+        .insert({ ...addressDetails, user_id: userId });
+
+      if (addressError) {
+        console.error('Error inserting address details:', addressError);
+        return { success: false, message: ERROR_MESSAGES.ADDRESS_NOT_ADDED };
+      }
     }
 
     return { success: true, message: SUCCESS_MESSAGES.WAREHOUSE_ADDED };
