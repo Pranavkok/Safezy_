@@ -11,6 +11,7 @@ import { signupWarehouseEmailHTML } from '@/data/signupWarehouseEmail';
 import { orderConfirmationEmailHTML } from '@/data/orderConfirmationEmail';
 import { customerSuccessSignupEmailHTML } from '@/data/customerSuccessSignupEmail';
 import { contactedEmailToAdminHTML } from '@/data/contactedEmailToAdmin';
+import { complaintEmailToAdminHTML } from '@/data/complaintEmailToAdmin';
 import { orderConfirmationEmailToAdminHTML } from '@/data/ordreConfirmationEmailToAdmin';
 import { blogSubscribedEmailHTML } from '@/data/blogSubscribedEmail';
 import { newBlogHTML } from '@/data/blogNotificationEmail';
@@ -239,6 +240,35 @@ export const sendBlogSubscribedEmail = async (
       success: false,
       message: ERROR_MESSAGES.BLOG_SUBSCRIPTION_SUCCESS_EMAIL_ERROR
     };
+  }
+};
+
+export const sendComplaintEmail = async (
+  name: string,
+  email: string,
+  subject: string,
+  message: string
+) => {
+  try {
+    const supabase = await createClient();
+
+    const payload = {
+      to: [
+        'rahulkumar.ojha@safezy.in',
+        'ravi.sharma@safezy.in',
+        'pranay.aggarwal@safezy.in',
+        'admin@safezy.in'
+      ],
+      subject: 'Safezy | New Complaint Submitted',
+      html: complaintEmailToAdminHTML({ name, email, subject, message })
+    };
+
+    await supabase.functions.invoke('send-email', { body: payload });
+
+    return { success: true, message: SUCCESS_MESSAGES.EMAIL_SENT };
+  } catch (error) {
+    console.error('Error in sendComplaintEmail:', error);
+    return { success: false, message: ERROR_MESSAGES.EMAIL_NOT_SENT };
   }
 };
 

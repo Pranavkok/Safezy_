@@ -4,6 +4,7 @@ type AppRoutesType = {
   ABOUT_US: string;
   BLOG: string;
   CONTACT_US: string;
+  COMPLAINT: string;
   SITE_MAP: string;
   PRIVACY_POLICY: string;
   TERMS_AND_CONDITIONS: string;
@@ -147,6 +148,7 @@ export const AppRoutes: AppRoutesType = {
   ABOUT_US: '/about-us',
   BLOG: '/blog',
   CONTACT_US: '/contact-us',
+  COMPLAINT: '/complaint',
   SITE_MAP: '/site-map',
   PRIVACY_POLICY: '/privacy',
   TERMS_AND_CONDITIONS: '/term',
