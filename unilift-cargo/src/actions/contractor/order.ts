@@ -583,7 +583,14 @@ export const fetchOrderDetailsForWarehouseOperator = async (
       contact_number: contractor?.contactNumber
     };
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching order details:', error);
+      return { success: false, message: ERROR_MESSAGES.ORDER_NOT_FETCHED, data: orderData };
+    }
+
+    if (!data) {
+      return { success: false, message: 'Order not found.', data: orderData };
+    }
 
     return {
       success: true,
@@ -592,7 +599,7 @@ export const fetchOrderDetailsForWarehouseOperator = async (
     };
   } catch (error) {
     console.error('Error fetching order details:', error);
-    throw error;
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR, data: {} as any };
   }
 };
 
