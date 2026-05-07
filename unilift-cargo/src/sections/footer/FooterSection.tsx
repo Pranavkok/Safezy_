@@ -68,6 +68,7 @@ const EHS_LINKS = [
 const QUICK_LINKS = [
   { title: 'About Us', href: AppRoutes.ABOUT_US },
   { title: 'Contact Us', href: AppRoutes.CONTACT_US },
+  { title: 'Complaint', href: AppRoutes.COMPLAINT },
   { title: 'Site-Map', href: AppRoutes.SITE_MAP },
   { title: 'Privacy Policy', href: AppRoutes.PRIVACY_POLICY },
   { title: 'Terms & Conditions', href: AppRoutes.TERMS_AND_CONDITIONS }

@@ -19,7 +19,8 @@ import {
   // Locate,
   UserCog,
   MessageSquare,
-  HardHat
+  HardHat,
+  AlertCircle
 } from 'lucide-react';
 import { DashboardIcon } from '@radix-ui/react-icons';
 import { useRouter } from 'next/navigation';
@@ -212,6 +213,12 @@ export const SIDEBAR_MENU_ITEMS: NavigationMenuType[] = [
     title: 'Contact Us',
     icon: <Phone className="w-5 h-5" />,
     route: AppRoutes.CONTACT_US
+  },
+  {
+    id: 'complaint',
+    title: 'Complaint',
+    icon: <AlertCircle className="w-5 h-5" />,
+    route: AppRoutes.COMPLAINT
   },
   // {
   //   id: 'track-ppe',
