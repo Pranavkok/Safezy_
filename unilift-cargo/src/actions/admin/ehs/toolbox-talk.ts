@@ -572,7 +572,7 @@ export const getToolboxTalkSuggestions = async (): Promise<{
       };
     }
 
-    const userIds = [...new Set(data.filter(s => s.user_id).map(s => s.user_id as string))];
+    const userIds = Array.from(new Set(data.filter(s => s.user_id).map(s => s.user_id as string)));
     const userMap = new Map<string, { first_name: string; last_name: string }>();
 
     if (userIds.length > 0) {
