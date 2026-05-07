@@ -112,6 +112,11 @@ const ToolboxTalkSugggestionModal = () => {
                     <p className="text-md font-semibold text-gray-700">
                       {item.topic_name}
                     </p>
+                    {item.user && (
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {item.user.first_name} {item.user.last_name}
+                      </p>
+                    )}
                     <p className="text-xs text-gray-400 mt-1">
                       Submitted on{' '}
                       {new Date(item.created_at).toLocaleDateString('en-IN', {

@@ -60,6 +60,10 @@ export type ChecklistTopicType = Tables<'ehs_checklist_topics'>;
 
 export type SuggestionType = Tables<'ehs_suggestions'>;
 
+export type SuggestionWithUserType = SuggestionType & {
+  user: { first_name: string; last_name: string } | null;
+};
+
 export type IncidentAnalysisType = Tables<'ehs_incident_analysis'>;
 export type IncidentAnalysisWithImageType = Tables<'ehs_incident_analysis'> & {
   images: {

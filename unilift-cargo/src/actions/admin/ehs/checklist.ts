@@ -9,7 +9,7 @@ import {
   ContractorChecklistType,
   EhsChecklistFormType
 } from '@/types/ehs.types';
-import { SuggestionType } from '@/types/index.types';
+import { SuggestionType, SuggestionWithUserType } from '@/types/index.types';
 import { createClient } from '@/utils/supabase/server';
 import { createServiceClient } from '@/utils/supabase/service';
 import { getAuthId } from '@/actions/user';
@@ -527,7 +527,7 @@ export const getMyChecklistSuggestions = async (): Promise<{
 export const getChecklistSuggestions = async (): Promise<{
   success: boolean;
   message: string;
-  data?: SuggestionType[];
+  data?: SuggestionWithUserType[];
 }> => {
   const serviceClient = createServiceClient();
 
@@ -547,10 +547,26 @@ export const getChecklistSuggestions = async (): Promise<{
       };
     }
 
+    const userIds = [...new Set(data.filter(s => s.user_id).map(s => s.user_id as string))];
+    const userMap = new Map<string, { first_name: string; last_name: string }>();
+
+    if (userIds.length > 0) {
+      const { data: users } = await serviceClient
+        .from('users')
+        .select('auth_id, first_name, last_name')
+        .in('auth_id', userIds);
+      users?.forEach(u => userMap.set(u.auth_id, { first_name: u.first_name, last_name: u.last_name }));
+    }
+
+    const enrichedData: SuggestionWithUserType[] = data.map(s => ({
+      ...s,
+      user: s.user_id ? (userMap.get(s.user_id) ?? null) : null
+    }));
+
     return {
       success: true,
       message: SUCCESS_MESSAGES.CHECKLIST_SUGGESTION_FETCHED,
-      data
+      data: enrichedData
     };
   } catch (error) {
     console.error(
