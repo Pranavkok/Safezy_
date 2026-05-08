@@ -1,10 +1,9 @@
 import { NextRequest } from 'next/server';
 import { PayUResponse } from '@/types/payment.types';
-import { UDF1Type, UDF3Type } from '@/types/order.types';
+import { UDF1Type, UDF2Type, UDF3Type } from '@/types/order.types';
+import { placeOrder } from '@/actions/contractor/order';
+import { createAdminClient } from '@/utils/supabase/server';
 
-/**
- * Decodes HTML entities from a string
- */
 const decodeHtmlEntities = (str: string): string => {
   return str
     .replace(/&quot;/g, '"')
@@ -15,16 +14,10 @@ const decodeHtmlEntities = (str: string): string => {
     .replace(/&apos;/g, "'");
 };
 
-/**
- * Handles PayU success URL (surl) redirect
- * This receives data when the user is redirected back from PayU after payment
- */
 export async function POST(req: NextRequest) {
   try {
-    // Parse the form data from the request
     const formData = await req.formData();
 
-    // Create the PayU response object from success URL parameters
     const payUResponse: PayUResponse = {
       key: (formData.get('key') as string) || '',
       txnId: (formData.get('txnid') as string) || '',
@@ -49,39 +42,28 @@ export async function POST(req: NextRequest) {
       udf3: (formData.get('udf3') as string) || undefined
     };
 
-    // Parse order details from udf1 if available
-    let orderDetail = null;
-    let otherDetails = null;
-    if (payUResponse.udf1 && payUResponse.udf3) {
-      try {
-        const decodedUdf1 = decodeHtmlEntities(payUResponse.udf1);
-        const decodedUdf3 = decodeHtmlEntities(payUResponse.udf3);
+    let orderDetail: UDF1Type | null = null;
+    let userDetails: UDF2Type | null = null;
+    let otherDetails: UDF3Type | null = null;
 
-        orderDetail = JSON.parse(decodedUdf1) as UDF1Type;
-        otherDetails = JSON.parse(decodedUdf3) as UDF3Type;
+    if (payUResponse.udf1 && payUResponse.udf2 && payUResponse.udf3) {
+      try {
+        orderDetail = JSON.parse(decodeHtmlEntities(payUResponse.udf1)) as UDF1Type;
+        userDetails = JSON.parse(decodeHtmlEntities(payUResponse.udf2)) as UDF2Type;
+        otherDetails = JSON.parse(decodeHtmlEntities(payUResponse.udf3)) as UDF3Type;
       } catch (error) {
         console.error('Error parsing order details:', error);
-        // Continue with the redirect even if parsing fails
       }
     }
 
-    // Create URL parameters for the redirect
     const searchParams = new URLSearchParams();
 
-    // Add essential transaction details to the URL
     if (payUResponse.mihPayId)
-      searchParams.append(
-        'payment_gateway_transaction_id',
-        payUResponse.mihPayId
-      );
+      searchParams.append('payment_gateway_transaction_id', payUResponse.mihPayId);
     if (payUResponse.status)
       searchParams.append('transaction_status', payUResponse.status);
-
-    // Add payment method information if available
     if (payUResponse.PG_TYPE)
       searchParams.append('payment_method', payUResponse.PG_TYPE);
-
-    // Add order details if available
     if (orderDetail?.date) searchParams.append('date', orderDetail.date);
     if (otherDetails?.worksiteId)
       searchParams.append('worksite_id', otherDetails.worksiteId);
@@ -90,24 +72,67 @@ export async function POST(req: NextRequest) {
     } else if (payUResponse.amount) {
       searchParams.append('totalAmount', payUResponse.amount);
     }
-
-    // Add transaction ID
     if (payUResponse.txnId)
       searchParams.append('transaction_id', payUResponse.txnId);
-
-    // Add any error message if present
     if (payUResponse.error_Message)
       searchParams.append('error_message', payUResponse.error_Message);
 
-    // Determine the redirect URL based on payment status
-    const redirectUrl = `${req.nextUrl.origin}/payment/success`;
+    // Place order and record transaction on successful payment
+    if (
+      payUResponse.status?.toLowerCase() === 'success' &&
+      orderDetail &&
+      userDetails &&
+      otherDetails &&
+      userDetails.userId
+    ) {
+      try {
+        const supabase = await createAdminClient();
 
-    // Redirect with all the transaction details
+        const { data: transactionData, error: transactionError } = await supabase
+          .from('transaction')
+          .insert({
+            date: new Date().toISOString(),
+            amount: parseFloat(payUResponse.amount),
+            user_id: userDetails.userId,
+            payment_gateway_transaction_id: payUResponse.mihPayId,
+            transaction_status: payUResponse.status,
+            payment_mode: payUResponse.payment_source ?? payUResponse.PG_TYPE ?? 'unknown'
+          })
+          .select('id')
+          .single();
+
+        if (!transactionError && transactionData) {
+          const contractor = {
+            userId: userDetails.userId,
+            firstName: payUResponse.firstName,
+            lastName: payUResponse.lastName,
+            email: payUResponse.email,
+            phone: payUResponse.phone,
+            companyName: userDetails.companyName
+          };
+
+          const orderResult = await placeOrder(orderDetail, contractor, otherDetails);
+
+          if (orderResult.success && orderResult.orderId) {
+            await supabase
+              .from('order')
+              .update({ transaction_id: transactionData.id })
+              .eq('id', orderResult.orderId);
+          } else {
+            console.error('Order placement failed:', orderResult.message);
+          }
+        } else {
+          console.error('Transaction recording error:', transactionError);
+        }
+      } catch (err) {
+        console.error('Error placing order after payment:', err);
+      }
+    }
+
+    const redirectUrl = `${req.nextUrl.origin}/payment/success`;
     return Response.redirect(`${redirectUrl}?${searchParams.toString()}`, 303);
   } catch (error) {
     console.error('Error handling PayU success URL:', error);
-
-    // Redirect to error page if processing fails
     return Response.redirect(
       `${req.nextUrl.origin}/payment/error?error=processing_failed`,
       303
