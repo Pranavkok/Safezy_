@@ -117,7 +117,7 @@ export const fetchAllOrdersByContractor = async ({
 };
 
 export const fetchOrderBasicDetails = async (orderId: string) => {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
 
   try {
     const { data: orderData, error: orderError } = await supabase
