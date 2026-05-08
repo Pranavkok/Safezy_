@@ -1,4 +1,3 @@
-export const dynamic = 'force-static';
 import type { Metadata } from 'next';
 import SignUpSection from '@/sections/auth/SignUpSection';
 import SignUpWarehouseOperatorSection from '@/sections/auth/SignUpWarehouseOperatorSection'; // Update the import path based on your structure
