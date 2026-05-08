@@ -13,8 +13,14 @@ export const SignUpWarehouseOperatorSchema = z.object({
     .string()
     .min(1, 'Address 1 is required')
     .max(200, 'Address 1 must be less than 200 characters'),
-  address2: z.string(),
-  locality: z.string(),
+  address2: z
+    .string()
+    .min(1, 'Address 2 is required')
+    .max(200, 'Address 2 must be less than 200 characters'),
+  locality: z
+    .string()
+    .min(1, 'Locality is required')
+    .max(100, 'Locality must be less than 100 characters'),
   city: z
     .string()
     .min(1, 'City is required')

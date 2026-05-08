@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { Minus, Plus } from 'lucide-react';
 
 // Internal Components
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,6 @@ const SignUpWarehouseOperatorSection = () => {
   });
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
-  const [showOptional, setShowOptional] = useState<boolean>(false);
 
   const onSubmit = async (data: WarehouseOperatorSignUpType) => {
     try {
@@ -56,7 +54,6 @@ const SignUpWarehouseOperatorSection = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {/* Mandatory fields */}
       <div className="grid lg:grid-cols-2 lg:gap-x-4">
         <InputFieldWithLabel
           label="Store Name"
@@ -90,6 +87,22 @@ const SignUpWarehouseOperatorSection = () => {
           errorText={errors.address1?.message as string}
           required
           {...register('address1')}
+        />
+
+        <InputFieldWithLabel
+          label="Address 2"
+          type="text"
+          errorText={errors.address2?.message as string}
+          required
+          {...register('address2')}
+        />
+
+        <InputFieldWithLabel
+          label="Locality"
+          type="text"
+          errorText={errors.locality?.message as string}
+          required
+          {...register('locality')}
         />
 
         <InputFieldWithLabel
@@ -133,45 +146,10 @@ const SignUpWarehouseOperatorSection = () => {
         />
       </div>
 
-      {/* Optional fields toggle */}
-      <button
-        type="button"
-        onClick={() => setShowOptional(!showOptional)}
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 mt-4 mb-2 border border-dashed border-gray-300 rounded-md px-4 py-2 w-full justify-center hover:border-gray-400 transition-colors"
-      >
-        {showOptional ? (
-          <Minus className="h-4 w-4" />
-        ) : (
-          <Plus className="h-4 w-4" />
-        )}
-        {showOptional
-          ? 'Hide Additional Information'
-          : 'Add Additional Information (Optional)'}
-      </button>
-
-      {/* Optional fields */}
-      {showOptional && (
-        <div className="grid lg:grid-cols-2 lg:gap-x-4 mt-2">
-          <InputFieldWithLabel
-            label="Address 2"
-            type="text"
-            errorText={errors.address2?.message as string}
-            {...register('address2')}
-          />
-
-          <InputFieldWithLabel
-            label="Locality"
-            type="text"
-            errorText={errors.locality?.message as string}
-            {...register('locality')}
-          />
-        </div>
-      )}
-
       <div className="pt-5 grid place-content-center">
         <Button
           type="submit"
-          className="w-full lg:w-[390px] "
+          className="w-full lg:w-[390px]"
           disabled={loading}
         >
           {loading && <ButtonSpinner />}
