@@ -546,7 +546,7 @@ export const fetchOrderDetailsForWarehouseOperator = async (
   data: OrderDetailsForWarehouseOperatorType;
 }> => {
   try {
-    const supabase = await createClient();
+    const supabase = createServiceClient();
 
     const { data, error } = await supabase
       .from('order')
