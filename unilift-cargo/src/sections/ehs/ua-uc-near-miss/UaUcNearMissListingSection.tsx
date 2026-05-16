@@ -2,11 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getUaUcReportsList } from '@/actions/contractor/ua-uc-near-miss';
-import { UaUcNearMissListItem, ObservationType, ObservationStatus } from '@/types/ehs.types';
+import { getUaUcReportsList, getUaUcReportById } from '@/actions/contractor/ua-uc-near-miss';
+import { UaUcNearMissListItem, ObservationType } from '@/types/ehs.types';
 import {
   Plus,
   ChevronRight,
@@ -15,8 +14,12 @@ import {
   Zap,
   CheckCircle2,
   Clock,
-  FileText
+  FileText,
+  ArrowLeft
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import UaUcReportPage from './UaUcReportPage';
+import Spinner from '@/components/loaders/Spinner';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,28 +34,6 @@ const OBSERVATION_META: Record<ObservationType, { label: string; color: string; 
   UC:       { label: 'Unsafe Condition', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: ShieldAlert },
   NearMiss: { label: 'Near Miss',        color: 'bg-blue-100 text-blue-700 border-blue-200',  icon: Zap }
 };
-
-type TypeFilter   = ObservationType | 'All';
-type StatusFilter = ObservationStatus | 'All';
-
-// ─── Filter Pills ─────────────────────────────────────────────────────────────
-
-function FilterPill<T extends string>({
-  value, active, onClick, label
-}: { value: T; active: boolean; onClick: (v: T) => void; label: string }) {
-  return (
-    <button
-      onClick={() => onClick(value)}
-      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
-        active
-          ? 'bg-primary text-white border-primary'
-          : 'bg-white text-gray-600 border-gray-200 hover:border-primary hover:text-primary'
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -69,15 +50,11 @@ const RowSkeleton = () => (
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 
-const EmptyState = ({ filtered }: { filtered: boolean }) => (
+const EmptyState = () => (
   <div className="flex flex-col items-center justify-center min-h-[300px] text-center space-y-3">
     <FileText className="w-12 h-12 text-gray-300" />
-    <p className="text-gray-600 font-medium">
-      {filtered ? 'No reports match the selected filters.' : 'No reports submitted yet.'}
-    </p>
-    {!filtered && (
-      <p className="text-sm text-gray-400">Submit your first UA / UC / Near Miss report to get started.</p>
-    )}
+    <p className="text-gray-600 font-medium">No reports submitted yet.</p>
+    <p className="text-sm text-gray-400">Submit your first UA / UC / Near Miss report to get started.</p>
   </div>
 );
 
@@ -93,36 +70,29 @@ const ReportRow = ({ report, onClick }: { report: UaUcNearMissListItem; onClick:
       onClick={onClick}
       className="group flex flex-col sm:flex-row sm:items-center gap-3 p-4 border border-gray-200 rounded-lg bg-white hover:border-primary hover:shadow-sm cursor-pointer transition-all duration-200"
     >
-      {/* Type badge */}
       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${meta.color}`}>
         <Icon className="w-3 h-3" />
         {meta.label}
       </span>
 
-      {/* Report No */}
       <span className="font-mono text-sm font-semibold text-primary flex-shrink-0">
         {report.report_no}
       </span>
 
-      {/* Location */}
       <span className="text-sm text-gray-600 flex-1 truncate">
         {report.location_department}
       </span>
 
-      {/* Date */}
       <span className="text-xs text-gray-400 flex-shrink-0">
         {formatDate(report.reported_at)}
       </span>
 
-      {/* Status badge */}
       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${
         isOpen
           ? 'bg-orange-50 text-orange-600 border-orange-200'
           : 'bg-green-50 text-green-600 border-green-200'
       }`}>
-        {isOpen
-          ? <Clock className="w-3 h-3" />
-          : <CheckCircle2 className="w-3 h-3" />}
+        {isOpen ? <Clock className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
         {report.status}
       </span>
 
@@ -135,8 +105,7 @@ const ReportRow = ({ report, onClick }: { report: UaUcNearMissListItem; onClick:
 
 const UaUcNearMissListingSection = () => {
   const router = useRouter();
-  const [typeFilter,   setTypeFilter]   = useState<TypeFilter>('All');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
 
   const { data: result, isLoading } = useQuery({
     queryKey: ['ua-uc-near-miss-list'],
@@ -144,17 +113,15 @@ const UaUcNearMissListingSection = () => {
     refetchOnWindowFocus: false
   });
 
+  const { data: reportResult, isFetching: reportFetching } = useQuery({
+    queryKey: ['ua-uc-report', selectedReportId],
+    queryFn: () => getUaUcReportById(selectedReportId!),
+    enabled: selectedReportId !== null,
+    refetchOnWindowFocus: false
+  });
+
   const reports = result?.data ?? [];
 
-  const filtered = useMemo(() => {
-    return reports.filter(r => {
-      const typeMatch   = typeFilter   === 'All' || r.observation_type === typeFilter;
-      const statusMatch = statusFilter === 'All' || r.status           === statusFilter;
-      return typeMatch && statusMatch;
-    });
-  }, [reports, typeFilter, statusFilter]);
-
-  // Summary counts
   const counts = useMemo(() => ({
     total:  reports.length,
     open:   reports.filter(r => r.status === 'Open').length,
@@ -164,18 +131,46 @@ const UaUcNearMissListingSection = () => {
     nm:     reports.filter(r => r.observation_type === 'NearMiss').length
   }), [reports]);
 
-  const isFiltered = typeFilter !== 'All' || statusFilter !== 'All';
+  // ── Detail view ──
+  if (selectedReportId !== null) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-4">
+        <button
+          onClick={() => setSelectedReportId(null)}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Reports
+        </button>
 
+        {reportFetching && (
+          <div className="flex items-center justify-center py-16">
+            <Spinner />
+          </div>
+        )}
+
+        {!reportFetching && reportResult?.data && (
+          <UaUcReportPage report={reportResult.data} />
+        )}
+
+        {!reportFetching && !reportResult?.data && (
+          <div className="flex items-center justify-center py-16 text-gray-500 text-sm">
+            Report not found.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── List view ──
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">UA / UC / Near Miss Reports</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            All your submitted observation reports
-          </p>
+          <p className="text-sm text-gray-500 mt-0.5">All your submitted observation reports</p>
         </div>
         <Button onClick={() => router.push('/ehs/ua-uc-near-miss/add')} className="flex items-center gap-2 flex-shrink-0">
           <Plus className="w-4 h-4" />
@@ -183,16 +178,16 @@ const UaUcNearMissListingSection = () => {
         </Button>
       </div>
 
-      {/* ── Summary Cards ── */}
+      {/* Summary Cards */}
       {!isLoading && reports.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'Total',    value: counts.total,  color: 'text-gray-700'   },
-            { label: 'Open',     value: counts.open,   color: 'text-orange-600' },
-            { label: 'Closed',   value: counts.closed, color: 'text-green-600'  },
-            { label: 'UA',       value: counts.ua,     color: 'text-red-600'    },
-            { label: 'UC',       value: counts.uc,     color: 'text-yellow-600' },
-            { label: 'Near Miss',value: counts.nm,     color: 'text-blue-600'   }
+            { label: 'Total',     value: counts.total,  color: 'text-gray-700'   },
+            { label: 'Open',      value: counts.open,   color: 'text-orange-600' },
+            { label: 'Closed',    value: counts.closed, color: 'text-green-600'  },
+            { label: 'UA',        value: counts.ua,     color: 'text-red-600'    },
+            { label: 'UC',        value: counts.uc,     color: 'text-yellow-600' },
+            { label: 'Near Miss', value: counts.nm,     color: 'text-blue-600'   }
           ].map(({ label, value, color }) => (
             <Card key={label} className="text-center py-3">
               <CardContent className="p-0">
@@ -204,38 +199,7 @@ const UaUcNearMissListingSection = () => {
         </div>
       )}
 
-      {/* ── Filters ── */}
-      <div className="flex flex-wrap gap-4">
-        {/* Type filter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-medium text-gray-500">Type:</span>
-          {(['All', 'UA', 'UC', 'NearMiss'] as TypeFilter[]).map(v => (
-            <FilterPill
-              key={v}
-              value={v}
-              active={typeFilter === v}
-              onClick={setTypeFilter}
-              label={v === 'All' ? 'All' : v === 'NearMiss' ? 'Near Miss' : v}
-            />
-          ))}
-        </div>
-
-        {/* Status filter */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-medium text-gray-500">Status:</span>
-          {(['All', 'Open', 'Closed'] as StatusFilter[]).map(v => (
-            <FilterPill
-              key={v}
-              value={v}
-              active={statusFilter === v}
-              onClick={setStatusFilter}
-              label={v}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* ── List ── */}
+      {/* List */}
       <div className="space-y-2">
         {isLoading && (
           <>
@@ -245,23 +209,20 @@ const UaUcNearMissListingSection = () => {
           </>
         )}
 
-        {!isLoading && filtered.length === 0 && (
-          <EmptyState filtered={isFiltered} />
-        )}
+        {!isLoading && reports.length === 0 && <EmptyState />}
 
-        {!isLoading && filtered.length > 0 && filtered.map(report => (
+        {!isLoading && reports.map(report => (
           <ReportRow
             key={report.id}
             report={report}
-            onClick={() => router.push(`/ehs/ua-uc-near-miss/${report.id}`)}
+            onClick={() => setSelectedReportId(report.id)}
           />
         ))}
       </div>
 
-      {/* ── Footer count ── */}
-      {!isLoading && filtered.length > 0 && (
+      {!isLoading && reports.length > 0 && (
         <p className="text-xs text-gray-400 text-right">
-          Showing {filtered.length} of {reports.length} report{reports.length !== 1 ? 's' : ''}
+          {reports.length} report{reports.length !== 1 ? 's' : ''}
         </p>
       )}
     </div>
