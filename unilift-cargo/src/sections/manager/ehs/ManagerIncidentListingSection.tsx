@@ -62,8 +62,9 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
     { header: 'Severity', key: 'severity_level', width: 15 },
     { header: 'Location', key: 'location', width: 20 },
     { header: 'Date', key: 'date', width: 15 },
-    { header: 'Assigned To', key: 'assigned_to', width: 22 },
+    { header: 'Reported By', key: 'reported_by', width: 22 },
     { header: 'Status', key: 'status', width: 12 },
+    { header: 'Final Approved/Closed', key: 'closed_at', width: 22 },
     { header: 'Remarks', key: 'remarks', width: 20 }
   ];
 
@@ -96,8 +97,9 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
       severity_level: (inc as any).severity_level ?? '—',
       location: inc.location ?? '—',
       date: inc.date ? formatDate(inc.date) : '—',
-      assigned_to: inc.assigned_to_name ?? '—',
+      reported_by: inc.reported_by_name ?? '—',
       status,
+      closed_at: inc.closed_at ? formatDate(inc.closed_at) : '—',
       remarks
     });
 
@@ -231,9 +233,10 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
                 <th className="px-4 py-3 text-left">Title</th>
                 <th className="px-4 py-3 text-left">Location</th>
                 <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Assigned To</th>
+                <th className="px-4 py-3 text-left">Reported By</th>
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Action</th>
+                <th className="px-4 py-3 text-left">Final Approved/Closed</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -246,7 +249,7 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                       {incident.date ? formatDate(incident.date) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{incident.assigned_to_name ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{incident.reported_by_name ?? '—'}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[status]}`}>
                         {status}
@@ -259,6 +262,13 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
                       >
                         View
                       </Link>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      {incident.closed_at ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-700 font-medium">
+                          ✓ {formatDate(incident.closed_at)}
+                        </span>
+                      ) : '—'}
                     </td>
                   </tr>
                 );

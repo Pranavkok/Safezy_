@@ -93,6 +93,8 @@ export type IncidentListItem = {
   is_completed: boolean | null;
   assigned_to_name: string | null;
   assigned_to_user_id: string | null;
+  reported_by_name: string | null;
+  closed_at: string | null;
 };
 
 // Fetch ALL incident analysis reports
@@ -108,7 +110,7 @@ export const getAllIncidentReports = async (filters?: {
   try {
     let query = serviceClient
       .from('ehs_incident_analysis')
-      .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id')
+      .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id, reported_by_user_id')
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status !== 'All') {
@@ -117,7 +119,6 @@ export const getAllIncidentReports = async (filters?: {
       } else if (filters.status === 'Assigned') {
         query = query.eq('is_completed', false).not('assigned_to_user_id', 'is', null);
       } else {
-        // Open: not completed and not assigned
         query = query.eq('is_completed', false).is('assigned_to_user_id', null);
       }
     }
@@ -129,7 +130,24 @@ export const getAllIncidentReports = async (filters?: {
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    return { success: true, message: 'Incidents fetched successfully.', data: data ?? [] };
+    // Fetch reporter names
+    const reporterIds = Array.from(new Set((data ?? []).filter(r => r.reported_by_user_id).map(r => r.reported_by_user_id as string)));
+    const reporterMap = new Map<string, string>();
+    if (reporterIds.length > 0) {
+      const { data: users } = await serviceClient
+        .from('users')
+        .select('auth_id, first_name, last_name')
+        .in('auth_id', reporterIds);
+      users?.forEach(u => reporterMap.set(u.auth_id, `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim()));
+    }
+
+    const enriched: IncidentListItem[] = (data ?? []).map(r => ({
+      ...r,
+      reported_by_name: r.reported_by_user_id ? (reporterMap.get(r.reported_by_user_id) ?? null) : null,
+      closed_at: r.is_completed ? r.updated_at : null
+    }));
+
+    return { success: true, message: 'Incidents fetched successfully.', data: enriched };
   } catch (err) {
     console.error('Unexpected error:', err);
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };

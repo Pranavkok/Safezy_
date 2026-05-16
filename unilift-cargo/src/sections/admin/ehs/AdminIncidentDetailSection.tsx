@@ -9,9 +9,9 @@ import ButtonSpinner from '@/components/ButtonSpinner';
 import { IncidentAnalysisWithImageType } from '@/types/index.types';
 import IncidentReport from '@/sections/ehs/incident-analysis/IncidentReport';
 import { uploadFile } from '@/utils';
-import { ImageIcon, X } from 'lucide-react';
+import { ImageIcon, FileVideo, X } from 'lucide-react';
 
-const MAX_SIZE_BYTES = 3 * 1024 * 1024;
+const MAX_SIZE_BYTES = 50 * 1024 * 1024;
 
 interface SafetyOfficer {
   authId: string;
@@ -38,6 +38,7 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
   const [closing, setClosing] = useState(false);
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [evidencePreview, setEvidencePreview] = useState<string | null>(null);
+  const [evidenceType, setEvidenceType] = useState<'image' | 'video' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const status = deriveStatus(incident);
@@ -46,17 +47,19 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_SIZE_BYTES) {
-      toast.error('Image must be smaller than 3 MB.');
+      toast.error('File must be smaller than 50 MB.');
       e.target.value = '';
       return;
     }
     setEvidenceFile(file);
     setEvidencePreview(URL.createObjectURL(file));
+    setEvidenceType(file.type.startsWith('video/') ? 'video' : 'image');
   };
 
   const removeFile = () => {
     setEvidenceFile(null);
     setEvidencePreview(null);
+    setEvidenceType(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -189,20 +192,20 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
 
                 <div>
                   <label className="text-xs text-gray-600 mb-1 block">
-                    Evidence Photo <span className="text-gray-400">(optional, max 3 MB)</span>
+                    Evidence Photo / Video <span className="text-gray-400">(optional, max 50 MB)</span>
                   </label>
                   {evidencePreview ? (
                     <div className="relative inline-block">
-                      <img
-                        src={evidencePreview}
-                        alt="Evidence preview"
-                        className="max-h-48 rounded border border-gray-200 object-contain"
-                      />
+                      {evidenceType === 'video' ? (
+                        <video src={evidencePreview} controls className="max-h-48 rounded border border-gray-200" />
+                      ) : (
+                        <img src={evidencePreview} alt="Evidence preview" className="max-h-48 rounded border border-gray-200 object-contain" />
+                      )}
                       <button
                         type="button"
                         onClick={removeFile}
                         className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-0.5 text-gray-500 hover:text-red-500 shadow-sm"
-                        aria-label="Remove image"
+                        aria-label="Remove file"
                       >
                         <X size={14} />
                       </button>
@@ -210,11 +213,12 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
                   ) : (
                     <label className="flex items-center gap-2 cursor-pointer w-fit border border-dashed border-gray-300 rounded-md px-4 py-3 text-sm text-gray-500 hover:border-primary hover:text-primary transition-colors">
                       <ImageIcon size={16} />
-                      <span>Upload image</span>
+                      <FileVideo size={16} />
+                      <span>Upload image or video</span>
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/*"
+                        accept="image/*,video/*"
                         className="hidden"
                         onChange={handleFileChange}
                       />

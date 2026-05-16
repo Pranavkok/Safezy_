@@ -264,12 +264,12 @@ const IncidentReportHtmlViewer = ({
           {(incidentDetails as any).closure_image_url && (
             <div className="mt-3">
               <p className="text-[10px] uppercase text-gray-500 font-medium mb-1">Closure Evidence</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={(incidentDetails as any).closure_image_url}
-                alt="Closure evidence"
-                className="max-h-64 object-contain rounded border border-gray-200"
-              />
+              {/\.(mp4|mov|webm|avi|mkv)(\?|$)/i.test((incidentDetails as any).closure_image_url) ? (
+                <video src={(incidentDetails as any).closure_image_url} controls className="max-h-64 rounded border border-gray-200 w-full" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={(incidentDetails as any).closure_image_url} alt="Closure evidence" className="max-h-64 object-contain rounded border border-gray-200" />
+              )}
             </div>
           )}
         </FieldGroup>

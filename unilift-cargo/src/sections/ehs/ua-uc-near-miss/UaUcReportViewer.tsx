@@ -222,11 +222,11 @@ const UaUcReportViewer = ({ report }: { report: UaUcNearMissRecord }) => {
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
                   Closure Evidence
                 </span>
-                <img
-                  src={report.closure_image_url}
-                  alt="Closure evidence"
-                  className="max-h-64 object-contain rounded border border-gray-200"
-                />
+                {/\.(mp4|mov|webm|avi|mkv)(\?|$)/i.test(report.closure_image_url) ? (
+                  <video src={report.closure_image_url} controls className="max-h-64 rounded border border-gray-200 w-full" />
+                ) : (
+                  <img src={report.closure_image_url} alt="Closure evidence" className="max-h-64 object-contain rounded border border-gray-200" />
+                )}
               </div>
             )}
           </div>
