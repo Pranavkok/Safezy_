@@ -88,6 +88,7 @@ export const closeUaUcReport = async (
     }
 
     revalidatePath(AppRoutes.SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
 
     return { success: true, message: 'Report closed successfully.' };
   } catch (err) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { UaUcNearMissRecord } from '@/types/ehs.types';
 import { closeUaUcReport } from '@/actions/safety-officer/ehs';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 const SoUaUcDetailSection = ({ report, officerName }: Props) => {
+  const router = useRouter();
   const today = new Date().toISOString().split('T')[0];
   const [actionTaken, setActionTaken] = useState('');
   const [actionDate, setActionDate] = useState(today);
@@ -69,6 +71,7 @@ const SoUaUcDetailSection = ({ report, officerName }: Props) => {
       });
       if (result.success) {
         toast.success(result.message);
+        router.refresh();
       } else {
         toast.error(result.message);
       }
