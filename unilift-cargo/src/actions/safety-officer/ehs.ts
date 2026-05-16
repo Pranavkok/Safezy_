@@ -122,7 +122,13 @@ export const getMyAssignedIncidents = async (): Promise<{
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    return { success: true, message: 'Incidents fetched.', data: data ?? [] };
+    const enriched: IncidentListItem[] = (data ?? []).map(r => ({
+      ...r,
+      reported_by_name: null,
+      closed_at: r.is_completed ? r.updated_at : null
+    }));
+
+    return { success: true, message: 'Incidents fetched.', data: enriched };
   } catch (err) {
     console.error('Unexpected error:', err);
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
