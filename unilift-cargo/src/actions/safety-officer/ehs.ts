@@ -88,6 +88,7 @@ export const closeUaUcReport = async (
     }
 
     revalidatePath(AppRoutes.SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING);
+    revalidatePath(AppRoutes.SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_DETAILS(reportId.toString()));
     revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
     revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS(reportId.toString()));
 
@@ -180,6 +181,7 @@ export const closeIncidentReport = async (
     }
 
     revalidatePath(AppRoutes.SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING);
+    revalidatePath(AppRoutes.SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_DETAILS(reportId));
     revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_LISTING);
     revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_DETAILS(reportId));
 
