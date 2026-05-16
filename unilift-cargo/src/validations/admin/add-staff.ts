@@ -11,7 +11,7 @@ export const AddStaffSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number'),
   contactNumber: z
     .string()
-    .min(10, 'Contact number must be at least 10 digits')
+    .length(10, 'Contact number must be exactly 10 digits')
     .regex(/^\d+$/, 'Contact number must contain only digits'),
   role: z.enum(['manager', 'safety_officer'], {
     required_error: 'Please select a role'

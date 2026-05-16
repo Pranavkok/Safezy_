@@ -142,6 +142,53 @@ export const getStaffList = async (): Promise<{
   }
 };
 
+export type UpdateStaffInput = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  contactNumber: string;
+  role: StaffRole;
+};
+
+export const updateStaffUser = async (
+  data: UpdateStaffInput
+): Promise<{ success: boolean; message: string }> => {
+  const serviceClient = createServiceClient();
+
+  try {
+    const { data: roleData, error: roleError } = await serviceClient
+      .from('user_roles')
+      .select('id')
+      .eq('role', data.role)
+      .single();
+
+    if (roleError || !roleData) {
+      return { success: false, message: ERROR_MESSAGES.ROLE_ERROR };
+    }
+
+    const { error } = await serviceClient
+      .from('users')
+      .update({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        contact_number: data.contactNumber,
+        role_id: roleData.id
+      })
+      .eq('id', data.id);
+
+    if (error) {
+      console.error('Error updating staff user:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath(AppRoutes.ADMIN_STAFF_LISTING);
+    return { success: true, message: 'Staff member updated successfully.' };
+  } catch (err) {
+    console.error('Unexpected error updating staff user:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 // Toggle active/inactive status for a staff member
 export const toggleStaffStatus = async (
   userId: string,

@@ -69,6 +69,7 @@ const AddStaffSection = () => {
         <InputFieldWithLabel
           label="Contact Number"
           placeholder="Enter contact number"
+          maxLength={10}
           errorText={errors.contactNumber?.message}
           {...register('contactNumber')}
         />

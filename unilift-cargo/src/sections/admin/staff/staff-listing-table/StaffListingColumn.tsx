@@ -5,6 +5,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
 import { StaffMember } from '@/actions/admin/staff';
 import ToggleStaffStatusSection from './ToggleStaffStatusSection';
+import EditStaffDialog from './EditStaffDialog';
 
 export function getStaffListingColumns(): ColumnDef<StaffMember>[] {
   return [
@@ -66,6 +67,13 @@ export function getStaffListingColumns(): ColumnDef<StaffMember>[] {
           isActive={row.original.is_active}
         />
       ),
+      enableSorting: false,
+      enableHiding: false
+    },
+    {
+      id: 'actions',
+      header: () => <span>Actions</span>,
+      cell: ({ row }) => <EditStaffDialog staff={row.original} />,
       enableSorting: false,
       enableHiding: false
     }
