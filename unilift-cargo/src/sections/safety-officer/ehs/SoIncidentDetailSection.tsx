@@ -1,7 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { closeIncidentReport } from '@/actions/safety-officer/ehs';
+import { AppRoutes } from '@/constants/AppRoutes';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import ButtonSpinner from '@/components/ButtonSpinner';
@@ -17,6 +19,7 @@ interface Props {
 }
 
 const SoIncidentDetailSection = ({ incident }: Props) => {
+  const router = useRouter();
   const [corrective, setCorrective] = useState('');
   const [preventive, setPreventive] = useState('');
   const [closing, setClosing] = useState(false);
@@ -65,6 +68,7 @@ const SoIncidentDetailSection = ({ incident }: Props) => {
       });
       if (result.success) {
         toast.success(result.message);
+        router.push(AppRoutes.SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING);
       } else {
         toast.error(result.message);
       }

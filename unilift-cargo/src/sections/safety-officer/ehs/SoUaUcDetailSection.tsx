@@ -10,6 +10,7 @@ import ButtonSpinner from '@/components/ButtonSpinner';
 import UaUcReportViewer from '@/sections/ehs/ua-uc-near-miss/UaUcReportViewer';
 import { uploadFile } from '@/utils';
 import { ImageIcon, FileVideo, X } from 'lucide-react';
+import { AppRoutes } from '@/constants/AppRoutes';
 
 const MAX_SIZE_BYTES = 50 * 1024 * 1024;
 
@@ -74,7 +75,7 @@ const SoUaUcDetailSection = ({ report, officerName }: Props) => {
       });
       if (result.success) {
         toast.success(result.message);
-        router.refresh();
+        router.push(AppRoutes.SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING);
       } else {
         toast.error(result.message);
       }
