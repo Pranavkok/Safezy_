@@ -89,6 +89,7 @@ export const closeUaUcReport = async (
 
     revalidatePath(AppRoutes.SAFETY_OFFICER_EHS_UA_UC_NEAR_MISS_LISTING);
     revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS(reportId.toString()));
 
     return { success: true, message: 'Report closed successfully.' };
   } catch (err) {
@@ -179,6 +180,8 @@ export const closeIncidentReport = async (
     }
 
     revalidatePath(AppRoutes.SAFETY_OFFICER_EHS_INCIDENT_ANALYSIS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_DETAILS(reportId));
 
     return { success: true, message: 'Incident closed successfully.' };
   } catch (err) {
