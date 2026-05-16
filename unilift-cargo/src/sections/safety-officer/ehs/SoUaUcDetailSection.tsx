@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import ButtonSpinner from '@/components/ButtonSpinner';
 import UaUcReportViewer from '@/sections/ehs/ua-uc-near-miss/UaUcReportViewer';
 import { uploadFile } from '@/utils';
-import { ImageIcon, FileVideo, X } from 'lucide-react';
+import { ImageIcon, FileVideo, X, Sparkles, Loader2 } from 'lucide-react';
 import { AppRoutes } from '@/constants/AppRoutes';
 
 const MAX_SIZE_BYTES = 50 * 1024 * 1024;
@@ -28,7 +28,30 @@ const SoUaUcDetailSection = ({ report, officerName }: Props) => {
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [evidencePreview, setEvidencePreview] = useState<string | null>(null);
   const [evidenceType, setEvidenceType] = useState<'image' | 'video' | null>(null);
+  const [generating, setGenerating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAutoGenerate = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/generate-ua-uc-closure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(report)
+      });
+      const json: { success: boolean; data?: { action_taken?: string } } = await res.json();
+      if (json.success && json.data?.action_taken) {
+        setActionTaken(json.data.action_taken);
+        toast.success('Action generated. Review and edit before closing.');
+      } else {
+        toast.error('Failed to generate suggestion. Please try again.');
+      }
+    } catch {
+      toast.error('An unexpected error occurred while generating.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,7 +115,24 @@ const SoUaUcDetailSection = ({ report, officerName }: Props) => {
 
       {report.status === 'Assigned' && (
         <section className="border-2 border-dashed border-green-200 rounded-lg p-4 space-y-4 max-w-3xl mx-auto">
-          <h3 className="text-sm font-semibold text-green-800">Close This Report</h3>
+          <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-green-800">Close This Report</h3>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleAutoGenerate}
+                disabled={generating || closing}
+                className="flex items-center gap-1.5 text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
+              >
+                {generating ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                {generating ? 'Generating...' : 'Auto Generate'}
+              </Button>
+            </div>
 
           <div className="space-y-3">
             <div>
