@@ -677,3 +677,46 @@ export const approveChecklistSuggestion = async (suggestionId: number) =>
 
 export const rejectChecklistSuggestion = async (suggestionId: number) =>
   reviewChecklistSuggestion(suggestionId, 'rejected');
+
+export const getChecklistSuggestionsHistory = async (): Promise<{
+  success: boolean;
+  message: string;
+  data?: SuggestionWithUserType[];
+}> => {
+  const serviceClient = createServiceClient();
+
+  try {
+    const { data, error } = await serviceClient
+      .from('ehs_suggestions')
+      .select('*')
+      .eq('suggestion_type', 'checklist')
+      .in('review_status', ['completed', 'rejected'])
+      .order('reviewed_at', { ascending: false });
+
+    if (error) {
+      console.error('Error while fetching checklist suggestion history', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    const userIds = Array.from(new Set(data.filter(s => s.user_id).map(s => s.user_id as string)));
+    const userMap = new Map<string, { first_name: string; last_name: string }>();
+
+    if (userIds.length > 0) {
+      const { data: users } = await serviceClient
+        .from('users')
+        .select('auth_id, first_name, last_name')
+        .in('auth_id', userIds);
+      users?.forEach(u => userMap.set(u.auth_id, { first_name: u.first_name, last_name: u.last_name }));
+    }
+
+    const enrichedData: SuggestionWithUserType[] = data.map(s => ({
+      ...s,
+      user: s.user_id ? (userMap.get(s.user_id) ?? null) : null
+    }));
+
+    return { success: true, message: 'Fetched successfully', data: enrichedData };
+  } catch (error) {
+    console.error('Unexpected error fetching checklist suggestion history', error);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
