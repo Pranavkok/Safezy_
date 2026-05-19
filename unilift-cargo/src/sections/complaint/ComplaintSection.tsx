@@ -20,6 +20,8 @@ import toast from 'react-hot-toast';
 const initialState: ComplaintFormType = {
   name: '',
   email: '',
+  company_name: '',
+  phone: '',
   subject: '',
   message: ''
 };
@@ -98,6 +100,27 @@ const ComplaintSection = () => {
                   className="bg-white"
                   errorText={errors.email?.message}
                   {...register('email')}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-[1.0075rem]">
+              <div className="flex flex-col gap-[.6125rem]">
+                <InputFieldWithLabel
+                  type="text"
+                  label="Company Name (optional)"
+                  className="bg-white"
+                  errorText={errors.company_name?.message}
+                  {...register('company_name')}
+                />
+              </div>
+              <div className="flex flex-col gap-[.6125rem]">
+                <InputFieldWithLabel
+                  type="text"
+                  label="Phone Number (optional)"
+                  className="bg-white"
+                  errorText={errors.phone?.message}
+                  {...register('phone')}
                 />
               </div>
             </div>

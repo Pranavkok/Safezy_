@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { assignIncidentReport } from '@/actions/manager/ehs';
+import { assignIncidentReport, closeIncidentReport } from '@/actions/manager/ehs';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import ButtonSpinner from '@/components/ButtonSpinner';
@@ -29,6 +29,7 @@ const ManagerIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
   const router = useRouter();
   const [selectedOfficer, setSelectedOfficer] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const status = deriveStatus(incident);
 
@@ -56,14 +57,31 @@ const ManagerIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
     }
   };
 
+  const handleClose = async () => {
+    setClosing(true);
+    try {
+      const result = await closeIncidentReport(incident.id);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error('An unexpected error occurred.');
+    } finally {
+      setClosing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Full incident report — identical to what the submitter sees */}
       <IncidentReport incidentDetails={incident} hideActions />
 
-      {/* Assign Panel */}
       {!incident.is_completed && (
-        <div className="max-w-screen-lg mx-auto px-4 md:px-8 pb-8">
+        <div className="max-w-screen-lg mx-auto px-4 md:px-8 pb-8 space-y-4">
+          {/* Assign Panel */}
           <section className="border-2 border-dashed border-blue-200 rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h3 className="text-sm font-semibold text-blue-800">
@@ -99,6 +117,20 @@ const ManagerIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
                 </Button>
               </div>
             )}
+          </section>
+
+          {/* Close Panel */}
+          <section className="border-2 border-dashed border-green-200 rounded-lg p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-green-800">Close Report</h3>
+            <p className="text-xs text-gray-500">Mark this incident as resolved. This action cannot be undone.</p>
+            <Button
+              onClick={handleClose}
+              disabled={closing}
+              variant="outline"
+              className="border-green-400 text-green-700 hover:bg-green-50 min-w-28"
+            >
+              {closing ? <ButtonSpinner /> : 'Mark as Closed'}
+            </Button>
           </section>
         </div>
       )}

@@ -11,7 +11,7 @@ export const submitComplaint = async (
   const supabase = await createClient();
 
   try {
-    const { name, email, subject, message } = data;
+    const { name, email, company_name, phone, subject, message } = data;
 
     const nameParts = name.trim().split(' ');
     const first_name = nameParts[0];
@@ -22,6 +22,8 @@ export const submitComplaint = async (
         first_name,
         last_name,
         email,
+        company_name: company_name || null,
+        contact_number: phone || null,
         requirements: `[COMPLAINT] Subject: ${subject}\n\nMessage: ${message}`
       }
     ]);

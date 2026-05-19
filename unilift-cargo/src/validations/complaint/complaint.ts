@@ -7,6 +7,12 @@ export const ComplaintFormSchema = z.object({
     .trim()
     .min(1, 'Email is required.')
     .email('Please provide a valid email address.'),
+  company_name: z.string().trim().optional(),
+  phone: z
+    .string()
+    .trim()
+    .optional()
+    .refine(v => !v || /^[0-9+\-\s()]{7,15}$/.test(v), 'Please enter a valid phone number.'),
   subject: z.string().trim().min(1, 'Subject is required.'),
   message: z
     .string()

@@ -154,6 +154,35 @@ export const getAllIncidentReports = async (filters?: {
   }
 };
 
+// Close an Incident Analysis report
+export const closeIncidentReport = async (
+  reportId: number
+): Promise<{ success: boolean; message: string }> => {
+  const serviceClient = createServiceClient();
+
+  try {
+    const { error } = await serviceClient
+      .from('ehs_incident_analysis')
+      .update({
+        is_completed: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', reportId);
+
+    if (error) {
+      console.error('Error closing incident:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath(AppRoutes.MANAGER_EHS_INCIDENT_ANALYSIS_LISTING);
+
+    return { success: true, message: 'Incident closed successfully.' };
+  } catch (err) {
+    console.error('Unexpected error closing incident:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 // Assign an Incident Analysis report to a Safety Officer
 export const assignIncidentReport = async (
   reportId: number,
