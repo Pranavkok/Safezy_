@@ -203,9 +203,9 @@ export const rejectIncidentReport = async (
       await supabase.from('notifications').insert({
         user_id: incident.assigned_to_user_id,
         type: 'incident_rejected_by_admin',
-        message: `Your closure of incident "${incident.title}" was rejected. Reason: ${remarks}`,
-        is_read: false,
-        created_at: new Date().toISOString()
+        title: 'Incident Closure Rejected',
+        body: `Your closure of incident "${incident.title}" was rejected. Reason: ${remarks}`,
+        is_read: false
       });
     }
 

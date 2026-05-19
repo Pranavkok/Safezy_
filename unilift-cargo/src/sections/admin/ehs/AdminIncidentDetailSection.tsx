@@ -325,7 +325,7 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
       )}
 
       {/* Final Approval Panel — shown when closed and pending approval */}
-      {incident.is_completed && (incident as any).final_approval === 'Pending' && (
+      {incident.is_completed && incident.final_approval === 'Pending' && (
         <div className="max-w-screen-lg mx-auto px-4 md:px-8 pb-8">
           <section className="border-2 border-dashed border-purple-200 rounded-lg p-4 space-y-4">
             <div>
@@ -378,20 +378,20 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
       )}
 
       {/* Show final approval result if already decided */}
-      {incident.is_completed && (incident as any).final_approval && (incident as any).final_approval !== 'Pending' && (
+      {incident.is_completed && incident.final_approval && incident.final_approval !== 'Pending' && (
         <div className="max-w-screen-lg mx-auto px-4 md:px-8 pb-8">
           <section className={`rounded-lg p-4 border ${
-            (incident as any).final_approval === 'Approved'
+            incident.final_approval === 'Approved'
               ? 'bg-green-50 border-green-200'
               : 'bg-red-50 border-red-200'
           }`}>
             <p className={`text-sm font-semibold ${
-              (incident as any).final_approval === 'Approved' ? 'text-green-800' : 'text-red-800'
+              incident.final_approval === 'Approved' ? 'text-green-800' : 'text-red-800'
             }`}>
-              Final Approval: {(incident as any).final_approval}
+              Final Approval: {incident.final_approval}
             </p>
-            {(incident as any).final_approval_remarks && (
-              <p className="text-xs text-gray-600 mt-1">Remarks: {(incident as any).final_approval_remarks}</p>
+            {incident.final_approval_remarks && (
+              <p className="text-xs text-gray-600 mt-1">Remarks: {incident.final_approval_remarks}</p>
             )}
           </section>
         </div>

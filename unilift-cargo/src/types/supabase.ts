@@ -594,6 +594,9 @@ export type Database = {
           investigation_team: Json | null
           is_a_past_incident: Database["public"]["Enums"]["confirmation"] | null
           is_completed: boolean | null
+          final_approval: string | null
+          final_approval_remarks: string | null
+          final_approval_at: string | null
           location: string | null
           narrative: string | null
           past_incident_remarks: string | null
@@ -665,6 +668,9 @@ export type Database = {
             | Database["public"]["Enums"]["confirmation"]
             | null
           is_completed?: boolean | null
+          final_approval?: string | null
+          final_approval_remarks?: string | null
+          final_approval_at?: string | null
           location?: string | null
           narrative?: string | null
           past_incident_remarks?: string | null
@@ -736,6 +742,9 @@ export type Database = {
             | Database["public"]["Enums"]["confirmation"]
             | null
           is_completed?: boolean | null
+          final_approval?: string | null
+          final_approval_remarks?: string | null
+          final_approval_at?: string | null
           location?: string | null
           narrative?: string | null
           past_incident_remarks?: string | null
@@ -2041,6 +2050,7 @@ export type Database = {
         | "ppe_expired"
         | "ppe_expiry_warning"
         | "new_order_admin"
+        | "incident_rejected_by_admin"
       orderStatus:
         | "Processing"
         | "Returned"
@@ -2211,6 +2221,7 @@ export const Constants = {
         "ppe_expired",
         "ppe_expiry_warning",
         "new_order_admin",
+        "incident_rejected_by_admin",
       ],
       orderStatus: [
         "Processing",
