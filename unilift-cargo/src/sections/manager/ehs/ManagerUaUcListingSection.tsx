@@ -65,6 +65,7 @@ async function downloadExcel(reports: UaUcNearMissRecord[], period: PeriodFilter
     { header: 'Date', key: 'date', width: 15 },
     { header: 'Assigned To', key: 'assigned_to', width: 20 },
     { header: 'Status', key: 'status', width: 12 },
+    { header: 'Final Approver', key: 'final_approval', width: 16 },
     { header: 'Remarks', key: 'remarks', width: 20 }
   ];
 
@@ -95,6 +96,7 @@ async function downloadExcel(reports: UaUcNearMissRecord[], period: PeriodFilter
       date: formatDate(r.reported_at),
       assigned_to: r.assigned_to_name ?? '—',
       status: r.status,
+      final_approval: r.final_approval ?? '—',
       remarks
     });
 
@@ -109,6 +111,19 @@ async function downloadExcel(reports: UaUcNearMissRecord[], period: PeriodFilter
     } else {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
       statusCell.font = { color: { argb: 'FF065F46' }, bold: true };
+    }
+
+    // Final Approver cell color
+    const approvalCell = row.getCell('final_approval');
+    if (r.final_approval === 'Pending') {
+      approvalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF9C3' } };
+      approvalCell.font = { color: { argb: 'FF854D0E' }, bold: true };
+    } else if (r.final_approval === 'Approved') {
+      approvalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+      approvalCell.font = { color: { argb: 'FF065F46' }, bold: true };
+    } else if (r.final_approval === 'Rejected') {
+      approvalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+      approvalCell.font = { color: { argb: 'FF991B1B' }, bold: true };
     }
 
     row.alignment = { vertical: 'middle' };
@@ -249,6 +264,7 @@ const ManagerUaUcListingSection = ({ reports, detailRouteBase, showExportButton 
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Assigned To</th>
                 <th className="px-4 py-3 text-left">Status</th>
+                {showExportButton && <th className="px-4 py-3 text-left">Final Approver</th>}
                 <th className="px-4 py-3 text-left">Action</th>
               </tr>
             </thead>
@@ -272,6 +288,19 @@ const ManagerUaUcListingSection = ({ reports, detailRouteBase, showExportButton 
                       {report.status}
                     </span>
                   </td>
+                  {showExportButton && (
+                    <td className="px-4 py-3">
+                      {report.final_approval === 'Pending' ? (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Pending</span>
+                      ) : report.final_approval === 'Approved' ? (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">Approved</span>
+                      ) : report.final_approval === 'Rejected' ? (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">Rejected</span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     <Link
                       href={`${detailRouteBase ?? '/manager/ehs/ua-uc-near-miss'}/${report.id}`}

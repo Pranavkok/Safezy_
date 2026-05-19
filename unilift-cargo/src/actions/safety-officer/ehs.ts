@@ -78,6 +78,7 @@ export const closeUaUcReport = async (
         action_by: closeData.action_by,
         action_date: closeData.action_date,
         closure_image_url: closeData.closure_image_url ?? null,
+        final_approval: 'Pending',
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);

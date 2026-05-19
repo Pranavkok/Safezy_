@@ -54,6 +54,7 @@ export const adminCloseUaUcReport = async (
         action_by: closeData.action_by,
         action_date: closeData.action_date,
         closure_image_url: closeData.closure_image_url ?? null,
+        final_approval: 'Pending',
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);
@@ -165,6 +166,87 @@ export const approveIncidentReport = async (
     return { success: true, message: 'Incident approved successfully.' };
   } catch (err) {
     console.error('Unexpected error approving incident:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
+// ─── UA / UC / Near Miss Final Approval ──────────────────────────────────────
+
+export const approveUaUcReport = async (
+  reportId: number,
+  remarks?: string
+): Promise<{ success: boolean; message: string }> => {
+  const supabase = createServiceClient();
+  try {
+    const { error } = await supabase
+      .from('ehs_ua_uc_near_miss')
+      .update({
+        final_approval: 'Approved',
+        final_approval_remarks: remarks ?? null,
+        final_approval_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', reportId);
+
+    if (error) {
+      console.error('Error approving UA/UC report:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS(reportId.toString()));
+
+    return { success: true, message: 'Report approved successfully.' };
+  } catch (err) {
+    console.error('Unexpected error approving UA/UC report:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
+export const rejectUaUcReport = async (
+  reportId: number,
+  remarks: string
+): Promise<{ success: boolean; message: string }> => {
+  const supabase = createServiceClient();
+  try {
+    const { data: report } = await supabase
+      .from('ehs_ua_uc_near_miss')
+      .select('assigned_to_user_id, report_no')
+      .eq('id', reportId)
+      .single();
+
+    const { error } = await supabase
+      .from('ehs_ua_uc_near_miss')
+      .update({
+        status: 'Assigned',
+        final_approval: 'Rejected',
+        final_approval_remarks: remarks,
+        final_approval_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', reportId);
+
+    if (error) {
+      console.error('Error rejecting UA/UC report:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    if (report?.assigned_to_user_id) {
+      await supabase.from('notifications').insert({
+        user_id: report.assigned_to_user_id,
+        type: 'uauc_rejected_by_admin',
+        title: 'UA/UC Closure Rejected',
+        body: `Your closure of report "${report.report_no}" was rejected. Reason: ${remarks}`,
+        is_read: false
+      });
+    }
+
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS(reportId.toString()));
+
+    return { success: true, message: 'Report rejected and safety officer notified.' };
+  } catch (err) {
+    console.error('Unexpected error rejecting UA/UC report:', err);
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
   }
 };

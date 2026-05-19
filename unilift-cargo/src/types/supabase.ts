@@ -993,6 +993,9 @@ export type Database = {
           reported_by_name: string | null
           reported_by_user_id: string | null
           status: string
+          final_approval: string | null
+          final_approval_remarks: string | null
+          final_approval_at: string | null
           ua_classifications: Json | null
           ua_other: string | null
           uc_classifications: Json | null
@@ -1013,6 +1016,9 @@ export type Database = {
           created_at?: string
           employee_id?: string | null
           equipment_involved?: string | null
+          final_approval?: string | null
+          final_approval_at?: string | null
+          final_approval_remarks?: string | null
           id?: never
           location_department: string
           media_type?: string | null
@@ -1048,6 +1054,9 @@ export type Database = {
           created_at?: string
           employee_id?: string | null
           equipment_involved?: string | null
+          final_approval?: string | null
+          final_approval_at?: string | null
+          final_approval_remarks?: string | null
           id?: never
           location_department?: string
           media_type?: string | null
@@ -2051,6 +2060,7 @@ export type Database = {
         | "ppe_expiry_warning"
         | "new_order_admin"
         | "incident_rejected_by_admin"
+        | "uauc_rejected_by_admin"
       orderStatus:
         | "Processing"
         | "Returned"
@@ -2222,6 +2232,7 @@ export const Constants = {
         "ppe_expiry_warning",
         "new_order_admin",
         "incident_rejected_by_admin",
+        "uauc_rejected_by_admin",
       ],
       orderStatus: [
         "Processing",

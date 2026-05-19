@@ -309,6 +309,9 @@ export type UaUcNearMissRecord = {
   assigned_to_user_id: string | null;
   assigned_to_name: string | null;
   closure_image_url: string | null;
+  final_approval: string | null;
+  final_approval_remarks: string | null;
+  final_approval_at: string | null;
   created_at: string;
   updated_at: string;
 };

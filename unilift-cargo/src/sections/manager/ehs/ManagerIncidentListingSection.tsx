@@ -64,6 +64,7 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
     { header: 'Date', key: 'date', width: 15 },
     { header: 'Reported By', key: 'reported_by', width: 22 },
     { header: 'Status', key: 'status', width: 12 },
+    { header: 'Final Approver', key: 'final_approval', width: 16 },
     { header: 'Final Approved/Closed', key: 'closed_at', width: 22 },
     { header: 'Remarks', key: 'remarks', width: 20 }
   ];
@@ -99,6 +100,7 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
       date: inc.date ? formatDate(inc.date) : '—',
       reported_by: inc.reported_by_name ?? '—',
       status,
+      final_approval: inc.final_approval ?? '—',
       closed_at: inc.closed_at ? formatDate(inc.closed_at) : '—',
       remarks
     });
@@ -116,6 +118,19 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
       statusCell.font = { color: { argb: 'FF065F46' }, bold: true };
     }
 
+    // Final Approver cell color
+    const approvalCell = row.getCell('final_approval');
+    if (inc.final_approval === 'Pending') {
+      approvalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF9C3' } };
+      approvalCell.font = { color: { argb: 'FF854D0E' }, bold: true };
+    } else if (inc.final_approval === 'Approved') {
+      approvalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+      approvalCell.font = { color: { argb: 'FF065F46' }, bold: true };
+    } else if (inc.final_approval === 'Rejected') {
+      approvalCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+      approvalCell.font = { color: { argb: 'FF991B1B' }, bold: true };
+    }
+
     row.alignment = { vertical: 'middle' };
     if (idx % 2 === 1) {
       row.eachCell({ includeEmpty: true }, cell => {
@@ -128,7 +143,7 @@ async function downloadExcel(incidents: IncidentListItem[], period: PeriodFilter
 
   // Add summary row
   ws.addRow([]);
-  const summaryRow = ws.addRow([`Total: ${filtered.length} reports`, '', '', '', '', '', '', '', '']);
+  const summaryRow = ws.addRow([`Total: ${filtered.length} reports`, '', '', '', '', '', '', '', '', '']);
   summaryRow.font = { bold: true, italic: true, color: { argb: 'FF6B7280' } };
 
   // Add border to all data cells
