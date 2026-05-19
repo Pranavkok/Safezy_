@@ -63,7 +63,8 @@ const EmptyState = () => (
 
 const UaUcNearMissListingSection = () => {
   const router = useRouter();
-  const [activeFilter, setActiveFilter] = useState<ObservationType | null>(null);
+  const [typeFilter, setTypeFilter] = useState<ObservationType | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'Open' | null>(null);
 
   const { data: result, isLoading } = useQuery({
     queryKey: ['ua-uc-near-miss-list'],
@@ -81,14 +82,20 @@ const UaUcNearMissListingSection = () => {
     NearMiss: reports.filter(r => r.observation_type === 'NearMiss').length
   }), [reports]);
 
-  const filteredReports = useMemo(() =>
-    activeFilter ? reports.filter(r => r.observation_type === activeFilter) : reports,
-    [reports, activeFilter]
-  );
+  const filteredReports = useMemo(() => reports.filter(r => {
+    if (typeFilter && r.observation_type !== typeFilter) return false;
+    if (statusFilter && r.status !== statusFilter) return false;
+    return true;
+  }), [reports, typeFilter, statusFilter]);
 
-  const handleTypeFilter = (type: ObservationType) => {
-    setActiveFilter(prev => prev === type ? null : type);
-  };
+  const hasFilter = typeFilter !== null || statusFilter !== null;
+
+  const clearFilters = () => { setTypeFilter(null); setStatusFilter(null); };
+
+  const filterLabel = [
+    statusFilter === 'Open' ? 'Open' : null,
+    typeFilter ? OBSERVATION_META[typeFilter].label : null
+  ].filter(Boolean).join(' · ');
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -108,11 +115,19 @@ const UaUcNearMissListingSection = () => {
         </Button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards — full width, same as table */}
       {!isLoading && reports.length > 0 && (
-        <div className="flex flex-wrap gap-3">
-          {/* Total */}
-          <Card className="text-center py-3 px-4 min-w-[90px]">
+        <div className="grid grid-cols-5 gap-3">
+
+          {/* Total — clears all filters */}
+          <Card
+            onClick={clearFilters}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              !hasFilter
+                ? 'border-gray-300 bg-gray-50'
+                : 'border-transparent hover:border-gray-200 hover:bg-gray-50/60'
+            }`}
+          >
             <CardContent className="p-0">
               <p className="text-2xl font-bold text-gray-700">{counts.total}</p>
               <p className="text-xs text-gray-500 mt-0.5">Total</p>
@@ -120,7 +135,14 @@ const UaUcNearMissListingSection = () => {
           </Card>
 
           {/* Open */}
-          <Card className="text-center py-3 px-4 min-w-[90px]">
+          <Card
+            onClick={() => setStatusFilter(prev => prev === 'Open' ? null : 'Open')}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              statusFilter === 'Open'
+                ? 'border-orange-400 bg-orange-50'
+                : 'border-transparent hover:border-orange-200 hover:bg-orange-50/50'
+            }`}
+          >
             <CardContent className="p-0">
               <p className="text-2xl font-bold text-orange-600">{counts.open}</p>
               <p className="text-xs text-gray-500 mt-0.5">Open</p>
@@ -129,9 +151,9 @@ const UaUcNearMissListingSection = () => {
 
           {/* UA */}
           <Card
-            onClick={() => handleTypeFilter('UA')}
-            className={`text-center py-3 px-4 min-w-[90px] cursor-pointer transition-all border-2 ${
-              activeFilter === 'UA'
+            onClick={() => setTypeFilter(prev => prev === 'UA' ? null : 'UA')}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              typeFilter === 'UA'
                 ? 'border-red-400 bg-red-50'
                 : 'border-transparent hover:border-red-200 hover:bg-red-50/50'
             }`}
@@ -144,9 +166,9 @@ const UaUcNearMissListingSection = () => {
 
           {/* UC */}
           <Card
-            onClick={() => handleTypeFilter('UC')}
-            className={`text-center py-3 px-4 min-w-[90px] cursor-pointer transition-all border-2 ${
-              activeFilter === 'UC'
+            onClick={() => setTypeFilter(prev => prev === 'UC' ? null : 'UC')}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              typeFilter === 'UC'
                 ? 'border-yellow-400 bg-yellow-50'
                 : 'border-transparent hover:border-yellow-200 hover:bg-yellow-50/50'
             }`}
@@ -159,9 +181,9 @@ const UaUcNearMissListingSection = () => {
 
           {/* Near Miss */}
           <Card
-            onClick={() => handleTypeFilter('NearMiss')}
-            className={`text-center py-3 px-4 min-w-[90px] cursor-pointer transition-all border-2 ${
-              activeFilter === 'NearMiss'
+            onClick={() => setTypeFilter(prev => prev === 'NearMiss' ? null : 'NearMiss')}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              typeFilter === 'NearMiss'
                 ? 'border-blue-400 bg-blue-50'
                 : 'border-transparent hover:border-blue-200 hover:bg-blue-50/50'
             }`}
@@ -202,8 +224,8 @@ const UaUcNearMissListingSection = () => {
               <tr>
                 <td colSpan={6}>
                   <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
-                    <p className="text-gray-500 font-medium">No {OBSERVATION_META[activeFilter!].label} reports found.</p>
-                    <button onClick={() => setActiveFilter(null)} className="text-sm text-primary underline">Clear filter</button>
+                    <p className="text-gray-500 font-medium">No reports match the selected filter.</p>
+                    <button type="button" onClick={clearFilters} className="text-sm text-primary underline">Clear filter</button>
                   </div>
                 </td>
               </tr>
@@ -258,7 +280,7 @@ const UaUcNearMissListingSection = () => {
       {!isLoading && reports.length > 0 && (
         <p className="text-xs text-gray-400 text-right">
           {filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}
-          {activeFilter && ` · ${OBSERVATION_META[activeFilter].label} only`}
+          {filterLabel && ` · ${filterLabel}`}
         </p>
       )}
     </div>
