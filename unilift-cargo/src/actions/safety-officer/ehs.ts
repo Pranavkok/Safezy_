@@ -168,6 +168,7 @@ export const closeIncidentReport = async (
       .from('ehs_incident_analysis')
       .update({
         is_completed: true,
+        final_approval: 'Pending',
         corrective_actions: closeData.corrective_actions ? [closeData.corrective_actions] : [],
         preventive_actions: closeData.preventive_actions ? [closeData.preventive_actions] : [],
         closure_image_url: closeData.closure_image_url ?? null,

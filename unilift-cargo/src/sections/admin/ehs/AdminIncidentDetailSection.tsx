@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminAssignIncidentReport, adminCloseIncidentReport } from '@/actions/admin/ehs';
+import { adminAssignIncidentReport, adminCloseIncidentReport, approveIncidentReport, rejectIncidentReport } from '@/actions/admin/ehs';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import ButtonSpinner from '@/components/ButtonSpinner';
@@ -36,6 +36,10 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
   const [corrective, setCorrective] = useState('');
   const [preventive, setPreventive] = useState('');
   const [closing, setClosing] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [approvalRemarks, setApprovalRemarks] = useState('');
+  const [rejectionRemarks, setRejectionRemarks] = useState('');
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [evidencePreview, setEvidencePreview] = useState<string | null>(null);
   const [evidenceType, setEvidenceType] = useState<'image' | 'video' | null>(null);
@@ -141,6 +145,44 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
       toast.error('An unexpected error occurred.');
     } finally {
       setClosing(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    setApproving(true);
+    try {
+      const result = await approveIncidentReport(incident.id, approvalRemarks || undefined);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error('An unexpected error occurred.');
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionRemarks.trim()) {
+      toast.error('Please provide a reason for rejection.');
+      return;
+    }
+    setRejecting(true);
+    try {
+      const result = await rejectIncidentReport(incident.id, rejectionRemarks);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error('An unexpected error occurred.');
+    } finally {
+      setRejecting(false);
     }
   };
 
@@ -279,6 +321,79 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
               </Button>
             </section>
           )}
+        </div>
+      )}
+
+      {/* Final Approval Panel — shown when closed and pending approval */}
+      {incident.is_completed && (incident as any).final_approval === 'Pending' && (
+        <div className="max-w-screen-lg mx-auto px-4 md:px-8 pb-8">
+          <section className="border-2 border-dashed border-purple-200 rounded-lg p-4 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-purple-800">Final Approval</h3>
+              <p className="text-xs text-gray-500 mt-0.5">This incident has been closed. Review and give your final approval.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Approve side */}
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600 block">Remarks (optional)</label>
+                <textarea
+                  value={approvalRemarks}
+                  onChange={e => setApprovalRemarks(e.target.value)}
+                  placeholder="Add any remarks for approval..."
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 resize-none"
+                />
+                <Button
+                  onClick={handleApprove}
+                  disabled={approving || rejecting}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {approving ? <ButtonSpinner /> : 'Approve'}
+                </Button>
+              </div>
+
+              {/* Reject side */}
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600 block">Reason for Rejection <span className="text-red-500">*</span></label>
+                <textarea
+                  value={rejectionRemarks}
+                  onChange={e => setRejectionRemarks(e.target.value)}
+                  placeholder="Explain why this closure is being rejected..."
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+                />
+                <Button
+                  onClick={handleReject}
+                  disabled={approving || rejecting}
+                  variant="outline"
+                  className="w-full border-red-400 text-red-700 hover:bg-red-50"
+                >
+                  {rejecting ? <ButtonSpinner /> : 'Reject'}
+                </Button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Show final approval result if already decided */}
+      {incident.is_completed && (incident as any).final_approval && (incident as any).final_approval !== 'Pending' && (
+        <div className="max-w-screen-lg mx-auto px-4 md:px-8 pb-8">
+          <section className={`rounded-lg p-4 border ${
+            (incident as any).final_approval === 'Approved'
+              ? 'bg-green-50 border-green-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <p className={`text-sm font-semibold ${
+              (incident as any).final_approval === 'Approved' ? 'text-green-800' : 'text-red-800'
+            }`}>
+              Final Approval: {(incident as any).final_approval}
+            </p>
+            {(incident as any).final_approval_remarks && (
+              <p className="text-xs text-gray-600 mt-1">Remarks: {(incident as any).final_approval_remarks}</p>
+            )}
+          </section>
         </div>
       )}
     </div>

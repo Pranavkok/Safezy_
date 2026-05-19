@@ -95,6 +95,7 @@ export type IncidentListItem = {
   assigned_to_user_id: string | null;
   reported_by_name: string | null;
   closed_at: string | null;
+  final_approval: string | null;
 };
 
 // Fetch ALL incident analysis reports
@@ -110,7 +111,7 @@ export const getAllIncidentReports = async (filters?: {
   try {
     let query = serviceClient
       .from('ehs_incident_analysis')
-      .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id, reported_by_user_id')
+      .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id, reported_by_user_id, final_approval')
       .order('created_at', { ascending: false });
 
     if (filters?.status && filters.status !== 'All') {
@@ -144,7 +145,8 @@ export const getAllIncidentReports = async (filters?: {
     const enriched: IncidentListItem[] = (data ?? []).map(r => ({
       ...r,
       reported_by_name: r.reported_by_user_id ? (reporterMap.get(r.reported_by_user_id) ?? null) : null,
-      closed_at: r.is_completed ? r.updated_at : null
+      closed_at: r.is_completed ? r.updated_at : null,
+      final_approval: r.final_approval ?? null
     }));
 
     return { success: true, message: 'Incidents fetched successfully.', data: enriched };
@@ -165,6 +167,7 @@ export const closeIncidentReport = async (
       .from('ehs_incident_analysis')
       .update({
         is_completed: true,
+        final_approval: 'Pending',
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);

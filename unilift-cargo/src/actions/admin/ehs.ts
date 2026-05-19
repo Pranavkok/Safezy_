@@ -116,6 +116,7 @@ export const adminCloseIncidentReport = async (
       .from('ehs_incident_analysis')
       .update({
         is_completed: true,
+        final_approval: 'Pending',
         corrective_actions: closeData.corrective_actions ? [closeData.corrective_actions] : [],
         preventive_actions: closeData.preventive_actions ? [closeData.preventive_actions] : [],
         closure_image_url: closeData.closure_image_url ?? null,
@@ -133,6 +134,87 @@ export const adminCloseIncidentReport = async (
     return { success: true, message: 'Incident closed successfully.' };
   } catch (err) {
     console.error('Unexpected error closing incident:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
+export const approveIncidentReport = async (
+  reportId: number,
+  remarks?: string
+): Promise<{ success: boolean; message: string }> => {
+  const supabase = createServiceClient();
+  try {
+    const { error } = await supabase
+      .from('ehs_incident_analysis')
+      .update({
+        final_approval: 'Approved',
+        final_approval_remarks: remarks ?? null,
+        final_approval_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', reportId);
+
+    if (error) {
+      console.error('Error approving incident:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_DETAILS(reportId));
+
+    return { success: true, message: 'Incident approved successfully.' };
+  } catch (err) {
+    console.error('Unexpected error approving incident:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
+export const rejectIncidentReport = async (
+  reportId: number,
+  remarks: string
+): Promise<{ success: boolean; message: string }> => {
+  const supabase = createServiceClient();
+  try {
+    // Fetch assigned SO to notify them
+    const { data: incident } = await supabase
+      .from('ehs_incident_analysis')
+      .select('assigned_to_user_id, title')
+      .eq('id', reportId)
+      .single();
+
+    const { error } = await supabase
+      .from('ehs_incident_analysis')
+      .update({
+        is_completed: false,
+        final_approval: 'Rejected',
+        final_approval_remarks: remarks,
+        final_approval_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', reportId);
+
+    if (error) {
+      console.error('Error rejecting incident:', error);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    // Notify the assigned safety officer
+    if (incident?.assigned_to_user_id) {
+      await supabase.from('notifications').insert({
+        user_id: incident.assigned_to_user_id,
+        type: 'incident_rejected_by_admin',
+        message: `Your closure of incident "${incident.title}" was rejected. Reason: ${remarks}`,
+        is_read: false,
+        created_at: new Date().toISOString()
+      });
+    }
+
+    revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_DETAILS(reportId));
+
+    return { success: true, message: 'Incident rejected and safety officer notified.' };
+  } catch (err) {
+    console.error('Unexpected error rejecting incident:', err);
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
   }
 };
