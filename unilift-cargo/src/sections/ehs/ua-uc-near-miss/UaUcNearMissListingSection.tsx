@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -63,6 +63,7 @@ const EmptyState = () => (
 
 const UaUcNearMissListingSection = () => {
   const router = useRouter();
+  const [activeFilter, setActiveFilter] = useState<ObservationType | null>(null);
 
   const { data: result, isLoading } = useQuery({
     queryKey: ['ua-uc-near-miss-list'],
@@ -73,9 +74,21 @@ const UaUcNearMissListingSection = () => {
   const reports = result?.data ?? [];
 
   const counts = useMemo(() => ({
-    total: reports.length,
-    open:  reports.filter(r => r.status === 'Open').length
+    total:    reports.length,
+    open:     reports.filter(r => r.status === 'Open').length,
+    UA:       reports.filter(r => r.observation_type === 'UA').length,
+    UC:       reports.filter(r => r.observation_type === 'UC').length,
+    NearMiss: reports.filter(r => r.observation_type === 'NearMiss').length
   }), [reports]);
+
+  const filteredReports = useMemo(() =>
+    activeFilter ? reports.filter(r => r.observation_type === activeFilter) : reports,
+    [reports, activeFilter]
+  );
+
+  const handleTypeFilter = (type: ObservationType) => {
+    setActiveFilter(prev => prev === type ? null : type);
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -95,19 +108,67 @@ const UaUcNearMissListingSection = () => {
         </Button>
       </div>
 
-      {/* Summary — Total + Open only */}
+      {/* Summary Cards */}
       {!isLoading && reports.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 max-w-xs">
-          <Card className="text-center py-3">
+        <div className="flex flex-wrap gap-3">
+          {/* Total */}
+          <Card className="text-center py-3 px-4 min-w-[90px]">
             <CardContent className="p-0">
               <p className="text-2xl font-bold text-gray-700">{counts.total}</p>
               <p className="text-xs text-gray-500 mt-0.5">Total</p>
             </CardContent>
           </Card>
-          <Card className="text-center py-3">
+
+          {/* Open */}
+          <Card className="text-center py-3 px-4 min-w-[90px]">
             <CardContent className="p-0">
               <p className="text-2xl font-bold text-orange-600">{counts.open}</p>
               <p className="text-xs text-gray-500 mt-0.5">Open</p>
+            </CardContent>
+          </Card>
+
+          {/* UA */}
+          <Card
+            onClick={() => handleTypeFilter('UA')}
+            className={`text-center py-3 px-4 min-w-[90px] cursor-pointer transition-all border-2 ${
+              activeFilter === 'UA'
+                ? 'border-red-400 bg-red-50'
+                : 'border-transparent hover:border-red-200 hover:bg-red-50/50'
+            }`}
+          >
+            <CardContent className="p-0">
+              <p className="text-2xl font-bold text-red-600">{counts.UA}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Unsafe Act</p>
+            </CardContent>
+          </Card>
+
+          {/* UC */}
+          <Card
+            onClick={() => handleTypeFilter('UC')}
+            className={`text-center py-3 px-4 min-w-[90px] cursor-pointer transition-all border-2 ${
+              activeFilter === 'UC'
+                ? 'border-yellow-400 bg-yellow-50'
+                : 'border-transparent hover:border-yellow-200 hover:bg-yellow-50/50'
+            }`}
+          >
+            <CardContent className="p-0">
+              <p className="text-2xl font-bold text-yellow-600">{counts.UC}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Unsafe Condition</p>
+            </CardContent>
+          </Card>
+
+          {/* Near Miss */}
+          <Card
+            onClick={() => handleTypeFilter('NearMiss')}
+            className={`text-center py-3 px-4 min-w-[90px] cursor-pointer transition-all border-2 ${
+              activeFilter === 'NearMiss'
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-transparent hover:border-blue-200 hover:bg-blue-50/50'
+            }`}
+          >
+            <CardContent className="p-0">
+              <p className="text-2xl font-bold text-blue-600">{counts.NearMiss}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Near Miss</p>
             </CardContent>
           </Card>
         </div>
@@ -137,7 +198,18 @@ const UaUcNearMissListingSection = () => {
 
             {!isLoading && reports.length === 0 && <EmptyState />}
 
-            {!isLoading && reports.map((report: UaUcNearMissListItem) => {
+            {!isLoading && reports.length > 0 && filteredReports.length === 0 && (
+              <tr>
+                <td colSpan={6}>
+                  <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
+                    <p className="text-gray-500 font-medium">No {OBSERVATION_META[activeFilter!].label} reports found.</p>
+                    <button onClick={() => setActiveFilter(null)} className="text-sm text-primary underline">Clear filter</button>
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {!isLoading && filteredReports.map((report: UaUcNearMissListItem) => {
               const meta = OBSERVATION_META[report.observation_type] ?? OBSERVATION_META.UA;
               const Icon = meta.icon;
               const isOpen = report.status === 'Open';
@@ -185,7 +257,8 @@ const UaUcNearMissListingSection = () => {
 
       {!isLoading && reports.length > 0 && (
         <p className="text-xs text-gray-400 text-right">
-          {reports.length} report{reports.length !== 1 ? 's' : ''}
+          {filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}
+          {activeFilter && ` · ${OBSERVATION_META[activeFilter].label} only`}
         </p>
       )}
     </div>
