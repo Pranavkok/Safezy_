@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -68,6 +68,7 @@ const EmptyState = () => (
 
 const IncidentAnalysisListingSection = () => {
   const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState<IncidentAnalysisStatus | null>(null);
 
   const { data: result, isLoading } = useQuery({
     queryKey: ['incident-analysis-list'],
@@ -78,9 +79,16 @@ const IncidentAnalysisListingSection = () => {
   const reports = result?.data ?? [];
 
   const counts = useMemo(() => ({
-    total: reports.length,
-    open:  reports.filter(r => deriveStatus(r) === 'Open').length
+    total:    reports.length,
+    Open:     reports.filter(r => deriveStatus(r) === 'Open').length,
+    Assigned: reports.filter(r => deriveStatus(r) === 'Assigned').length,
+    Closed:   reports.filter(r => deriveStatus(r) === 'Closed').length
   }), [reports]);
+
+  const filteredReports = useMemo(() =>
+    statusFilter ? reports.filter(r => deriveStatus(r) === statusFilter) : reports,
+    [reports, statusFilter]
+  );
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -100,19 +108,67 @@ const IncidentAnalysisListingSection = () => {
         </Button>
       </div>
 
-      {/* Summary — Total + Open only */}
+      {/* Summary Cards — full width, same as table */}
       {!isLoading && reports.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 max-w-xs">
-          <Card className="text-center py-3">
+        <div className="grid grid-cols-4 gap-3">
+
+          {/* Total — clears filter */}
+          <Card
+            onClick={() => setStatusFilter(null)}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              statusFilter === null
+                ? 'border-gray-300 bg-gray-50'
+                : 'border-transparent hover:border-gray-200 hover:bg-gray-50/60'
+            }`}
+          >
             <CardContent className="p-0">
               <p className="text-2xl font-bold text-gray-700">{counts.total}</p>
               <p className="text-xs text-gray-500 mt-0.5">Total</p>
             </CardContent>
           </Card>
-          <Card className="text-center py-3">
+
+          {/* Open */}
+          <Card
+            onClick={() => setStatusFilter(prev => prev === 'Open' ? null : 'Open')}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              statusFilter === 'Open'
+                ? 'border-orange-400 bg-orange-50'
+                : 'border-transparent hover:border-orange-200 hover:bg-orange-50/50'
+            }`}
+          >
             <CardContent className="p-0">
-              <p className="text-2xl font-bold text-orange-600">{counts.open}</p>
+              <p className="text-2xl font-bold text-orange-600">{counts.Open}</p>
               <p className="text-xs text-gray-500 mt-0.5">Open</p>
+            </CardContent>
+          </Card>
+
+          {/* Assigned */}
+          <Card
+            onClick={() => setStatusFilter(prev => prev === 'Assigned' ? null : 'Assigned')}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              statusFilter === 'Assigned'
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-transparent hover:border-blue-200 hover:bg-blue-50/50'
+            }`}
+          >
+            <CardContent className="p-0">
+              <p className="text-2xl font-bold text-blue-600">{counts.Assigned}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Assigned</p>
+            </CardContent>
+          </Card>
+
+          {/* Closed */}
+          <Card
+            onClick={() => setStatusFilter(prev => prev === 'Closed' ? null : 'Closed')}
+            className={`text-center py-4 cursor-pointer transition-all border-2 ${
+              statusFilter === 'Closed'
+                ? 'border-green-400 bg-green-50'
+                : 'border-transparent hover:border-green-200 hover:bg-green-50/50'
+            }`}
+          >
+            <CardContent className="p-0">
+              <p className="text-2xl font-bold text-green-600">{counts.Closed}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Closed</p>
             </CardContent>
           </Card>
         </div>
@@ -141,7 +197,18 @@ const IncidentAnalysisListingSection = () => {
 
             {!isLoading && reports.length === 0 && <EmptyState />}
 
-            {!isLoading && reports.map((report: IncidentAnalysisListItem) => {
+            {!isLoading && reports.length > 0 && filteredReports.length === 0 && (
+              <tr>
+                <td colSpan={5}>
+                  <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
+                    <p className="text-gray-500 font-medium">No {statusFilter} reports found.</p>
+                    <button type="button" onClick={() => setStatusFilter(null)} className="text-sm text-primary underline">Clear filter</button>
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {!isLoading && filteredReports.map((report: IncidentAnalysisListItem) => {
               const status = deriveStatus(report);
               const { color, icon: Icon } = STATUS_STYLES[status];
 
@@ -188,7 +255,8 @@ const IncidentAnalysisListingSection = () => {
 
       {!isLoading && reports.length > 0 && (
         <p className="text-xs text-gray-400 text-right">
-          {reports.length} report{reports.length !== 1 ? 's' : ''}
+          {filteredReports.length} report{filteredReports.length !== 1 ? 's' : ''}
+          {statusFilter && ` · ${statusFilter} only`}
         </p>
       )}
     </div>
