@@ -170,10 +170,10 @@ const ComplaintSection = () => {
             <div className="flex gap-[1.4375rem]">
               <MailIcon className="h-[1.875rem] w-[2.375rem] -ml-[10px]" />
               <a
-                href="mailto:support@safezy.in"
+                href="mailto:admin@safezy.in"
                 className="md:text-2xl text-base font-medium hover:text-primary text-black"
               >
-                support@safezy.in
+                admin@safezy.in
               </a>
             </div>
           </div>
