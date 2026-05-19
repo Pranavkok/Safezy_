@@ -22,7 +22,7 @@ export const submitComplaint = async (
         first_name,
         last_name,
         email,
-        requirements: `Subject: ${subject}\n\nMessage: ${message}`
+        requirements: `[COMPLAINT] Subject: ${subject}\n\nMessage: ${message}`
       }
     ]);
 

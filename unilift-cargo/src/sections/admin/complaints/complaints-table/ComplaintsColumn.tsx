@@ -56,7 +56,7 @@ export function getComplaintsColumns(): ColumnDef<ComplaintListingType>[] {
               email={row.original.email}
               imageUrl={row.original.image}
               contact={row.original.contact_number}
-              order_id={row.original.order_id as string}
+              order_id={row.original.order_id}
             />
           </div>
         );

@@ -7,7 +7,7 @@ import {
   GetComplaintsParamsType
 } from '@/types/complaint.types';
 
-// Get all complaints
+// Get all complaints (submitted via the public complaint form → contact table)
 export const getComplaints = async ({
   searchQuery,
   sortBy,
@@ -22,44 +22,28 @@ export const getComplaints = async ({
 }> => {
   const supabase = await createClient();
   try {
-    let complaintQuery = supabase.from('complaint').select(
-      `
-          id,
-          image,
-          description,
-          order_id,
-          users (
-              first_name,
-              last_name,
-              company_name,
-              email,
-              contact_number
-          )
-      `,
-      { count: 'exact' }
-    );
+    let query = supabase
+      .from('contact')
+      .select('id, first_name, last_name, email, company_name, contact_number, requirements', { count: 'exact' })
+      .ilike('requirements', '[COMPLAINT]%');
 
     if (searchQuery) {
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .or(
-          `first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`
-        );
+      query = query.or(
+        `first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`
+      );
+    }
 
-      if (userError) {
-        console.error('Error fetching users for search criteria:', userError);
-      } else {
-        const userIds = userData.map(user => user.id);
-        complaintQuery = complaintQuery.in('user_id', userIds);
-      }
+    if (sortBy && ['first_name', 'company_name', 'email'].includes(sortBy)) {
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    } else {
+      query = query.order('created_at', { ascending: false });
     }
 
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
-    complaintQuery = complaintQuery.range(from, to);
+    query = query.range(from, to);
 
-    const { data, error, count } = await complaintQuery;
+    const { data, error, count } = await query;
 
     if (error) {
       console.error('Error fetching complaints:', error);
@@ -69,29 +53,17 @@ export const getComplaints = async ({
       };
     }
 
-    const complaintsData = data.map(complaint => {
-      return {
-        id: complaint.id,
-        image: complaint.image,
-        description: complaint.description,
-        first_name: complaint.users?.first_name,
-        last_name: complaint.users?.last_name,
-        company_name: complaint.users?.company_name,
-        email: complaint.users!.email,
-        contact_number: complaint.users!.contact_number,
-        order_id: complaint.order_id
-      };
-    });
-
-    if (sortBy && ['first_name', 'company_name', 'email'].includes(sortBy)) {
-      complaintsData.sort((a, b) => {
-        const fieldA = String(a[sortBy as keyof typeof a] || '');
-        const fieldB = String(b[sortBy as keyof typeof b] || '');
-        return sortOrder === 'asc'
-          ? fieldA.localeCompare(fieldB)
-          : fieldB.localeCompare(fieldA);
-      });
-    }
+    const complaintsData: ComplaintListingType[] = data.map(row => ({
+      id: row.id,
+      image: null,
+      description: row.requirements.replace(/^\[COMPLAINT\]\s*/, ''),
+      first_name: row.first_name,
+      last_name: row.last_name,
+      company_name: row.company_name,
+      email: row.email,
+      contact_number: row.contact_number ?? '',
+      order_id: null
+    }));
 
     return {
       success: true,

@@ -20,7 +20,7 @@ type ComplaintsModalProps = {
   imageUrl: string | null;
   description: string;
   contact: string;
-  order_id: string;
+  order_id: string | null;
 };
 
 const ComplaintsModal = ({
@@ -54,15 +54,17 @@ const ComplaintsModal = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="w-full flex justify-center">
-            <Image
-              height={400}
-              width={400}
-              src={imageUrl as string}
-              alt={`${name}'s complaint`}
-              className="rounded-md max-h-48 w-auto object-cover"
-            />
-          </div>
+          {imageUrl && (
+            <div className="w-full flex justify-center">
+              <Image
+                height={400}
+                width={400}
+                src={imageUrl}
+                alt={`${name}'s complaint`}
+                className="rounded-md max-h-48 w-auto object-cover"
+              />
+            </div>
+          )}
 
           <div className="grid gap-2 text-sm">
             <div className="flex flex-col">
@@ -75,24 +77,26 @@ const ComplaintsModal = ({
             </div>
             <div className="flex flex-col">
               <span className="font-semibold">Contact No:</span>
-              <span>{contact}</span>
+              <span>{contact || '—'}</span>
             </div>
             <div className="flex flex-col">
               <span className="font-semibold mb-1">Description:</span>
-              <p className="text-gray-700">{description}</p>
+              <p className="text-gray-700 whitespace-pre-line">{description}</p>
             </div>
           </div>
         </div>
 
         <DialogFooter className="justify-center sm:justify-end">
-          <Button
-            type="submit"
-            className="h-9 font-bold lg:min-w-32"
-            variant="default"
-            onClick={() => router.push(AppRoutes.ADMIN_ORDER_DETAILS(order_id))}
-          >
-            View Order Details
-          </Button>
+          {order_id && (
+            <Button
+              type="button"
+              className="h-9 font-bold lg:min-w-32"
+              variant="default"
+              onClick={() => router.push(AppRoutes.ADMIN_ORDER_DETAILS(order_id))}
+            >
+              View Order Details
+            </Button>
+          )}
 
           <DialogClose asChild>
             <Button type="button" variant="default">
