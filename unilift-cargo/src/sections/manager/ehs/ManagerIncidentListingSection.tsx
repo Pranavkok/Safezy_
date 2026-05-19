@@ -250,8 +250,8 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Reported By</th>
                 <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Action</th>
                 <th className="px-4 py-3 text-left">Final Approver</th>
+                <th className="px-4 py-3 text-left">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -271,14 +271,6 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <Link
-                        href={`${detailRouteBase ?? '/manager/ehs/incident-analysis'}/${incident.id}`}
-                        className="text-primary text-xs underline font-medium"
-                      >
-                        View
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
                       {incident.final_approval === 'Approved' && (
                         <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">Approved</span>
                       )}
@@ -289,6 +281,14 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
                         <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Pending</span>
                       )}
                       {!incident.final_approval && '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`${detailRouteBase ?? '/manager/ehs/incident-analysis'}/${incident.id}`}
+                        className="text-primary text-xs underline font-medium"
+                      >
+                        View
+                      </Link>
                     </td>
                   </tr>
                 );
