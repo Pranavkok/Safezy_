@@ -115,7 +115,7 @@ export const getMyAssignedIncidents = async (): Promise<{
 
     const { data, error } = await supabase
       .from('ehs_incident_analysis')
-      .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id')
+      .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id, final_approval')
       .eq('assigned_to_user_id', authId)
       .order('created_at', { ascending: false });
 
@@ -127,7 +127,8 @@ export const getMyAssignedIncidents = async (): Promise<{
     const enriched: IncidentListItem[] = (data ?? []).map(r => ({
       ...r,
       reported_by_name: null,
-      closed_at: r.is_completed ? r.updated_at : null
+      closed_at: r.is_completed ? r.updated_at : null,
+      final_approval: r.final_approval ?? null
     }));
 
     return { success: true, message: 'Incidents fetched.', data: enriched };
