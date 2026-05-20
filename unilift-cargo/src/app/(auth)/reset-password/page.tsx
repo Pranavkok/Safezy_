@@ -1,5 +1,3 @@
-export const dynamic = 'force-static';
-
 // External Librarie
 import type { Metadata } from 'next';
 import ResetPasswordSection from '@/sections/auth/ResetPasswordSection';
