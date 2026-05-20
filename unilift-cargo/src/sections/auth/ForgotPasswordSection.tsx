@@ -17,8 +17,8 @@ import { ForgotPasswordSchema } from '@/validations/auth/forgot-password';
 // Types
 import { ForgotPasswordType } from '@/types/auth.types';
 
-// Actions
-import { forgotPassword } from '@/actions/auth';
+// Supabase browser client
+import { createClient } from '@/utils/supabase/client';
 
 const ForgotPasswordSection = () => {
   const [isEmailSent, setIsEmailSent] = useState(false);
@@ -28,23 +28,24 @@ const ForgotPasswordSection = () => {
     formState: { errors }
   } = useForm<ForgotPasswordType>({
     resolver: zodResolver(ForgotPasswordSchema),
-    defaultValues: {
-      email: ''
-    }
+    defaultValues: { email: '' }
   });
 
   const [loading, setLoading] = useState<boolean>(false);
 
   const onSubmit = async (data: ForgotPasswordType) => {
     setLoading(true);
-    const res = await forgotPassword(data.email);
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      redirectTo: `${window.location.origin}/auth/callback`
+    });
     setLoading(false);
-    if (res.success) {
-      setIsEmailSent(true);
 
-      toast.success(res.message);
+    if (error) {
+      toast.error(error.message);
     } else {
-      toast.error(res.message);
+      setIsEmailSent(true);
+      toast.success('Password reset email sent! Check your inbox.');
     }
   };
 
