@@ -14,7 +14,8 @@ import {
   FileText,
   CheckCircle2,
   Clock,
-  UserCheck
+  UserCheck,
+  SlidersHorizontal
 } from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,6 +69,7 @@ const EmptyState = () => (
 
 const IncidentAnalysisListingSection = () => {
   const router = useRouter();
+  const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<IncidentAnalysisStatus | null>(null);
 
   const { data: result, isLoading } = useQuery({
@@ -99,17 +101,30 @@ const IncidentAnalysisListingSection = () => {
           <h1 className="text-2xl font-bold text-gray-900">Incident Analysis Reports</h1>
           <p className="text-sm text-gray-500 mt-0.5">All your submitted incident analysis reports</p>
         </div>
-        <Button
-          onClick={() => router.push(AppRoutes.EHS_INCIDENT_ANALYSIS_ADD)}
-          className="flex items-center gap-2 flex-shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          New Report
-        </Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {!isLoading && reports.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(prev => !prev)}
+              className={`flex items-center gap-2 ${showFilters ? 'border-primary text-primary' : ''}`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filter
+              {statusFilter && <span className="ml-1 w-2 h-2 rounded-full bg-primary inline-block" />}
+            </Button>
+          )}
+          <Button
+            onClick={() => router.push(AppRoutes.EHS_INCIDENT_ANALYSIS_ADD)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            New Report
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Cards — full width, same as table */}
-      {!isLoading && reports.length > 0 && (
+      {/* Summary Cards — shown only when filter panel is open */}
+      {!isLoading && reports.length > 0 && showFilters && (
         <div className="grid grid-cols-4 gap-3">
 
           {/* Total — clears filter */}
