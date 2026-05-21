@@ -57,6 +57,12 @@ export async function middleware(request: NextRequest) {
         return redirectTo(ROLE_REDIRECT_PATHS[userRole], request.url);
       }
 
+      // Allow reset-password for all roles (PKCE recovery flow logs the user in
+      // before they can set a new password)
+      if (pathname === AppRoutes.RESET_PASSWORD) {
+        return supabaseResponse;
+      }
+
       // Role-specific redirect rules (force each role to their own portal)
       // Manager and Safety Officer are also allowed on public (non-protected) routes
       if (
