@@ -7,6 +7,8 @@ import { AppRoutes } from '@/constants/AppRoutes';
 import EyeIcon from '@/components/svgs/EyeIcon';
 import { useRouter } from 'next/navigation';
 import { FetchContractorType } from '@/actions/admin/contractor';
+import EditCustomerDialog from './EditCustomerDialog';
+import DeleteCustomerDialog from './DeleteCustomerDialog';
 
 export function getContractorsListingsColumns(
   router: ReturnType<typeof useRouter>
@@ -81,17 +83,19 @@ export function getContractorsListingsColumns(
       ),
       cell: function Cell({ row }) {
         return (
-          <div className="flex  ">
+          <div className="flex items-center gap-1">
             <div
-              className="hover:bg-transparent"
+              className="p-1.5 rounded hover:bg-gray-100 transition-colors cursor-pointer"
               onClick={() =>
                 router.push(
                   AppRoutes.ADMIN_CONTRACTOR_DETAILS(row.getValue('id'))
                 )
               }
             >
-              <EyeIcon className="fill-gray-400 hover:fill-primary w-5 h-5 transition-colors duration-300 " />
+              <EyeIcon className="fill-gray-400 hover:fill-primary w-4 h-4 transition-colors duration-300" />
             </div>
+            <EditCustomerDialog customer={row.original} />
+            <DeleteCustomerDialog customer={row.original} />
           </div>
         );
       },
