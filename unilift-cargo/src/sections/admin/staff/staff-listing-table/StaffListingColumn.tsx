@@ -6,6 +6,7 @@ import { DataTableColumnHeader } from '@/components/data-table/data-table-column
 import { StaffMember } from '@/actions/admin/staff';
 import ToggleStaffStatusSection from './ToggleStaffStatusSection';
 import EditStaffDialog from './EditStaffDialog';
+import DeleteStaffDialog from './DeleteStaffDialog';
 
 export function getStaffListingColumns(): ColumnDef<StaffMember>[] {
   return [
@@ -73,7 +74,12 @@ export function getStaffListingColumns(): ColumnDef<StaffMember>[] {
     {
       id: 'actions',
       header: () => <span>Actions</span>,
-      cell: ({ row }) => <EditStaffDialog staff={row.original} />,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          <EditStaffDialog staff={row.original} />
+          <DeleteStaffDialog staff={row.original} />
+        </div>
+      ),
       enableSorting: false,
       enableHiding: false
     }

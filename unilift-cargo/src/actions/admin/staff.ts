@@ -189,6 +189,49 @@ export const updateStaffUser = async (
   }
 };
 
+export const deleteStaffUser = async (
+  userId: string
+): Promise<{ success: boolean; message: string }> => {
+  const serviceClient = createServiceClient();
+
+  try {
+    // Fetch auth_id before deleting the users row
+    const { data: userData, error: fetchError } = await serviceClient
+      .from('users')
+      .select('auth_id')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !userData) {
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    const { error: dbError } = await serviceClient
+      .from('users')
+      .delete()
+      .eq('id', userId);
+
+    if (dbError) {
+      console.error('Error deleting staff user from db:', dbError);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    const { error: authError } = await serviceClient.auth.admin.deleteUser(
+      userData.auth_id
+    );
+
+    if (authError) {
+      console.error('Error deleting auth user:', authError);
+    }
+
+    revalidatePath(AppRoutes.ADMIN_STAFF_LISTING);
+    return { success: true, message: 'Staff member deleted successfully.' };
+  } catch (err) {
+    console.error('Unexpected error deleting staff user:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 // Toggle active/inactive status for a staff member
 export const toggleStaffStatus = async (
   userId: string,
