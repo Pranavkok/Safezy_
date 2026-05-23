@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { UaUcNearMissRecord, ObservationType, ObservationStatus } from '@/types/ehs.types';
 import { formatDate } from '@/utils/date';
-import { Download } from 'lucide-react';
+import { Download, ChevronDown, X } from 'lucide-react';
 
 const TYPE_LABELS: Record<string, string> = {
   UA: 'Unsafe Act',
@@ -172,11 +172,34 @@ const ManagerUaUcListingSection = ({ reports, detailRouteBase, showExportButton 
   const [statusFilter, setStatusFilter] = useState<'All' | ObservationStatus>('All');
   const [period, setPeriod] = useState<PeriodFilter>('this_month');
   const [downloading, setDownloading] = useState(false);
+  const [reporterFilter, setReporterFilter] = useState<string | null>(null);
+  const [reporterSearch, setReporterSearch] = useState('');
+  const [reporterOpen, setReporterOpen] = useState(false);
+  const reporterRef = useRef<HTMLDivElement>(null);
+
+  const uniqueReporters = Array.from(
+    new Set(reports.map(r => r.reported_by_name).filter(Boolean))
+  ).sort() as string[];
+
+  const filteredReporters = uniqueReporters.filter(name =>
+    name.toLowerCase().includes(reporterSearch.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (reporterRef.current && !reporterRef.current.contains(e.target as Node)) {
+        setReporterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const filtered = reports.filter(r => {
     const typeMatch = typeFilter === 'All' || r.observation_type === typeFilter;
     const statusMatch = statusFilter === 'All' || r.status === statusFilter;
-    return typeMatch && statusMatch;
+    const reporterMatch = !reporterFilter || r.reported_by_name === reporterFilter;
+    return typeMatch && statusMatch && reporterMatch;
   });
 
   const handleDownload = async () => {
@@ -192,11 +215,12 @@ const ManagerUaUcListingSection = ({ reports, detailRouteBase, showExportButton 
     <div className="space-y-4">
       {/* Filters + export */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           <div className="flex gap-1">
             {(['All', 'UA', 'UC', 'NearMiss'] as const).map(t => (
               <button
                 key={t}
+                type="button"
                 onClick={() => setTypeFilter(t)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   typeFilter === t
@@ -212,6 +236,7 @@ const ManagerUaUcListingSection = ({ reports, detailRouteBase, showExportButton 
             {(['All', 'Open', 'Assigned', 'Closed'] as const).map(s => (
               <button
                 key={s}
+                type="button"
                 onClick={() => setStatusFilter(s)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                   statusFilter === s
@@ -223,12 +248,77 @@ const ManagerUaUcListingSection = ({ reports, detailRouteBase, showExportButton 
               </button>
             ))}
           </div>
+
+          {/* Reporter searchable dropdown */}
+          <div ref={reporterRef} className="relative">
+            <button
+              type="button"
+              onClick={() => { setReporterOpen(o => !o); setReporterSearch(''); }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                reporterFilter
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-primary'
+              }`}
+            >
+              <span>{reporterFilter ?? 'All Reporters'}</span>
+              {reporterFilter ? (
+                <X
+                  className="w-3 h-3"
+                  onClick={e => { e.stopPropagation(); setReporterFilter(null); setReporterOpen(false); }}
+                />
+              ) : (
+                <ChevronDown className="w-3 h-3" />
+              )}
+            </button>
+
+            {reporterOpen && (
+              <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-52">
+                <div className="p-2 border-b border-gray-100">
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search reporter..."
+                    value={reporterSearch}
+                    onChange={e => setReporterSearch(e.target.value)}
+                    className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <ul className="max-h-48 overflow-y-auto py-1">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => { setReporterFilter(null); setReporterOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors ${!reporterFilter ? 'font-semibold text-primary' : 'text-gray-700'}`}
+                    >
+                      All Reporters
+                    </button>
+                  </li>
+                  {filteredReporters.length === 0 ? (
+                    <li className="px-3 py-2 text-xs text-gray-400">No results</li>
+                  ) : (
+                    filteredReporters.map(name => (
+                      <li key={name}>
+                        <button
+                          type="button"
+                          onClick={() => { setReporterFilter(name); setReporterOpen(false); }}
+                          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors ${reporterFilter === name ? 'font-semibold text-primary' : 'text-gray-700'}`}
+                        >
+                          {name}
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Export — admin only */}
         {showExportButton && (
           <div className="flex items-center gap-2">
             <select
+              aria-label="Select period"
               value={period}
               onChange={e => setPeriod(e.target.value as PeriodFilter)}
               className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"

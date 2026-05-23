@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { IncidentListItem } from '@/actions/manager/ehs';
 import { formatDate } from '@/utils/date';
-import { Download } from 'lucide-react';
+import { Download, ChevronDown, X } from 'lucide-react';
 
 type IncidentStatus = 'Open' | 'Assigned' | 'Closed';
 type PeriodFilter = 'this_week' | 'this_month' | 'last_3_months';
@@ -178,10 +178,33 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
   const [statusFilter, setStatusFilter] = useState<'All' | IncidentStatus>('All');
   const [period, setPeriod] = useState<PeriodFilter>('this_month');
   const [downloading, setDownloading] = useState(false);
+  const [reporterFilter, setReporterFilter] = useState<string | null>(null);
+  const [reporterSearch, setReporterSearch] = useState('');
+  const [reporterOpen, setReporterOpen] = useState(false);
+  const reporterRef = useRef<HTMLDivElement>(null);
+
+  const uniqueReporters = Array.from(
+    new Set(incidents.map(i => i.reported_by_name).filter(Boolean))
+  ).sort() as string[];
+
+  const filteredReporters = uniqueReporters.filter(name =>
+    name.toLowerCase().includes(reporterSearch.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (reporterRef.current && !reporterRef.current.contains(e.target as Node)) {
+        setReporterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const filtered = incidents.filter(i => {
-    if (statusFilter === 'All') return true;
-    return deriveStatus(i) === statusFilter;
+    const statusMatch = statusFilter === 'All' || deriveStatus(i) === statusFilter;
+    const reporterMatch = !reporterFilter || i.reported_by_name === reporterFilter;
+    return statusMatch && reporterMatch;
   });
 
   const handleDownload = async () => {
@@ -197,27 +220,95 @@ const ManagerIncidentListingSection = ({ incidents, detailRouteBase, showExportB
     <div className="space-y-4">
       {/* Top bar: filters + export */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Status filters */}
-        <div className="flex gap-1">
-          {(['All', 'Open', 'Assigned', 'Closed'] as const).map(s => (
+        {/* Status filters + reporter filter */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex gap-1">
+            {(['All', 'Open', 'Assigned', 'Closed'] as const).map(s => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  statusFilter === s
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-primary'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {/* Reporter searchable dropdown */}
+          <div ref={reporterRef} className="relative">
             <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                statusFilter === s
+              type="button"
+              onClick={() => { setReporterOpen(o => !o); setReporterSearch(''); }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                reporterFilter
                   ? 'bg-primary text-white border-primary'
                   : 'bg-white text-gray-600 border-gray-300 hover:border-primary'
               }`}
             >
-              {s}
+              <span>{reporterFilter ?? 'All Reporters'}</span>
+              {reporterFilter ? (
+                <X
+                  className="w-3 h-3"
+                  onClick={e => { e.stopPropagation(); setReporterFilter(null); setReporterOpen(false); }}
+                />
+              ) : (
+                <ChevronDown className="w-3 h-3" />
+              )}
             </button>
-          ))}
+
+            {reporterOpen && (
+              <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg w-52">
+                <div className="p-2 border-b border-gray-100">
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search reporter..."
+                    value={reporterSearch}
+                    onChange={e => setReporterSearch(e.target.value)}
+                    className="w-full text-xs px-2 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <ul className="max-h-48 overflow-y-auto py-1">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => { setReporterFilter(null); setReporterOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors ${!reporterFilter ? 'font-semibold text-primary' : 'text-gray-700'}`}
+                    >
+                      All Reporters
+                    </button>
+                  </li>
+                  {filteredReporters.length === 0 ? (
+                    <li className="px-3 py-2 text-xs text-gray-400">No results</li>
+                  ) : (
+                    filteredReporters.map(name => (
+                      <li key={name}>
+                        <button
+                          type="button"
+                          onClick={() => { setReporterFilter(name); setReporterOpen(false); }}
+                          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors ${reporterFilter === name ? 'font-semibold text-primary' : 'text-gray-700'}`}
+                        >
+                          {name}
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Export controls — admin only */}
         {showExportButton && (
           <div className="flex items-center gap-2">
             <select
+              aria-label="Select period"
               value={period}
               onChange={e => setPeriod(e.target.value as PeriodFilter)}
               className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary"
