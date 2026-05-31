@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { getUserIdFromAuth } from '@/actions/user';
@@ -78,7 +80,8 @@ export async function GET(
       }
     });
   } catch (err) {
-    console.error('PDF generation error:', err);
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('PDF generation error:', msg, err);
+    return NextResponse.json({ error: 'Failed to generate PDF', detail: msg }, { status: 500 });
   }
 }
