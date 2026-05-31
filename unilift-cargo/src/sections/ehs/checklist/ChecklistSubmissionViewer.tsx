@@ -17,6 +17,7 @@ type ChecklistSubmission = {
   site_name: string;
   inspected_by: string;
   progress: { date: string; progress: number }[];
+  header_values?: { label: string; value: string }[];
   answers: Answer[];
 };
 
@@ -122,6 +123,11 @@ const ChecklistSubmissionViewer = ({ submission }: { submission: ChecklistSubmis
             </span>
           }
         />
+        {submission.header_values && submission.header_values.length > 0 &&
+          submission.header_values.map((hv, idx) => (
+            <InfoRow key={idx} label={hv.label} value={hv.value || '—'} />
+          ))
+        }
         {latestScore !== null && (
           <InfoRow
             label="Score"

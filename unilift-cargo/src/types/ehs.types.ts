@@ -80,7 +80,7 @@ export type ChecklistResponseByContractorType = z.infer<typeof formSchema>;
 export type EhsChecklistFormType = Omit<
   z.infer<typeof EhsChecklistFormSchema>,
   'image_url'
-> & { image_url: string };
+> & { image_url: string; header_fields: { label: string }[] };
 export type EhsChecklistType = z.infer<typeof EhsChecklistFormSchema>;
 export type sendChecklistMailType = Omit<
   ChecklistResponseByContractorType,
@@ -134,6 +134,7 @@ export type ChecklistTopicAndQuestionsType = {
   id: number;
   topic_name: string;
   image_url: string;
+  header_fields?: { label: string }[];
   ehs_checklist_questions: {
     id: number;
     question: string;

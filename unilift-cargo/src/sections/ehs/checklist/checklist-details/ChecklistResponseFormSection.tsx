@@ -46,6 +46,10 @@ const ChecklistResponseFormSection = ({
     defaultValues: {
       topicId: checklistQuestions?.id || 0,
       date: new Date().toISOString().split('T')[0],
+      header_values: (checklistQuestions.header_fields ?? []).map(f => ({
+        label: f.label,
+        value: ''
+      })),
       answers: checklistQuestions.ehs_checklist_questions.map(q => ({
         questionId: q.id,
         answer: undefined,
@@ -125,7 +129,8 @@ const ChecklistResponseFormSection = ({
           email: data.email,
           date: data.date,
           inspected_by: data.inspected_by,
-          site_name: data.site_name
+          site_name: data.site_name,
+          header_values: data.header_values ?? []
         },
         `${user.firstName + ' ' + user.lastName}`,
         ccEmails.filter(e => e.trim() !== '')
@@ -214,6 +219,26 @@ const ChecklistResponseFormSection = ({
             <div className="w-full text-center bg-primary text-white text-base sm:text-lg md:text-xl font-extrabold py-2 sm:py-3 mt-2 sm:mt-4 rounded-md px-2">
               {checklistQuestions.topic_name.toUpperCase()}
             </div>
+
+            {/* Dynamic Header Fields */}
+            {checklistQuestions.header_fields && checklistQuestions.header_fields.length > 0 && (
+              <div className="mt-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                  {checklistQuestions.header_fields.map((field, index) => (
+                    <div key={index} className="flex items-center gap-3 border-b border-gray-300 pb-2">
+                      <span className="font-semibold text-gray-700 whitespace-nowrap text-sm min-w-fit">
+                        {field.label}:
+                      </span>
+                      <Input
+                        {...register(`header_values.${index}.value`)}
+                        className="flex-1 border-0 shadow-none bg-transparent focus-visible:ring-0 px-0 text-sm"
+                        placeholder="Enter value..."
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Reference Image */}
             {checklistQuestions.image_url && (

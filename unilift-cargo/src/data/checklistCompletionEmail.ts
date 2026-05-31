@@ -200,6 +200,20 @@ export const checklistCompletionEmailHTML = (
        </div>
        <div class="info-section">
            <h2>Topic Name: ${context.topicName}</h2>
+           ${
+             context.header_values && context.header_values.length > 0
+               ? `<table style="margin-top:12px;width:100%;border-collapse:collapse;">
+                 ${context.header_values
+                   .map(
+                     hv => `<tr>
+                     <td style="padding:4px 8px;font-weight:600;color:#4A5568;width:40%">${hv.label}</td>
+                     <td style="padding:4px 8px;color:#2D3748">${hv.value || '—'}</td>
+                   </tr>`
+                   )
+                   .join('')}
+               </table>`
+               : ''
+           }
        </div>
        <h2>Checklist Details</h2>
        <table>

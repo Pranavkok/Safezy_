@@ -31,7 +31,8 @@ export const addChecklistTopic = async (
       .from('ehs_checklist_topics')
       .insert({
         topic_name: checklist.topic_name,
-        image_url: checklist.image_url
+        image_url: checklist.image_url,
+        header_fields: checklist.header_fields ?? []
       })
       .select('id')
       .single();
@@ -98,13 +99,15 @@ export const updateChecklistTopic = async (
     // Update topic name if changed
     if (
       initialData.topic_name !== checklist.topic_name ||
-      initialData.image_url !== checklist.image_url
+      initialData.image_url !== checklist.image_url ||
+      JSON.stringify(initialData.header_fields ?? []) !== JSON.stringify(checklist.header_fields ?? [])
     ) {
       const { error: topicError } = await serviceClient
         .from('ehs_checklist_topics')
         .update({
           topic_name: checklist.topic_name,
-          image_url: checklist.image_url
+          image_url: checklist.image_url,
+          header_fields: checklist.header_fields ?? []
         })
         .eq('id', topicId);
 

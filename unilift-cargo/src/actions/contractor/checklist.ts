@@ -68,6 +68,7 @@ export const getChecklistDetailsById = async (
           id,
           topic_name,
           image_url,
+          header_fields,
           ehs_checklist_questions(
             id,
             question,
@@ -129,7 +130,8 @@ export const addChecklistResponseByContractor = async (
         ],
         date: checklist.date,
         inspected_by: checklist.inspected_by,
-        site_name: checklist.site_name
+        site_name: checklist.site_name,
+        header_values: checklist.header_values ?? []
       })
       .select('id')
       .single();
@@ -224,7 +226,8 @@ export const updateChecklistResponseByContractor = async (
         ],
         date: checklist.date,
         inspected_by: checklist.inspected_by,
-        site_name: checklist.site_name
+        site_name: checklist.site_name,
+        header_values: checklist.header_values ?? []
       })
       .eq('id', prevProgress.id)
       .eq('user_id', userId);
@@ -416,6 +419,7 @@ export const getChecklistSubmissionById = async (submissionId: number): Promise<
     site_name: string;
     inspected_by: string;
     progress: { date: string; progress: number }[];
+    header_values: { label: string; value: string }[];
     answers: {
       question: string;
       weightage: number;
@@ -438,6 +442,7 @@ export const getChecklistSubmissionById = async (submissionId: number): Promise<
         site_name,
         inspected_by,
         progress,
+        header_values,
         ehs_checklist_topics(topic_name),
         ehs_checklist_done_questions(
           is_completed,
@@ -471,6 +476,7 @@ export const getChecklistSubmissionById = async (submissionId: number): Promise<
         site_name: (data as any).site_name,
         inspected_by: (data as any).inspected_by,
         progress: (data as any).progress ?? [],
+        header_values: (data as any).header_values ?? [],
         answers
       }
     };
