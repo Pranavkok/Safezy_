@@ -497,39 +497,43 @@ export const sendChecklistCompleteEmail = async (
     const supabase = await createClient();
     const subject = 'Safezy | Checklist Completion Notification';
 
-    const pdfBase64 = await generateChecklistPdfBase64({
-      topicName: emailContext.topicName,
-      siteName: emailContext.site_name,
-      inspectedBy: emailContext.inspected_by,
-      date: emailContext.date,
-      headerValues: emailContext.header_values ?? [],
-      answers: emailContext.answers
-        .filter(a => a.answer)
-        .map(a => ({
-          question: a.questionText ?? '',
-          answer: a.answer ?? '',
-          remark: a.remark ?? '',
-          weightage: Number(a.weightage)
-        }))
-    });
-
-    const safeTopic = emailContext.topicName.replace(/[^a-zA-Z0-9_-]/g, '_');
     const payload: Record<string, unknown> = {
       to: superiorEmail,
       subject,
-      html: checklistCompletionEmailHTML(userName, emailContext),
-      attachments: [
+      html: checklistCompletionEmailHTML(userName, emailContext)
+    };
+
+    if (ccEmails && ccEmails.length > 0) {
+      payload.cc = ccEmails.join(',');
+    }
+
+    try {
+      const pdfBase64 = await generateChecklistPdfBase64({
+        topicName: emailContext.topicName,
+        siteName: emailContext.site_name,
+        inspectedBy: emailContext.inspected_by,
+        date: emailContext.date,
+        headerValues: emailContext.header_values ?? [],
+        answers: emailContext.answers
+          .filter(a => a.answer)
+          .map(a => ({
+            question: a.questionText ?? '',
+            answer: a.answer ?? '',
+            remark: a.remark ?? '',
+            weightage: Number(a.weightage)
+          }))
+      });
+      const safeTopic = emailContext.topicName.replace(/[^a-zA-Z0-9_-]/g, '_');
+      payload.attachments = [
         {
           filename: `EHS_Checklist_${safeTopic}.pdf`,
           content: pdfBase64,
           encoding: 'base64',
           contentType: 'application/pdf'
         }
-      ]
-    };
-
-    if (ccEmails && ccEmails.length > 0) {
-      payload.cc = ccEmails.join(',');
+      ];
+    } catch (pdfErr) {
+      console.error('PDF generation failed, sending email without attachment:', pdfErr);
     }
 
     await supabase.functions.invoke('send-email', {
