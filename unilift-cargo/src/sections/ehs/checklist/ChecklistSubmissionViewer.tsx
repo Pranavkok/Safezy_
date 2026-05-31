@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { CheckCircle2, XCircle, MinusCircle, MapPin, User, Calendar, ClipboardList } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, XCircle, MinusCircle, MapPin, User, Calendar, Download, Loader2 } from 'lucide-react';
 
 type Answer = {
   question: string;
@@ -78,6 +78,45 @@ const ChecklistSubmissionViewer = ({ submission }: { submission: ChecklistSubmis
   const noCount = submission.answers.filter(a => a.answer === 'No').length;
   const naCount = submission.answers.filter(a => a.answer === 'N/A').length;
 
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setIsGenerating(true);
+    try {
+      const [{ pdf }, { default: ChecklistPdfDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/data/ChecklistPdfDocument')
+      ]);
+
+      const pdfData = {
+        topicName: submission.topic_name,
+        siteName: submission.site_name,
+        inspectedBy: submission.inspected_by,
+        date: submission.date,
+        headerValues: submission.header_values ?? [],
+        answers: submission.answers.map(a => ({
+          question: a.question,
+          answer: a.answer,
+          remark: a.remark,
+          weightage: a.weightage
+        })),
+        totalScore: latestScore ?? undefined
+      };
+
+      const blob = await pdf(<ChecklistPdfDocument data={pdfData} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `EHS_Checklist_${submission.topic_name.replace(/\s+/g, '_')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF generation failed', err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-5 max-w-3xl mx-auto">
 
@@ -88,10 +127,22 @@ const ChecklistSubmissionViewer = ({ submission }: { submission: ChecklistSubmis
           <h1 className="text-2xl font-bold text-gray-900">{submission.topic_name}</h1>
           <p className="text-sm text-gray-500 mt-0.5">Submitted on {formatDate(submission.date)}</p>
         </div>
-        <span className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border bg-green-50 text-green-600 border-green-200">
-          <CheckCircle2 className="w-4 h-4" />
-          Completed
-        </span>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border bg-green-50 text-green-600 border-green-200">
+            <CheckCircle2 className="w-4 h-4" />
+            Completed
+          </span>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isGenerating}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border bg-primary text-white border-primary hover:bg-primary/90 disabled:opacity-60 transition-colors"
+          >
+            {isGenerating
+              ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+              : <><Download className="w-4 h-4" /> Download PDF</>
+            }
+          </button>
+        </div>
       </div>
 
       {/* Section 1 — Submission Info */}

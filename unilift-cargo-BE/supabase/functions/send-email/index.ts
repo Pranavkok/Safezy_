@@ -3,7 +3,7 @@ import nodemailer from 'npm:nodemailer';
 
 serve(async (req) => {
   try {
-    const { to, subject, html, cc } = await req.json();
+    const { to, subject, html, cc, attachments } = await req.json();
 
     if (!to || !subject || !html) {
       return new Response(
@@ -27,7 +27,8 @@ serve(async (req) => {
       to,
       subject,
       html,
-      ...(cc ? { cc } : {})
+      ...(cc ? { cc } : {}),
+      ...(attachments && attachments.length > 0 ? { attachments } : {})
     };
 
     await transporter.sendMail(mailOptions);
