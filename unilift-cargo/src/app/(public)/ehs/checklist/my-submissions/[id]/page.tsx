@@ -28,12 +28,14 @@ const ChecklistSubmissionViewPage = async ({ params }: { params: { id: string } 
 
   return (
     <div className="bg-gray-50">
-      <PageBanner
-        image={ASSETS.IMG.EHS_CHECKLIST_BANNER}
-        pageHeading="Checklist Submission"
-        breadcrumbs={BREADCRUMBS}
-      />
-      <div className="mt-10 max-w-3xl mx-auto px-4 py-8 w-full">
+      <div className="print:hidden">
+        <PageBanner
+          image={ASSETS.IMG.EHS_CHECKLIST_BANNER}
+          pageHeading="Checklist Submission"
+          breadcrumbs={BREADCRUMBS}
+        />
+      </div>
+      <div className="mt-10 print:mt-0 max-w-3xl mx-auto px-4 py-8 print:py-4 w-full">
         <ChecklistSubmissionViewer submission={res.data} />
       </div>
     </div>

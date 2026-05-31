@@ -93,14 +93,13 @@ const ChecklistSubmissionViewer = ({ submission }: { submission: ChecklistSubmis
             <CheckCircle2 className="w-4 h-4" />
             Completed
           </span>
-          <a
-            href={`/api/checklist/pdf/${submission.id}`}
-            download
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border bg-primary text-white border-primary hover:bg-primary/90 transition-colors"
+          <button
+            onClick={() => window.print()}
+            className="print:hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border bg-primary text-white border-primary hover:bg-primary/90 transition-colors"
           >
             <Download className="w-4 h-4" />
             Download PDF
-          </a>
+          </button>
         </div>
       </div>
 
