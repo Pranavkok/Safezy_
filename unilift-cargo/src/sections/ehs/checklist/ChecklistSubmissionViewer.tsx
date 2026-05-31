@@ -1,8 +1,13 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { CheckCircle2, XCircle, MinusCircle, MapPin, User, Calendar } from 'lucide-react';
-import ChecklistDownloadButton from './ChecklistDownloadButton';
+
+const ChecklistDownloadButton = dynamic(
+  () => import('./ChecklistDownloadButton'),
+  { ssr: false }
+);
 
 type Answer = {
   question: string;
