@@ -90,7 +90,7 @@ export const getChecklistDetailsById = async (
     return {
       success: true,
       message: SUCCESS_MESSAGES.CHECKLIST_DETAILS_FETCHED,
-      data: data as ChecklistTopicAndQuestionsType
+      data: data as unknown as ChecklistTopicAndQuestionsType
     };
   } catch (error) {
     console.error(
