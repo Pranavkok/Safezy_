@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, XCircle, MinusCircle, MapPin, User, Calendar, Download } from 'lucide-react';
+import { CheckCircle2, XCircle, MinusCircle, MapPin, User, Calendar } from 'lucide-react';
+import ChecklistDownloadButton from './ChecklistDownloadButton';
 
 type Answer = {
   question: string;
@@ -93,14 +94,18 @@ const ChecklistSubmissionViewer = ({ submission }: { submission: ChecklistSubmis
             <CheckCircle2 className="w-4 h-4" />
             Completed
           </span>
-          <a
-            href={`/api/checklist/pdf/${submission.id}`}
-            download
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border bg-primary text-white border-primary hover:bg-primary/90 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Download PDF
-          </a>
+          <ChecklistDownloadButton
+            data={{
+              topicName: submission.topic_name,
+              siteName: submission.site_name,
+              inspectedBy: submission.inspected_by,
+              date: submission.date,
+              headerValues: submission.header_values,
+              answers: submission.answers,
+              totalScore: latestScore ?? undefined
+            }}
+            fileName={`EHS_Checklist_${submission.topic_name.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`}
+          />
         </div>
       </div>
 
