@@ -240,6 +240,38 @@ const ChecklistResponseFormSection = ({
               </div>
             )}
 
+            {/* Site Information — inside header */}
+            <div className="mt-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+              <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-3">
+                Site Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <InputFieldWithLabel
+                  type="text"
+                  label="Name of Site"
+                  errorText={errors.site_name?.message}
+                  required
+                  {...register('site_name')}
+                />
+                <InputFieldWithLabel
+                  type="text"
+                  label="Inspected By"
+                  errorText={errors.inspected_by?.message}
+                  required
+                  {...register('inspected_by')}
+                />
+                <InputFieldWithLabel
+                  type="date"
+                  label="Date of Inspection"
+                  errorText={errors.date?.message}
+                  required
+                  min={yesterday}
+                  max={today}
+                  {...register('date')}
+                />
+              </div>
+            </div>
+
             {/* Reference Image */}
             {checklistQuestions.image_url && (
               <div className="mt-4">
@@ -256,42 +288,6 @@ const ChecklistResponseFormSection = ({
 
           <CardContent className="p-2 sm:p-6">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Site Information Section */}
-              <Card className="border border-primary shadow-sm">
-                <CardHeader className="pb-2">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Site Information
-                  </h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <InputFieldWithLabel
-                      type="text"
-                      label="Name of Site"
-                      errorText={errors.site_name?.message}
-                      required
-                      {...register('site_name')}
-                    />
-                    <InputFieldWithLabel
-                      type="text"
-                      label="Inspected By"
-                      errorText={errors.inspected_by?.message}
-                      required
-                      {...register('inspected_by')}
-                    />
-                    <InputFieldWithLabel
-                      type="date"
-                      label="Date of Inspection"
-                      errorText={errors.date?.message}
-                      required
-                      min={yesterday}
-                      max={today}
-                      {...register('date')}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Questions Section */}
               <div className="space-y-4">
                 {checklistQuestions.ehs_checklist_questions.map(
