@@ -28,6 +28,8 @@ import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel'
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formSchema } from '@/validations/admin/add-checklist';
 import { CheckCircle, AlertTriangle, Plus, X } from 'lucide-react';
+import { pdf } from '@react-pdf/renderer';
+import ChecklistPdfDocument from '@/data/ChecklistPdfDocument';
 
 const ChecklistResponseFormSection = ({
   checklistQuestions
@@ -121,6 +123,34 @@ const ChecklistResponseFormSection = ({
         return;
       }
 
+      let pdfBase64: string | undefined;
+      try {
+        const pdfData = {
+          topicName: checklistQuestions.topic_name,
+          siteName: data.site_name,
+          inspectedBy: data.inspected_by,
+          date: data.date,
+          headerValues: data.header_values ?? [],
+          answers: data.answers
+            .filter(a => a.answer)
+            .map(a => ({
+              question: a.questionText ?? '',
+              answer: a.answer ?? '',
+              remark: a.remark ?? '',
+              weightage: Number(a.weightage)
+            }))
+        };
+        const blob = await pdf(<ChecklistPdfDocument data={pdfData} />).toBlob();
+        pdfBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (pdfErr) {
+        console.error('Client-side PDF generation failed:', pdfErr);
+      }
+
       const res = await sendChecklistCompleteEmail(
         data.email,
         {
@@ -133,7 +163,8 @@ const ChecklistResponseFormSection = ({
           header_values: data.header_values ?? []
         },
         `${user.firstName + ' ' + user.lastName}`,
-        ccEmails.filter(e => e.trim() !== '')
+        ccEmails.filter(e => e.trim() !== ''),
+        pdfBase64
       );
 
       if (res.success) {

@@ -12,7 +12,6 @@ import { createClient } from '@/utils/supabase/server';
 import { createServiceClient } from '@/utils/supabase/service';
 import { getAuthId, getUserIdFromAuth } from '../user';
 import { checklistCompletionEmailHTML } from '@/data/checklistCompletionEmail';
-import { generateChecklistPdfBase64 } from '@/lib/generateChecklistPdf';
 import { sendPushNotification } from '@/lib/web-push';
 
 export const getAllChecklistTopics = async (): Promise<{
@@ -491,7 +490,8 @@ export const sendChecklistCompleteEmail = async (
   superiorEmail: string,
   emailContext: sendChecklistMailType,
   userName: string,
-  ccEmails?: string[]
+  ccEmails?: string[],
+  pdfBase64?: string
 ) => {
   try {
     const supabase = await createClient();
@@ -507,22 +507,7 @@ export const sendChecklistCompleteEmail = async (
       payload.cc = ccEmails.join(',');
     }
 
-    try {
-      const pdfBase64 = await generateChecklistPdfBase64({
-        topicName: emailContext.topicName,
-        siteName: emailContext.site_name,
-        inspectedBy: emailContext.inspected_by,
-        date: emailContext.date,
-        headerValues: emailContext.header_values ?? [],
-        answers: emailContext.answers
-          .filter(a => a.answer)
-          .map(a => ({
-            question: a.questionText ?? '',
-            answer: a.answer ?? '',
-            remark: a.remark ?? '',
-            weightage: Number(a.weightage)
-          }))
-      });
+    if (pdfBase64) {
       const safeTopic = emailContext.topicName.replace(/[^a-zA-Z0-9_-]/g, '_');
       payload.attachments = [
         {
@@ -532,8 +517,6 @@ export const sendChecklistCompleteEmail = async (
           contentType: 'application/pdf'
         }
       ];
-    } catch (pdfErr) {
-      console.error('PDF generation failed, sending email without attachment:', pdfErr);
     }
 
     await supabase.functions.invoke('send-email', {
