@@ -11,7 +11,14 @@ const nextConfig = {
       'graceful-fs',
       'nodemailer',
       'web-push',
-      '@supabase/supabase-js'
+      '@supabase/supabase-js',
+      '@react-pdf/renderer',
+      '@react-pdf/reconciler',
+      '@react-pdf/layout',
+      '@react-pdf/font',
+      '@react-pdf/pdfkit',
+      '@react-pdf/render',
+      '@react-pdf/fns'
     ]
   },
   images: {
