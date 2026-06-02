@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
 import toast from 'react-hot-toast';
-import { Loader2, Plus, Trash2, HelpCircle, AlertCircle, LayoutList } from 'lucide-react';
+import { Loader2, Plus, Trash2, HelpCircle, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import TextAreaWithLabel from '@/components/inputs-fields/TextareaWithLabel';
 import {
@@ -69,15 +69,6 @@ const EhsChecklistAddUpdateSection = ({
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'questions'
-  });
-
-  const {
-    fields: headerFields,
-    append: appendHeader,
-    remove: removeHeader
-  } = useFieldArray({
-    control,
-    name: 'header_fields'
   });
 
   const questions = watch('questions');
@@ -189,63 +180,6 @@ const EhsChecklistAddUpdateSection = ({
               {...register('topic_name')}
               className="w-full"
             />
-          </div>
-
-          {/* Header Fields Section */}
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-semibold">
-                  Header Fields
-                </h3>
-                <LayoutList className="h-4 w-4 text-gray-400" />
-              </div>
-              <p className="text-sm text-gray-500">
-                Custom fields shown at the top of the form for the user to fill in (e.g. Machine No., Shift, Operator)
-              </p>
-            </div>
-
-            {headerFields.length > 0 && (
-              <div className="space-y-3">
-                {headerFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
-                  >
-                    <span className="text-sm text-gray-500 w-6 flex-shrink-0">{index + 1}.</span>
-                    <div className="flex-1">
-                      <InputFieldWithLabel
-                        type="text"
-                        label="Field Label"
-                        placeholder='e.g. "Machine No.", "Shift", "Operator Name"'
-                        errorText={errors.header_fields?.[index]?.label?.message}
-                        required
-                        {...register(`header_fields.${index}.label`)}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="flex-shrink-0 mt-5"
-                      onClick={() => removeHeader(index)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto border-dashed"
-              onClick={() => appendHeader({ label: '' })}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="whitespace-nowrap">Add Header Field</span>
-            </Button>
           </div>
 
           {/* Header Section */}

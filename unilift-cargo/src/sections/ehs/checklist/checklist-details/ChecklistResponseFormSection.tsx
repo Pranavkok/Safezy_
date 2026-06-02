@@ -22,6 +22,7 @@ import toast from 'react-hot-toast';
 import Image from 'next/image';
 import ASSETS from '@/assets';
 import { AppRoutes } from '@/constants/AppRoutes';
+import { STATIC_CHECKLIST_HEADER_FIELDS } from '@/constants/constants';
 import { useRouter } from 'next/navigation';
 import { SecondaryLogo } from '@/components/svgs';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
@@ -48,7 +49,7 @@ const ChecklistResponseFormSection = ({
     defaultValues: {
       topicId: checklistQuestions?.id || 0,
       date: new Date().toISOString().split('T')[0],
-      header_values: (checklistQuestions.header_fields ?? []).map(f => ({
+      header_values: STATIC_CHECKLIST_HEADER_FIELDS.map(f => ({
         label: f.label,
         value: ''
       })),
@@ -251,13 +252,16 @@ const ChecklistResponseFormSection = ({
               {checklistQuestions.topic_name.toUpperCase()}
             </div>
 
-            {/* Dynamic Header Fields */}
-            {checklistQuestions.header_fields && checklistQuestions.header_fields.length > 0 && (
-              <div className="mt-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+            {/* Static Header Fields */}
+            <div className="mt-4 border border-primary rounded-md overflow-hidden">
+              <div className="bg-primary px-4 py-2">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Equipment Details</h3>
+              </div>
+              <div className="p-4 bg-white">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                  {checklistQuestions.header_fields.map((field, index) => (
-                    <div key={index} className="flex items-center gap-3 border-b border-gray-300 pb-2">
-                      <span className="font-semibold text-gray-700 whitespace-nowrap text-sm min-w-fit">
+                  {STATIC_CHECKLIST_HEADER_FIELDS.map((field, index) => (
+                    <div key={index} className="flex items-center gap-3 border-b border-primary/20 pb-2">
+                      <span className="font-semibold text-primary whitespace-nowrap text-sm min-w-fit">
                         {field.label}:
                       </span>
                       <Input
@@ -269,37 +273,39 @@ const ChecklistResponseFormSection = ({
                   ))}
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Site Information — inside header */}
-            <div className="mt-4 border border-gray-200 rounded-md p-4 bg-gray-50">
-              <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-3">
-                Site Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <InputFieldWithLabel
-                  type="text"
-                  label="Name of Site"
-                  errorText={errors.site_name?.message}
-                  required
-                  {...register('site_name')}
-                />
-                <InputFieldWithLabel
-                  type="text"
-                  label="Inspected By"
-                  errorText={errors.inspected_by?.message}
-                  required
-                  {...register('inspected_by')}
-                />
-                <InputFieldWithLabel
-                  type="date"
-                  label="Date of Inspection"
-                  errorText={errors.date?.message}
-                  required
-                  min={yesterday}
-                  max={today}
-                  {...register('date')}
-                />
+            <div className="mt-4 border border-primary rounded-md overflow-hidden">
+              <div className="bg-primary px-4 py-2">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Site Information</h3>
+              </div>
+              <div className="p-4 bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <InputFieldWithLabel
+                    type="text"
+                    label="Name of Site"
+                    errorText={errors.site_name?.message}
+                    required
+                    {...register('site_name')}
+                  />
+                  <InputFieldWithLabel
+                    type="text"
+                    label="Inspected By"
+                    errorText={errors.inspected_by?.message}
+                    required
+                    {...register('inspected_by')}
+                  />
+                  <InputFieldWithLabel
+                    type="date"
+                    label="Date of Inspection"
+                    errorText={errors.date?.message}
+                    required
+                    min={yesterday}
+                    max={today}
+                    {...register('date')}
+                  />
+                </div>
               </div>
             </div>
 
