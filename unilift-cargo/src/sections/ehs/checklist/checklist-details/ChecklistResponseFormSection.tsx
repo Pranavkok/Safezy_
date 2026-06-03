@@ -259,18 +259,48 @@ const ChecklistResponseFormSection = ({
               </div>
               <div className="p-4 bg-white">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                  {STATIC_CHECKLIST_HEADER_FIELDS.map((field, index) => (
-                    <div key={index} className="flex items-center gap-3 border-b border-primary/20 pb-2">
-                      <span className="font-semibold text-primary whitespace-nowrap text-sm min-w-fit">
-                        {field.label}:
-                      </span>
-                      <Input
-                        {...register(`header_values.${index}.value`)}
-                        className="flex-1 border-0 shadow-none bg-transparent focus-visible:ring-0 px-0 text-sm"
-                        placeholder="Enter value..."
-                      />
-                    </div>
-                  ))}
+                  {STATIC_CHECKLIST_HEADER_FIELDS.map((field, index) =>
+                    field.options ? (
+                      <div key={index} className="col-span-1 sm:col-span-2 border-b border-primary/20 pb-3">
+                        <span className="font-semibold text-primary text-sm block mb-2">
+                          {field.label}:
+                        </span>
+                        <Controller
+                          name={`header_values.${index}.value`}
+                          control={control}
+                          render={({ field: f }) => (
+                            <div className="flex flex-wrap gap-2">
+                              {field.options!.map(option => (
+                                <button
+                                  key={option}
+                                  type="button"
+                                  onClick={() => f.onChange(option)}
+                                  className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-colors ${
+                                    f.value === option
+                                      ? 'bg-primary text-white border-primary'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
+                                  }`}
+                                >
+                                  {option}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        />
+                      </div>
+                    ) : (
+                      <div key={index} className="flex items-center gap-3 border-b border-primary/20 pb-2">
+                        <span className="font-semibold text-primary whitespace-nowrap text-sm min-w-fit">
+                          {field.label}:
+                        </span>
+                        <Input
+                          {...register(`header_values.${index}.value`)}
+                          className="flex-1 border-0 shadow-none bg-transparent focus-visible:ring-0 px-0 text-sm"
+                          placeholder="Enter value..."
+                        />
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             </div>

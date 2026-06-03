@@ -558,13 +558,15 @@ export const USER_ROLES: {
   SAFETY_OFFICER: 'safety_officer'
 } as const;
 
-
-export const STATIC_CHECKLIST_HEADER_FIELDS: { label: string }[] = [
+export const STATIC_CHECKLIST_HEADER_FIELDS: { label: string; options?: string[] }[] = [
   { label: 'Welding Machine No' },
   { label: 'Time' },
   { label: 'Equipment Number' },
   { label: 'Identification Marking' },
   { label: 'T.P. Certificate Number' },
   { label: 'S.W.L' },
-  { label: 'Type of Welding Machine (Single / Two / Three phase and Rectifier / Transformer / Welding Generator)' }
+  {
+    label: 'Type of Welding Machine',
+    options: ['Single', 'Two', 'Three phase', 'Rectifier', 'Transformer', 'Welding Generator']
+  }
 ];
