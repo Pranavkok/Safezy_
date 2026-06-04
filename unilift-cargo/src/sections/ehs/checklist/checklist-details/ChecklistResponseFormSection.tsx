@@ -252,7 +252,41 @@ const ChecklistResponseFormSection = ({
               {checklistQuestions.topic_name.toUpperCase()}
             </div>
 
-            {/* Static Header Fields */}
+            {/* Site Information — inside header */}
+            <div className="mt-4 border border-primary rounded-md overflow-hidden">
+              <div className="bg-primary px-4 py-2">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Site Information</h3>
+              </div>
+              <div className="p-4 bg-white">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <InputFieldWithLabel
+                    type="text"
+                    label="Name of Site"
+                    errorText={errors.site_name?.message}
+                    required
+                    {...register('site_name')}
+                  />
+                  <InputFieldWithLabel
+                    type="text"
+                    label="Inspected By"
+                    errorText={errors.inspected_by?.message}
+                    required
+                    {...register('inspected_by')}
+                  />
+                  <InputFieldWithLabel
+                    type="date"
+                    label="Date of Inspection"
+                    errorText={errors.date?.message}
+                    required
+                    min={yesterday}
+                    max={today}
+                    {...register('date')}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Equipment Details */}
             <div className="mt-4 border border-primary rounded-md overflow-hidden">
               <div className="bg-primary px-4 py-2">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide">Equipment Details</h3>
@@ -301,40 +335,6 @@ const ChecklistResponseFormSection = ({
                       </div>
                     )
                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* Site Information — inside header */}
-            <div className="mt-4 border border-primary rounded-md overflow-hidden">
-              <div className="bg-primary px-4 py-2">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Site Information</h3>
-              </div>
-              <div className="p-4 bg-white">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <InputFieldWithLabel
-                    type="text"
-                    label="Name of Site"
-                    errorText={errors.site_name?.message}
-                    required
-                    {...register('site_name')}
-                  />
-                  <InputFieldWithLabel
-                    type="text"
-                    label="Inspected By"
-                    errorText={errors.inspected_by?.message}
-                    required
-                    {...register('inspected_by')}
-                  />
-                  <InputFieldWithLabel
-                    type="date"
-                    label="Date of Inspection"
-                    errorText={errors.date?.message}
-                    required
-                    min={yesterday}
-                    max={today}
-                    {...register('date')}
-                  />
                 </div>
               </div>
             </div>
