@@ -189,7 +189,7 @@ export const deleteContractor = async (
   try {
     const { data: userData, error: fetchError } = await serviceClient
       .from('users')
-      .select('auth_id')
+      .select('*')
       .eq('id', userId)
       .single();
 
@@ -213,6 +213,9 @@ export const deleteContractor = async (
 
     if (authError) {
       console.error('Error deleting auth user:', authError);
+      // Rollback — restore the deleted row so data stays consistent
+      await serviceClient.from('users').insert(userData);
+      return { success: false, message: 'Failed to delete user. Please try again.' };
     }
 
     revalidatePath(AppRoutes.ADMIN_CONTRACTOR_LISTING);

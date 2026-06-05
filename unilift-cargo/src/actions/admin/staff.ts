@@ -195,10 +195,9 @@ export const deleteStaffUser = async (
   const serviceClient = createServiceClient();
 
   try {
-    // Fetch auth_id before deleting the users row
     const { data: userData, error: fetchError } = await serviceClient
       .from('users')
-      .select('auth_id')
+      .select('*')
       .eq('id', userId)
       .single();
 
@@ -222,6 +221,9 @@ export const deleteStaffUser = async (
 
     if (authError) {
       console.error('Error deleting auth user:', authError);
+      // Rollback — restore the deleted row so data stays consistent
+      await serviceClient.from('users').insert(userData);
+      return { success: false, message: 'Failed to delete user. Please try again.' };
     }
 
     revalidatePath(AppRoutes.ADMIN_STAFF_LISTING);
