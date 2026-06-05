@@ -26,6 +26,30 @@ const observationLabel: Record<string, string> = {
   NearMiss: 'Near Miss'
 };
 
+// Parses "1. foo 2. bar" or newline-separated numbered text into list items
+function parseNumberedList(text: string): string[] | null {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  // If already on separate lines and start with a number, use them directly
+  if (lines.length > 1 && lines.every(l => /^\d+\./.test(l))) {
+    return lines.map(l => l.replace(/^\d+\.\s*/, ''));
+  }
+  // Fall back: split inline "1. ... 2. ..." pattern
+  const parts = text.split(/(?=\d+\.\s)/).map(s => s.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+  return parts.length > 1 ? parts : null;
+}
+
+function NumberedList({ text }: { text: string }) {
+  const items = parseNumberedList(text);
+  if (!items) return <span className="text-sm text-gray-800">{text}</span>;
+  return (
+    <ol className="list-decimal list-outside pl-4 space-y-1">
+      {items.map((item, i) => (
+        <li key={i} className="text-sm text-gray-800">{item}</li>
+      ))}
+    </ol>
+  );
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
@@ -214,7 +238,7 @@ const UaUcReportViewer = ({ report }: { report: UaUcNearMissRecord }) => {
           </div>
         ) : (
           <div className="space-y-1">
-            <InfoRow label="Action taken" value={report.action_taken} />
+            <InfoRow label="Action taken" value={report.action_taken ? <NumberedList text={report.action_taken} /> : undefined} />
             <InfoRow label="By whom" value={report.action_by} />
             <InfoRow label="Date" value={formatDate(report.action_date)} />
             {report.closure_image_url && (
