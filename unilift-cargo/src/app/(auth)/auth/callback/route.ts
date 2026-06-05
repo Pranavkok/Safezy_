@@ -6,8 +6,9 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
 
   if (code) {
-    const redirectTo = `${requestUrl.origin}/reset-password`;
-    const errorRedirect = `${requestUrl.origin}/forgot-password?error_description=Email+link+is+invalid+or+has+expired`;
+    const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || requestUrl.origin;
+    const redirectTo = `${siteUrl}/reset-password`;
+    const errorRedirect = `${siteUrl}/forgot-password?error_description=Email+link+is+invalid+or+has+expired`;
 
     // Build the response first so we can attach cookies to it directly.
     // Using next/headers cookies() here won't work because the Set-Cookie
