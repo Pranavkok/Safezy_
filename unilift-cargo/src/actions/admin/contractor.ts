@@ -197,6 +197,19 @@ export const deleteContractor = async (
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
+    // Delete from auth first so we can bail before touching the DB if it fails
+    if (userData.auth_id) {
+      const { error: authError } = await serviceClient.auth.admin.deleteUser(
+        userData.auth_id
+      );
+
+      // Treat "user not found" as success — auth row may have already been removed
+      if (authError && !authError.message?.toLowerCase().includes('not found')) {
+        console.error('Error deleting auth user:', authError);
+        return { success: false, message: 'Failed to delete user. Please try again.' };
+      }
+    }
+
     const { error: dbError } = await serviceClient
       .from('users')
       .delete()
@@ -205,17 +218,6 @@ export const deleteContractor = async (
     if (dbError) {
       console.error('Error deleting contractor from db:', dbError);
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
-    }
-
-    const { error: authError } = await serviceClient.auth.admin.deleteUser(
-      userData.auth_id
-    );
-
-    if (authError) {
-      console.error('Error deleting auth user:', authError);
-      // Rollback — restore the deleted row so data stays consistent
-      await serviceClient.from('users').insert(userData);
-      return { success: false, message: 'Failed to delete user. Please try again.' };
     }
 
     revalidatePath(AppRoutes.ADMIN_CONTRACTOR_LISTING);
