@@ -31,6 +31,7 @@ export const adminAssignUaUcReport = async (
     }
 
     revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS(reportId.toString()));
 
     return { success: true, message: 'Report assigned successfully.' };
   } catch (err) {
@@ -65,6 +66,7 @@ export const adminCloseUaUcReport = async (
     }
 
     revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
+    revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_DETAILS(reportId.toString()));
 
     return { success: true, message: 'Report closed successfully.' };
   } catch (err) {
