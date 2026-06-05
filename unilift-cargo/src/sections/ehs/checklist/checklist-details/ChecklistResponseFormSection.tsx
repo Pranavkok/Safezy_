@@ -152,29 +152,34 @@ const ChecklistResponseFormSection = ({
         console.error('Client-side PDF generation failed:', pdfErr);
       }
 
-      const res = await sendChecklistCompleteEmail(
-        data.email,
-        {
-          answers: data.answers,
-          topicName: checklistQuestions.topic_name,
-          email: data.email,
-          date: data.date,
-          inspected_by: data.inspected_by,
-          site_name: data.site_name,
-          header_values: data.header_values ?? []
-        },
-        `${user.firstName + ' ' + user.lastName}`,
-        ccEmails.filter(e => e.trim() !== ''),
-        pdfBase64
-      );
+      try {
+        const res = await sendChecklistCompleteEmail(
+          data.email,
+          {
+            answers: data.answers,
+            topicName: checklistQuestions.topic_name,
+            email: data.email,
+            date: data.date,
+            inspected_by: data.inspected_by,
+            site_name: data.site_name,
+            header_values: data.header_values ?? []
+          },
+          `${user.firstName + ' ' + user.lastName}`,
+          ccEmails.filter(e => e.trim() !== ''),
+          pdfBase64
+        );
 
-      if (res.success) {
-        toast.success(res.message);
-        reset();
-        router.push(AppRoutes.EHS_CHECKLIST_LISTING);
-      } else {
-        toast.error(res.message);
+        if (!res.success) {
+          console.error('Checklist email failed:', res.message);
+        }
+      } catch (emailErr) {
+        // Email delivery is best-effort — checklist is already saved
+        console.error('Checklist email threw unexpectedly:', emailErr);
       }
+
+      toast.success('Checklist submitted successfully.');
+      reset();
+      router.push(AppRoutes.EHS_CHECKLIST_LISTING);
     } catch (error) {
       console.error('Error submitting checklist:', error);
       toast.error('Failed to submit checklist. Please try again.');
