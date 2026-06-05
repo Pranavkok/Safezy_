@@ -181,6 +181,31 @@ export const updateContractor = async (
   }
 };
 
+// Finds and deletes any auth user with the given email, regardless of auth_id.
+// Used as a safety net when the stored auth_id may be stale or null.
+async function cleanupAuthUserByEmail(email: string): Promise<void> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email)}&per_page=10`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!res.ok) return;
+
+    const body = await res.json();
+    const authUsers: { id: string }[] = body.users ?? [];
+
+    const serviceClient = createServiceClient();
+    await Promise.all(
+      authUsers.map((u) => serviceClient.auth.admin.deleteUser(u.id))
+    );
+  } catch (err) {
+    console.error('cleanupAuthUserByEmail failed:', err);
+  }
+}
+
 export const deleteContractor = async (
   userId: string
 ): Promise<{ success: boolean; message: string }> => {
@@ -197,7 +222,9 @@ export const deleteContractor = async (
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    // Delete from auth first so we can bail before touching the DB if it fails
+    // Delete from auth first so we can bail before touching the DB if it fails.
+    // Use auth_id when available; always follow up with an email-based cleanup so
+    // that stale / null auth_ids don't leave an orphaned Supabase auth record.
     if (userData.auth_id) {
       const { error: authError } = await serviceClient.auth.admin.deleteUser(
         userData.auth_id
@@ -209,6 +236,10 @@ export const deleteContractor = async (
         return { success: false, message: 'Failed to delete user. Please try again.' };
       }
     }
+
+    // Email-based cleanup catches any auth record whose UUID differs from auth_id
+    // (e.g., the user re-registered after a partial delete) so re-registration works.
+    await cleanupAuthUserByEmail(userData.email);
 
     const { error: dbError } = await serviceClient
       .from('users')

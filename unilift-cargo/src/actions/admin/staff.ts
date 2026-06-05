@@ -189,6 +189,29 @@ export const updateStaffUser = async (
   }
 };
 
+async function cleanupAuthUserByEmail(email: string): Promise<void> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email)}&per_page=10`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!res.ok) return;
+
+    const body = await res.json();
+    const authUsers: { id: string }[] = body.users ?? [];
+
+    const serviceClient = createServiceClient();
+    await Promise.all(
+      authUsers.map((u) => serviceClient.auth.admin.deleteUser(u.id))
+    );
+  } catch (err) {
+    console.error('cleanupAuthUserByEmail failed:', err);
+  }
+}
+
 export const deleteStaffUser = async (
   userId: string
 ): Promise<{ success: boolean; message: string }> => {
@@ -215,16 +238,21 @@ export const deleteStaffUser = async (
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    const { error: authError } = await serviceClient.auth.admin.deleteUser(
-      userData.auth_id
-    );
+    if (userData.auth_id) {
+      const { error: authError } = await serviceClient.auth.admin.deleteUser(
+        userData.auth_id
+      );
 
-    if (authError) {
-      console.error('Error deleting auth user:', authError);
-      // Rollback — restore the deleted row so data stays consistent
-      await serviceClient.from('users').insert(userData);
-      return { success: false, message: 'Failed to delete user. Please try again.' };
+      if (authError && !authError.message?.toLowerCase().includes('not found')) {
+        console.error('Error deleting auth user:', authError);
+        // Rollback — restore the deleted row so data stays consistent
+        await serviceClient.from('users').insert(userData);
+        return { success: false, message: 'Failed to delete user. Please try again.' };
+      }
     }
+
+    // Email-based cleanup so stale/null auth_ids don't leave an orphaned auth record
+    await cleanupAuthUserByEmail(userData.email);
 
     revalidatePath(AppRoutes.ADMIN_STAFF_LISTING);
     return { success: true, message: 'Staff member deleted successfully.' };
