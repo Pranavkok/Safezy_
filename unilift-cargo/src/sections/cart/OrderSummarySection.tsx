@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useUser } from '@/context/UserContext';
 import { Clock } from 'lucide-react';
@@ -33,6 +33,7 @@ const OrderSummarySection = ({
   maxLeadTime
 }: OrderSummaryPropsType) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const isSubmitting = useRef(false);
   const { firstName, lastName, email, userId, contactNumber, companyName } =
     useUser();
   const { clearCartItems } = useCart();
@@ -42,6 +43,8 @@ const OrderSummarySection = ({
   };
 
   const handlePayment = async () => {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     try {
       setIsProcessing(true);
 
@@ -165,6 +168,7 @@ const OrderSummarySection = ({
       toast.error('Checkout failed');
     } finally {
       setIsProcessing(false);
+      isSubmitting.current = false;
     }
   };
 
