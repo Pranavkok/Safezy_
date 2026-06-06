@@ -123,31 +123,28 @@ const MarkTBTDoneModal = ({
         durationSeconds
       );
 
-      const firstName = user.firstName as string;
-      const lastName = user.lastName as string;
-
-      const formData = new FormData();
-      formData.append('superior_email', superiorEmail);
-      formData.append('topicName', toolboxTopic);
-      formData.append('firstName', firstName);
-      formData.append('lastName', lastName);
-      formData.append('comments', data.comments || '');
-      selectedFiles.forEach(file => formData.append('file', file));
-
       if (res?.success) {
-        const result = await fetch('/api/send-email', {
-          method: 'POST',
-          body: formData
-        });
+        const firstName = user.firstName as string;
+        const lastName = user.lastName as string;
 
-        if (result.ok) {
-          toast.success(res?.message);
-          sessionStorage.removeItem(storageKey);
-          handleReset();
-          router.push(AppRoutes.EHS_TOOLBOX_TALK_REPORT(toolboxTalkId));
-        } else {
-          toast.error('Failed to send email');
-        }
+        const formData = new FormData();
+        formData.append('superior_email', superiorEmail);
+        formData.append('topicName', toolboxTopic);
+        formData.append('firstName', firstName);
+        formData.append('lastName', lastName);
+        formData.append('comments', data.comments || '');
+        selectedFiles.forEach(file => formData.append('file', file));
+
+        // Email is non-fatal — fire and forget so a slow SMTP connection
+        // never blocks the user from reaching the success screen.
+        fetch('/api/send-email', { method: 'POST', body: formData }).catch(err =>
+          console.error('[tbt] email send failed:', err)
+        );
+
+        toast.success(res.message);
+        sessionStorage.removeItem(storageKey);
+        handleReset();
+        router.push(AppRoutes.EHS_TOOLBOX_TALK_REPORT(toolboxTalkId));
       } else {
         toast.error(res?.message || 'Failed to save details');
       }
@@ -162,7 +159,7 @@ const MarkTBTDoneModal = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button className="bg-primary rounded-md px-4 sm:px-6 py-2  text-white font-extrabold text-xs sm:text-sm md:text-base">
+        <button type="button" className="bg-primary rounded-md px-4 sm:px-6 py-2  text-white font-extrabold text-xs sm:text-sm md:text-base">
           MARK AS TBT DONE
         </button>
       </DialogTrigger>
