@@ -25,7 +25,6 @@ import { AppRoutes } from '@/constants/AppRoutes';
 import { STATIC_CHECKLIST_HEADER_FIELDS } from '@/constants/constants';
 import { useRouter } from 'next/navigation';
 import { SecondaryLogo } from '@/components/svgs';
-import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { formSchema } from '@/validations/admin/add-checklist';
 import { CheckCircle, AlertTriangle, Plus, X } from 'lucide-react';
@@ -257,91 +256,92 @@ const ChecklistResponseFormSection = ({
               {checklistQuestions.topic_name.toUpperCase()}
             </div>
 
-            {/* Site Information — inside header */}
-            <div className="mt-4 border border-primary rounded-md overflow-hidden">
-              <div className="bg-primary px-4 py-2">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Site Information</h3>
+            {/* Header Fields — 3-column grid */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-3 border border-primary/20 rounded-md p-4 bg-white">
+              {/* Row 1 */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[130px] text-right">Name of site</span>
+                <Input
+                  {...register('site_name')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
               </div>
-              <div className="p-4 bg-white">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <InputFieldWithLabel
-                    type="text"
-                    label="Name of Site"
-                    errorText={errors.site_name?.message}
-                    required
-                    {...register('site_name')}
-                  />
-                  <InputFieldWithLabel
-                    type="text"
-                    label="Inspected By"
-                    errorText={errors.inspected_by?.message}
-                    required
-                    {...register('inspected_by')}
-                  />
-                  <InputFieldWithLabel
-                    type="date"
-                    label="Date of Inspection"
-                    errorText={errors.date?.message}
-                    required
-                    min={yesterday}
-                    max={today}
-                    {...register('date')}
-                  />
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[130px] text-right">Inspected by</span>
+                <Input
+                  {...register('inspected_by')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
               </div>
-            </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[60px] text-right">Other</span>
+                <Input
+                  {...register('header_values.3.value')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
+              </div>
 
-            {/* Equipment Details */}
-            <div className="mt-4 border border-primary rounded-md overflow-hidden">
-              <div className="bg-primary px-4 py-2">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Equipment Details</h3>
+              {/* Row 2 */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[130px] text-right">Location</span>
+                <Input
+                  {...register('header_values.0.value')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
               </div>
-              <div className="p-4 bg-white">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-                  {STATIC_CHECKLIST_HEADER_FIELDS.map((field, index) =>
-                    field.options ? (
-                      <div key={index} className="col-span-1 sm:col-span-2 border-b border-primary/20 pb-3">
-                        <span className="font-semibold text-primary text-sm block mb-2">
-                          {field.label}:
-                        </span>
-                        <Controller
-                          name={`header_values.${index}.value`}
-                          control={control}
-                          render={({ field: f }) => (
-                            <div className="flex flex-wrap gap-2">
-                              {field.options!.map(option => (
-                                <button
-                                  key={option}
-                                  type="button"
-                                  onClick={() => f.onChange(option)}
-                                  className={`px-4 py-1.5 rounded-full border text-sm font-medium transition-colors ${
-                                    f.value === option
-                                      ? 'bg-primary text-white border-primary'
-                                      : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
-                                  }`}
-                                >
-                                  {option}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        />
-                      </div>
-                    ) : (
-                      <div key={index} className="flex items-center gap-3 border-b border-primary/20 pb-2">
-                        <span className="font-semibold text-primary whitespace-nowrap text-sm min-w-fit">
-                          {field.label}:
-                        </span>
-                        <Input
-                          {...register(`header_values.${index}.value`)}
-                          className="flex-1 border-0 shadow-none bg-transparent focus-visible:ring-0 px-0 text-sm"
-                          placeholder="Enter value..."
-                        />
-                      </div>
-                    )
-                  )}
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[130px] text-right">Date of Inspection</span>
+                <Input
+                  type="date"
+                  {...register('date')}
+                  min={yesterday}
+                  max={today}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                />
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[60px] text-right">Time</span>
+                <Input
+                  {...register('header_values.4.value')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
+              </div>
+
+              {/* Row 3 */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[130px] text-right">Types of equipment</span>
+                <Input
+                  {...register('header_values.1.value')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[130px] text-right">Equipment No</span>
+                <Input
+                  {...register('header_values.2.value')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap min-w-[60px] text-right">S.W.L</span>
+                <Input
+                  {...register('header_values.5.value')}
+                  className="flex-1 border border-gray-300 rounded-md h-9 text-sm"
+                  placeholder=""
+                />
+              </div>
+
+              {/* Error messages */}
+              {errors.site_name && <p className="col-span-1 text-red-500 text-xs">{errors.site_name.message}</p>}
+              {errors.inspected_by && <p className="col-span-1 text-red-500 text-xs">{errors.inspected_by.message}</p>}
+              {errors.date && <p className="col-span-1 text-red-500 text-xs">{errors.date.message}</p>}
             </div>
 
             {/* Reference Image */}

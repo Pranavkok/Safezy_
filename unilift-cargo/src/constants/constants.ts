@@ -559,14 +559,10 @@ export const USER_ROLES: {
 } as const;
 
 export const STATIC_CHECKLIST_HEADER_FIELDS: { label: string; options?: string[] }[] = [
-  { label: 'Welding Machine No' },
+  { label: 'Location' },
+  { label: 'Types of equipment' },
+  { label: 'Equipment No' },
+  { label: 'Other' },
   { label: 'Time' },
-  { label: 'Equipment Number' },
-  { label: 'Identification Marking' },
-  { label: 'T.P. Certificate Number' },
-  { label: 'S.W.L' },
-  {
-    label: 'Type of Welding Machine',
-    options: ['Single', 'Two', 'Three phase', 'Rectifier', 'Transformer', 'Welding Generator']
-  }
+  { label: 'S.W.L' }
 ];
