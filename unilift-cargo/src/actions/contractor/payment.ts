@@ -6,7 +6,7 @@ import { GenerateHashPropTypes } from '@/types/payment.types';
 
 export const generateHash = async (
   generateHashProps: GenerateHashPropTypes
-): Promise<{ success: boolean; message: string; hash?: string }> => {
+): Promise<{ success: boolean; message: string; hash?: string; key?: string }> => {
   try {
     const { txnId, amount, productInfo, firstName, email, udf1, udf2, udf3 } =
       generateHashProps;
