@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import Image from 'next/image';
-import { SafezyLogo } from '@/assets';
 
 export default function ResetConfirmClient({ code }: { code: string }) {
   const router = useRouter();
