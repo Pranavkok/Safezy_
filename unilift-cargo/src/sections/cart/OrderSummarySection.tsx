@@ -112,9 +112,11 @@ const OrderSummarySection = ({
 
       const txnId = generateTransactionId();
 
+      const amountStr = total.toFixed(2);
+
       const hashResponse = await generateHash({
         txnId: txnId,
-        amount: total.toString(),
+        amount: amountStr,
         productInfo: 'Safezy Products',
         firstName: firstName,
         email: email,
@@ -135,7 +137,7 @@ const OrderSummarySection = ({
       const params = {
         key: process.env.NEXT_PUBLIC_MERCHANT_KEY!,
         txnid: txnId,
-        amount: total.toString(),
+        amount: amountStr,
         productInfo: 'Safezy Products',
         firstname: firstName,
         lastname: lastName,
@@ -219,7 +221,7 @@ const OrderSummarySection = ({
           <ProductFeedbackPage
             handlePayment={handlePayment}
             isProcessing={isProcessing}
-            disabled={!selectedWorksite.address}
+            disabled={!selectedWorksite.worksite_id}
             state={selectedWorksite?.address?.state}
           />
         </div>
