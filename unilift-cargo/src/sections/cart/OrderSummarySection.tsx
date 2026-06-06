@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useUser } from '@/context/UserContext';
 import { Clock } from 'lucide-react';
@@ -37,6 +37,16 @@ const OrderSummarySection = ({
   const { firstName, lastName, email, userId, contactNumber, companyName } =
     useUser();
   const { clearCartItems } = useCart();
+
+  // Reset processing state when user navigates back from PayU
+  useEffect(() => {
+    const handlePageShow = () => {
+      setIsProcessing(false);
+      isSubmitting.current = false;
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   const generateTransactionId = () => {
     return `TXN_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
