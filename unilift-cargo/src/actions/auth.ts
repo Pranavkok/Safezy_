@@ -243,7 +243,6 @@ export const resendOtp = async (
 export const forgotPassword = async (email: string) => {
   const supabase = await createClient();
   try {
-    const url = process.env.RESET_PASSWORD_URL;
     const { data: userData } = await supabase
       .from('users')
       .select('email')
@@ -258,7 +257,7 @@ export const forgotPassword = async (email: string) => {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${url}`
+      redirectTo: 'https://safezy.in/auth/reset-confirm'
     });
 
     if (error) {
