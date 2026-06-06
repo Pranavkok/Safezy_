@@ -241,6 +241,103 @@ export const deleteContractor = async (
     // (e.g., the user re-registered after a partial delete) so re-registration works.
     await cleanupAuthUserByEmail(userData.email);
 
+    // --- Cascade-delete all FK-constrained child records ---
+    // None of the FK constraints use ON DELETE CASCADE, so we must remove
+    // child rows manually in dependency order before deleting the user row.
+
+    // 1. Collect IDs needed for grandchild cleanup
+    const [{ data: worksiteRows }, { data: orderRows }, { data: checklistUserRows }] =
+      await Promise.all([
+        serviceClient.from('worksite').select('id').eq('user_id', userId),
+        serviceClient.from('order').select('id').eq('user_id', userId),
+        serviceClient.from('ehs_checklist_users').select('id').eq('user_id', userId)
+      ]);
+
+    const worksiteIds = (worksiteRows ?? []).map((r) => r.id);
+    const orderIds = (orderRows ?? []).map((r) => r.id);
+    const checklistUserIds = (checklistUserRows ?? []).map((r) => r.id);
+
+    // Employee IDs span both the user's own employee record and all employees
+    // that belong to the user's worksites (needed to clean product_history).
+    const employeeQueries = [
+      serviceClient.from('employee').select('id').eq('user_id', userId)
+    ];
+    if (worksiteIds.length > 0) {
+      employeeQueries.push(
+        serviceClient.from('employee').select('id').in('worksite_id', worksiteIds)
+      );
+    }
+    const employeeResults = await Promise.all(employeeQueries);
+    const employeeIds = [
+      ...new Set(employeeResults.flatMap((r) => (r.data ?? []).map((e) => e.id)))
+    ];
+
+    // Order-item IDs (needed to clean product_inventory rows that reference them)
+    let orderItemIds: string[] = [];
+    if (orderIds.length > 0) {
+      const { data: itemRows } = await serviceClient
+        .from('order_items')
+        .select('id')
+        .in('order_id', orderIds);
+      orderItemIds = (itemRows ?? []).map((r) => r.id);
+    }
+
+    // 2. Deepest grandchildren first
+    await Promise.all([
+      checklistUserIds.length > 0
+        ? serviceClient.from('ehs_checklist_done_questions').delete().in('checklist_user_id', checklistUserIds)
+        : Promise.resolve(),
+      employeeIds.length > 0
+        ? serviceClient.from('product_history').delete().in('employee_id', employeeIds)
+        : Promise.resolve(),
+      orderItemIds.length > 0
+        ? serviceClient.from('product_inventory').delete().in('order_items_id', orderItemIds)
+        : Promise.resolve()
+    ]);
+
+    // 3. Mid-level children
+    await Promise.all([
+      serviceClient.from('ehs_checklist_users').delete().eq('user_id', userId),
+      serviceClient.from('product_rating').delete().eq('user_id', userId),
+      serviceClient.from('complaint').delete().eq('user_id', userId),
+      serviceClient.from('transaction').delete().eq('user_id', userId),
+      orderIds.length > 0
+        ? serviceClient.from('order_items').delete().in('order_id', orderIds)
+        : Promise.resolve(),
+      employeeIds.length > 0
+        ? serviceClient.from('employee').delete().in('id', employeeIds)
+        : Promise.resolve()
+    ]);
+
+    // 4. Null-out warehouse_operator_id on orders not owned by this user
+    //    (those orders stay; we just remove the reference)
+    await serviceClient
+      .from('order')
+      .update({ warehouse_operator_id: null })
+      .eq('warehouse_operator_id', userId);
+
+    // 5. Remaining direct children
+    await Promise.all([
+      serviceClient.from('ehs_toolbox_notes').delete().eq('user_id', userId),
+      serviceClient.from('ehs_toolbox_users').delete().eq('user_id', userId),
+      serviceClient.from('cart_items').delete().eq('user_id', userId),
+      serviceClient.from('cart_reminder_tracking').delete().eq('user_id', userId),
+      serviceClient.from('admin_ppe_assignments').delete().eq('contractor_id', userId),
+      serviceClient.from('wishlist').delete().eq('user_id', userId),
+      serviceClient.from('product_inventory').delete().eq('user_id', userId),
+      serviceClient.from('address').delete().eq('user_id', userId),
+      orderIds.length > 0
+        ? serviceClient.from('order').delete().in('id', orderIds)
+        : Promise.resolve()
+    ]);
+
+    // 6. Worksite children (address rows tied to worksites) then worksites
+    if (worksiteIds.length > 0) {
+      await serviceClient.from('address').delete().in('worksite_id', worksiteIds);
+      await serviceClient.from('worksite').delete().in('id', worksiteIds);
+    }
+
+    // 7. Finally delete the user row
     const { error: dbError } = await serviceClient
       .from('users')
       .delete()
