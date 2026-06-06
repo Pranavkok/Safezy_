@@ -228,7 +228,7 @@ export const EHSToolboxTalkDetailsSection = ({
             <div className="mt-6 w-full rounded-lg overflow-hidden">
               <Image
                 src={toolboxTalk.pdf_url}
-                alt={'Data is not visible'}
+                alt={toolboxTalk.topic_name}
                 height={1080}
                 width={1080}
                 className="w-[1200px] h-auto max-h-full"

@@ -78,6 +78,30 @@ export const getAllToolboxTalkDetails = async (
   }
 };
 
+const SIGNED_URL_EXPIRY = 60 * 60 * 24; // 24 hours
+
+const toSignedUrl = async (
+  serviceClient: ReturnType<typeof createServiceClient>,
+  publicUrl: string | null | undefined,
+  bucket: string
+): Promise<string | null> => {
+  if (!publicUrl) return null;
+  try {
+    // Extract the file path after /object/public/<bucket>/ or /object/sign/<bucket>/
+    const marker = `/object/public/${bucket}/`;
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return publicUrl;
+    const filePath = publicUrl.slice(idx + marker.length);
+    const { data, error } = await serviceClient.storage
+      .from(bucket)
+      .createSignedUrl(filePath, SIGNED_URL_EXPIRY);
+    if (error || !data?.signedUrl) return publicUrl;
+    return data.signedUrl;
+  } catch {
+    return publicUrl;
+  }
+};
+
 export const getToolboxTalkDetailsById = async (
   toolboxId: number
 ): Promise<{
@@ -102,10 +126,12 @@ export const getToolboxTalkDetailsById = async (
       };
     }
 
+    const signedPdfUrl = await toSignedUrl(serviceClient, data.pdf_url, 'toolbox_talk_pdfs');
+
     return {
       success: true,
       message: SUCCESS_MESSAGES.TOOLBOX_DETAILS_FETCHED,
-      data
+      data: { ...data, pdf_url: signedPdfUrl ?? data.pdf_url }
     };
   } catch (error) {
     console.error(
