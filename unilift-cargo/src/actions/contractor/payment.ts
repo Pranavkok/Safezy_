@@ -47,7 +47,8 @@ export const generateHash = async (
     return {
       success: true,
       message: SUCCESS_MESSAGES.HASH_GENERATED,
-      hash
+      hash,
+      key  // return the server-side key so the form uses the same one the hash was computed with
     };
   } catch (error) {
     console.error('Error generating hash:', error);

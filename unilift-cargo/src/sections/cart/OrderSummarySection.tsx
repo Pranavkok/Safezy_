@@ -125,7 +125,7 @@ const OrderSummarySection = ({
         udf3: JSON.stringify(otherDetails)
       });
 
-      if (!hashResponse.success || !hashResponse.hash) {
+      if (!hashResponse.success || !hashResponse.hash || !hashResponse.key) {
         throw new Error('Failed to generate payment hash');
       }
 
@@ -135,7 +135,7 @@ const OrderSummarySection = ({
       form.action = process.env.NEXT_PUBLIC_PAYU_BASE_URL!;
 
       const params = {
-        key: process.env.NEXT_PUBLIC_MERCHANT_KEY!,
+        key: hashResponse.key,  // use the same key the hash was computed with
         txnid: txnId,
         amount: amountStr,
         productInfo: 'Safezy Products',
