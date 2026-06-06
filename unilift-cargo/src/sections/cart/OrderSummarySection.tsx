@@ -45,6 +45,7 @@ const OrderSummarySection = ({
   const handlePayment = async () => {
     if (isSubmitting.current) return;
     isSubmitting.current = true;
+    let formSubmitted = false;
     try {
       setIsProcessing(true);
 
@@ -163,12 +164,16 @@ const OrderSummarySection = ({
       });
 
       document.body.appendChild(form);
+      formSubmitted = true;
       form.submit();
+      // Page is navigating to PayU — keep button disabled; do not reset state
     } catch (error) {
       toast.error('Checkout failed');
     } finally {
-      setIsProcessing(false);
-      isSubmitting.current = false;
+      if (!formSubmitted) {
+        setIsProcessing(false);
+        isSubmitting.current = false;
+      }
     }
   };
 
