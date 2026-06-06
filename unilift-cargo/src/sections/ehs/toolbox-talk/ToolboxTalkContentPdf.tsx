@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Image,
   Font,
-  Style
+  Styles
 } from '@react-pdf/renderer';
 import ASSETS from '@/assets';
 import { ToolboxTalkType } from '@/types/index.types';
@@ -212,7 +212,7 @@ const S = StyleSheet.create({
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-function InlineText({ segs, style }: { segs: Seg[]; style: Style }) {
+function InlineText({ segs, style }: { segs: Seg[]; style: Styles[string] }) {
   return (
     <Text style={style}>
       {segs.map((s, i) => (
