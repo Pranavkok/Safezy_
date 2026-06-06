@@ -272,7 +272,7 @@ export const deleteContractor = async (
     const employeeIds = allEmployeeIds.filter((id, i, a) => a.indexOf(id) === i);
 
     // Order-item IDs (needed to clean product_inventory rows that reference them)
-    let orderItemIds: string[] = [];
+    let orderItemIds: number[] = [];
     if (orderIds.length > 0) {
       const { data: itemRows } = await serviceClient
         .from('order_items')
