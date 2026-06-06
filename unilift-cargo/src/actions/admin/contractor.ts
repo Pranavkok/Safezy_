@@ -268,9 +268,8 @@ export const deleteContractor = async (
       );
     }
     const employeeResults = await Promise.all(employeeQueries);
-    const employeeIds = [
-      ...new Set(employeeResults.flatMap((r) => (r.data ?? []).map((e) => e.id)))
-    ];
+    const allEmployeeIds = employeeResults.flatMap((r) => (r.data ?? []).map((e) => e.id));
+    const employeeIds = allEmployeeIds.filter((id, i, a) => a.indexOf(id) === i);
 
     // Order-item IDs (needed to clean product_inventory rows that reference them)
     let orderItemIds: string[] = [];
