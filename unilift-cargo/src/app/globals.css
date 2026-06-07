@@ -177,6 +177,79 @@ textarea {
   font-size: 16px !important;
 }
 
+/* Quill rich-text content renderer (toolbox talk detail view) */
+.quill-content {
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.quill-content p {
+  margin-bottom: 0.9rem;
+  line-height: 1.7;
+  color: inherit;
+}
+
+/* Bold first-child in a paragraph acts as a section heading */
+.quill-content p > strong:first-child {
+  display: block;
+  font-weight: 700;
+  color: hsl(var(--primary));
+  border-left: 3px solid hsl(var(--primary));
+  padding-left: 0.5rem;
+  margin-bottom: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.quill-content strong {
+  font-weight: 700;
+}
+
+.quill-content em {
+  font-style: italic;
+}
+
+.quill-content u {
+  text-decoration: underline;
+}
+
+.quill-content ul {
+  list-style: disc;
+  margin-left: 1.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.quill-content ol {
+  list-style: decimal;
+  margin-left: 1.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.quill-content li {
+  margin-bottom: 0.3rem;
+  line-height: 1.65;
+}
+
+.quill-content blockquote {
+  border-left: 4px solid hsl(var(--primary));
+  padding: 0.4rem 1rem;
+  margin: 0.75rem 0;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+  color: #555;
+}
+
+.quill-content .ql-align-center { text-align: center; }
+.quill-content .ql-align-right { text-align: right; }
+.quill-content .ql-align-justify { text-align: justify; }
+.quill-content .ql-size-small { font-size: 0.85em; }
+.quill-content .ql-size-large { font-size: 1.2em; }
+.quill-content .ql-size-huge { font-size: 1.5em; }
+
+.quill-content h1 { font-size: 1.6em; font-weight: 700; margin: 1rem 0 0.5rem; }
+.quill-content h2 { font-size: 1.35em; font-weight: 700; margin: 0.85rem 0 0.4rem; }
+.quill-content h3 { font-size: 1.15em; font-weight: 700; margin: 0.75rem 0 0.35rem; }
+
 /* styles for headings inside ql-editor */
 .ql-editor h1 {
   font-size: 2em;

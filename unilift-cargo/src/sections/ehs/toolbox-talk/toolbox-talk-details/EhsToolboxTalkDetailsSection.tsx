@@ -217,7 +217,7 @@ export const EHSToolboxTalkDetailsSection = ({
               </div>
 
               <div
-                className="relative z-[10] w-full prose break-words [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mt-4 [&>ul>li]:mb-2 [&>p.ql-align-center]:text-center [&>p]:my-2 [&>p>strong]:font-bold [&>p>em]:italic [&>.ql-size-large]:text-lg"
+                className="relative z-[10] w-full quill-content"
                 style={{ fontSize: `${fontSize}px` }}
                 dangerouslySetInnerHTML={{ __html: displayDescription }}
               />
