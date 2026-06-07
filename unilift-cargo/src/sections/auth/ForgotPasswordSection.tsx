@@ -17,8 +17,8 @@ import { ForgotPasswordSchema } from '@/validations/auth/forgot-password';
 // Types
 import { ForgotPasswordType } from '@/types/auth.types';
 
-// Supabase browser client
-import { createClient } from '@/utils/supabase/client';
+// Actions
+import { forgotPassword } from '@/actions/auth';
 
 const ForgotPasswordSection = () => {
   const [isEmailSent, setIsEmailSent] = useState(false);
@@ -35,14 +35,11 @@ const ForgotPasswordSection = () => {
 
   const onSubmit = async (data: ForgotPasswordType) => {
     setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/auth/callback`
-    });
+    const result = await forgotPassword(data.email);
     setLoading(false);
 
-    if (error) {
-      toast.error(error.message);
+    if (!result.success) {
+      toast.error(result.message);
     } else {
       setIsEmailSent(true);
       toast.success('Password reset email sent! Check your inbox.');
