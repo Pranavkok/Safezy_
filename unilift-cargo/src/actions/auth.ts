@@ -17,7 +17,6 @@ import { revalidatePath } from 'next/cache';
 import { addWarehouseOperatorDetails } from './warehouse-operator/warehouse';
 import { WarehouseOperatorSignUpType } from '@/sections/auth/SignUpWarehouseOperatorSection';
 import { addPrincipalDetails } from '@/actions/principal-employer/principal';
-import { addContractorDetails } from './contractor/contractor';
 import { sendPushNotification } from '@/lib/web-push';
 import { createServiceClient } from '@/utils/supabase/service';
 
@@ -28,10 +27,11 @@ import { createServiceClient } from '@/utils/supabase/service';
 async function signUpWithOrphanCleanup(
   supabase: Awaited<ReturnType<typeof createClient>>,
   email: string,
-  password: string
+  password: string,
+  metadata?: Record<string, unknown>
 ): Promise<{ id: string } | { error: string }> {
   const attempt = async () =>
-    supabase.auth.signUp({ email, password });
+    supabase.auth.signUp({ email, password, options: metadata ? { data: metadata } : undefined });
 
   let { data, error } = await attempt();
 
@@ -76,42 +76,26 @@ export const signUpUser = async (
       };
     }
 
-    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password);
+    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password, {
+      _pending_db_insert: 'contractor',
+      fName: userDetails.fName,
+      lName: userDetails.lName,
+      cName: userDetails.cName,
+      contactNumber: userDetails.contactNumber,
+      email: userDetails.email,
+      noOfWorkers: userDetails.noOfWorkers ?? null,
+      typeOfServicesProvided: userDetails.typeOfServicesProvided ?? [],
+      typeOfServicesProvidedOther: userDetails.typeOfServicesProvidedOther ?? null,
+      industriesServed: userDetails.industriesServed ?? [],
+      geographicalLocation: userDetails.geographicalLocation ?? [],
+      industriesServedOther: userDetails.industriesServedOther ?? null,
+      companies: userDetails.companies ?? [],
+      locations: userDetails.locations ?? [],
+    });
 
     if ('error' in result) {
       return { success: false, message: result.error };
     }
-
-    const authId = result.id;
-
-    const { data: roleData, error: roleError } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('role', USER_ROLES.CONTRACTOR)
-      .single();
-
-    if (roleError) {
-      console.error('Error fetching role', roleError);
-      return { success: false, message: ERROR_MESSAGES.ROLE_ERROR };
-    }
-
-    const roleId = roleData?.id as number;
-
-    const contractorResponse = await addContractorDetails(
-      userDetails,
-      authId,
-      roleId
-    );
-
-    if (!contractorResponse.success) {
-      return contractorResponse;
-    }
-
-    sendPushNotification(authId, 'registration', {
-      title: 'Welcome to Safezy!',
-      body: 'Your account is ready. Start exploring safety tools and manage your equipment.',
-      url: '/contractor/dashboard',
-    }).catch((err) => console.error('[push] registration notification failed:', err));
 
     const encodedEmail = btoa(userDetails.email);
 
@@ -220,6 +204,80 @@ export const verifyOtp = async (
         success: false,
         message: error.message || ERROR_MESSAGES.OTP_VERIFICATION_FAILED
       };
+    }
+
+    // If this was a contractor self-registration, insert DB row now that email is confirmed.
+    // We use serviceClient to avoid any session-cookie timing dependency.
+    const { data: { user } } = await supabase.auth.getUser();
+    const meta = user?.user_metadata;
+
+    if (meta?._pending_db_insert === 'contractor' && user?.id) {
+      const serviceClient = createServiceClient();
+
+      // Safeguard: skip if a row was somehow already created (re-verify edge case)
+      const { data: existing } = await serviceClient
+        .from('users')
+        .select('id')
+        .eq('auth_id', user.id)
+        .single();
+
+      if (!existing) {
+        const { data: roleData } = await serviceClient
+          .from('user_roles')
+          .select('id')
+          .eq('role', USER_ROLES.CONTRACTOR)
+          .single();
+
+        if (roleData) {
+          const fName = meta.fName as string;
+          const lName = meta.lName as string;
+          const contact = meta.contactNumber as string;
+          const cName = meta.cName as string;
+
+          // Generate a unique user code
+          const makeCode = () => {
+            const r = Math.floor(100000 + Math.random() * 900000).toString();
+            return `${fName[0].toLowerCase()}${lName[0].toLowerCase()}${contact.slice(0, 2)}-${contact.slice(-2)}${cName.slice(0, 4).toLowerCase()}-${r}`;
+          };
+          let code: string;
+          let taken: unknown;
+          do {
+            code = makeCode();
+            const { data } = await serviceClient
+              .from('users')
+              .select('user_unique_code')
+              .eq('user_unique_code', code)
+              .single();
+            taken = data;
+          } while (taken);
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (serviceClient.from('users') as any).insert({
+            first_name: fName,
+            last_name: lName,
+            contact_number: contact,
+            email: meta.email,
+            company_name: cName,
+            total_workers: meta.noOfWorkers ?? null,
+            locations_served: meta.locations ?? [],
+            companies_served: meta.companies ?? [],
+            industries_type: meta.industriesServed ?? [],
+            service_type: meta.typeOfServicesProvided ?? [],
+            other_industries_type: meta.industriesServedOther ?? null,
+            other_services_type: meta.typeOfServicesProvidedOther ?? null,
+            geographical_location: meta.geographicalLocation ?? [],
+            auth_id: user.id,
+            role_id: roleData.id,
+            user_unique_code: code!,
+          });
+
+          sendPushNotification(user.id, 'registration', {
+            title: 'Welcome to Safezy!',
+            body: 'Your account is ready. Start exploring safety tools and manage your equipment.',
+            url: '/contractor/dashboard',
+          }).catch((err) => console.error('[push] registration notification failed:', err));
+        }
+      }
     }
 
     return {
