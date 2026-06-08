@@ -21,6 +21,35 @@ import { addContractorDetails } from './contractor/contractor';
 import { sendPushNotification } from '@/lib/web-push';
 import { createServiceClient } from '@/utils/supabase/service';
 
+// Supabase silently returns identities:[] instead of an error when the email
+// already exists in auth.users (e.g. orphaned after an admin delete). This helper
+// detects that case, wipes the orphaned auth record, and retries signup so the
+// OTP email is actually delivered.
+async function signUpWithOrphanCleanup(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  email: string,
+  password: string
+): Promise<{ id: string } | { error: string }> {
+  const attempt = async () =>
+    supabase.auth.signUp({ email, password });
+
+  let { data, error } = await attempt();
+
+  if (error) return { error: error.message };
+
+  if (data.user?.identities?.length === 0) {
+    // Orphaned auth record — delete it via service role then retry once
+    const serviceClient = createServiceClient();
+    await serviceClient.auth.admin.deleteUser(data.user.id);
+    ({ data, error } = await attempt());
+    if (error) return { error: error.message };
+  }
+
+  const id = data.user?.id;
+  if (!id) return { error: ERROR_MESSAGES.USER_ID_NOT_FOUND };
+  return { id };
+}
+
 export const signUpUser = async (
   userDetails: SignUpType
 ): Promise<{ success: boolean; message: string; redirectPath?: string }> => {
@@ -47,21 +76,13 @@ export const signUpUser = async (
       };
     }
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
-      {
-        email: userDetails.email,
-        password: userDetails.password
-      }
-    );
+    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password);
 
-    if (signUpError) {
-      return { success: false, message: signUpError.message };
+    if ('error' in result) {
+      return { success: false, message: result.error };
     }
 
-    const authId = signUpData.user?.id as string;
-    if (!authId) {
-      return { success: false, message: ERROR_MESSAGES.USER_ID_NOT_FOUND };
-    }
+    const authId = result.id;
 
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
@@ -337,21 +358,13 @@ export const signUpWarehouseOperator = async (
       };
     }
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
-      {
-        email: userDetails.email,
-        password: userDetails.password
-      }
-    );
+    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password);
 
-    if (signUpError) {
-      return { success: false, message: signUpError.message };
+    if ('error' in result) {
+      return { success: false, message: result.error };
     }
 
-    const authId = signUpData.user?.id as string;
-    if (!authId) {
-      return { success: false, message: ERROR_MESSAGES.USER_ID_NOT_FOUND };
-    }
+    const authId = result.id;
 
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
@@ -414,21 +427,13 @@ export const signUpPrincipalUser = async (
       };
     }
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
-      {
-        email: userDetails.email,
-        password: userDetails.password
-      }
-    );
+    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password);
 
-    if (signUpError) {
-      return { success: false, message: signUpError.message };
+    if ('error' in result) {
+      return { success: false, message: result.error };
     }
 
-    const authId = signUpData.user?.id as string;
-    if (!authId) {
-      return { success: false, message: ERROR_MESSAGES.USER_ID_NOT_FOUND };
-    }
+    const authId = result.id;
 
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
