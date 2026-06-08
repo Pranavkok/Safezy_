@@ -97,6 +97,54 @@ export const fetchAllWarehouseOperators = async ({
   }
 };
 
+export const deleteWarehouseOperator = async (
+  userId: string
+): Promise<{ success: boolean; message: string }> => {
+  const serviceClient = createServiceClient();
+
+  try {
+    const { data: userData, error: fetchError } = await serviceClient
+      .from('users')
+      .select('auth_id, email')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !userData) {
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    // Delete auth user
+    if (userData.auth_id) {
+      const { error: authError } = await serviceClient.auth.admin.deleteUser(userData.auth_id);
+      if (authError && !authError.message?.toLowerCase().includes('not found')) {
+        console.error('Error deleting auth user:', authError);
+        return { success: false, message: 'Failed to delete warehouse. Please try again.' };
+      }
+    }
+
+    // Null out warehouse_operator_id on any orders referencing this user
+    await serviceClient
+      .from('order')
+      .update({ warehouse_operator_id: null })
+      .eq('warehouse_operator_id', userId);
+
+    // Delete address rows then the user row
+    await serviceClient.from('address').delete().eq('user_id', userId);
+
+    const { error: dbError } = await serviceClient.from('users').delete().eq('id', userId);
+
+    if (dbError) {
+      console.error('Error deleting warehouse from db:', dbError);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    return { success: true, message: 'Warehouse deleted successfully.' };
+  } catch (err) {
+    console.error('Unexpected error deleting warehouse:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
+
 export const addWarehouseOperatorDetails = async (
   userDetails: WarehouseOperatorSignUpType,
   authId: string,

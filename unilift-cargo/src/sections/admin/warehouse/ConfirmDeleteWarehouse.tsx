@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,8 +11,8 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { DeleteIcon } from '@/components/svgs';
-import { deactivateUser } from '@/actions';
+import { Trash2 } from 'lucide-react';
+import { deleteWarehouseOperator } from '@/actions/warehouse-operator/warehouse';
 import toast from 'react-hot-toast';
 
 export interface DeleteWarehousePropsType {
@@ -18,25 +20,22 @@ export interface DeleteWarehousePropsType {
   id: string;
 }
 
-export function ConfirmDeleteWarehouse({
-  storeName,
-  id
-}: DeleteWarehousePropsType) {
+export function ConfirmDeleteWarehouse({ storeName, id }: DeleteWarehousePropsType) {
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false); // Manage dialog open state
+  const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const result = await deactivateUser(id);
+      const result = await deleteWarehouseOperator(id);
       if (result.success) {
-        toast.success(result.message); // Show success toast
+        toast.success(result.message);
+        setOpen(false);
       } else {
-        toast.error(result.message); // Show error toast if failed
+        toast.error(result.message);
       }
-      setOpen(false);
-    } catch (error) {
-      console.error('Error deleting warehouse:', error);
+    } catch {
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -45,27 +44,24 @@ export function ConfirmDeleteWarehouse({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="hover:bg-transparent">
-          <DeleteIcon className="fill-gray-400 hover:fill-primary w-5 h-5 transition-colors duration-300" />
-        </Button>
+        <button className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-red-600 transition-colors">
+          <Trash2 size={15} />
+        </button>
       </DialogTrigger>
       <DialogContent className="bg-white sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Are you absolutely sure?</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete{' '}
-            <strong>
-              {storeName} {id}
-            </strong>
-            ? This action cannot be undone and will permanently remove all
-            associated data from our servers.
+            Are you sure you want to delete <strong>{storeName}</strong>? This
+            action cannot be undone and will permanently remove all associated
+            data.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button
             className="h-9 lg:w-32 bg-white"
             variant="outline"
-            onClick={() => setOpen(false)} // Close the dialog when cancel is clicked
+            onClick={() => setOpen(false)}
           >
             Cancel
           </Button>

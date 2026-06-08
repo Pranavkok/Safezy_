@@ -6,6 +6,7 @@ import { DataTableColumnHeader } from '@/components/data-table/data-table-column
 import { WarehouseWithAddressType } from '@/actions/warehouse-operator/warehouse';
 import ConfirmActiveInactiveSection from '../../contractors/ConfirmActiveInactiveSection';
 import { USER_ROLES } from '@/constants/constants';
+import { ConfirmDeleteWarehouse } from '../ConfirmDeleteWarehouse';
 
 export function getWarehouseListingsColumns(): ColumnDef<WarehouseWithAddressType>[] {
   return [
@@ -53,7 +54,19 @@ export function getWarehouseListingsColumns(): ColumnDef<WarehouseWithAddressTyp
           userRole={USER_ROLES.WAREHOUSE_OPERATOR}
         />
       ),
-
+      size: 40,
+      enableSorting: false,
+      enableHiding: false
+    },
+    {
+      id: 'actions',
+      header: () => <span>Action</span>,
+      cell: ({ row }) => (
+        <ConfirmDeleteWarehouse
+          id={row.original.id}
+          storeName={row.original.first_name}
+        />
+      ),
       size: 40,
       enableSorting: false,
       enableHiding: false
