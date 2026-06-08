@@ -1,10 +1,111 @@
 'use server';
 
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
+import { ERROR_MESSAGES, SUCCESS_MESSAGES, USER_ROLES } from '@/constants/constants';
 import { ContractorType } from '@/types/index.types';
 import { createServiceClient } from '@/utils/supabase/service';
 import { revalidatePath } from 'next/cache';
 import { AppRoutes } from '@/constants/AppRoutes';
+import { generateRandomNumber } from '@/actions/helper';
+
+export type CreateContractorInput = {
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  email: string;
+  contactNumber: string;
+  password: string;
+};
+
+export const createContractorByAdmin = async (
+  input: CreateContractorInput
+): Promise<{ success: boolean; message: string }> => {
+  const serviceClient = createServiceClient();
+
+  try {
+    // Check for existing user
+    const { data: existingUser } = await serviceClient
+      .from('users')
+      .select('email')
+      .eq('email', input.email.trim())
+      .single();
+
+    if (existingUser) {
+      return { success: false, message: 'A customer with this email already exists.' };
+    }
+
+    // Create auth user (email confirmed immediately, no verification email flow)
+    const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
+      email: input.email.trim(),
+      password: input.password,
+      email_confirm: true
+    });
+
+    if (authError || !authData.user) {
+      console.error('Error creating auth user:', authError);
+      return { success: false, message: authError?.message ?? ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    const authId = authData.user.id;
+
+    // Fetch contractor role id
+    const { data: roleData, error: roleError } = await serviceClient
+      .from('user_roles')
+      .select('id')
+      .eq('role', USER_ROLES.CONTRACTOR)
+      .single();
+
+    if (roleError || !roleData) {
+      await serviceClient.auth.admin.deleteUser(authId);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    // Generate unique user code
+    const generateCode = (): string => {
+      const a = input.firstName.charAt(0).toLowerCase();
+      const b = input.lastName.charAt(0).toLowerCase();
+      const c = input.contactNumber.slice(0, 2);
+      const d = input.contactNumber.slice(-2);
+      const e = input.companyName.slice(0, 4).toLowerCase();
+      const r = generateRandomNumber();
+      return `${a}${b}${c}-${d}${e}-${r}`;
+    };
+
+    let uniqueCode: string;
+    let existing: unknown;
+    do {
+      uniqueCode = generateCode();
+      const { data } = await serviceClient
+        .from('users')
+        .select('user_unique_code')
+        .eq('user_unique_code', uniqueCode)
+        .single();
+      existing = data;
+    } while (existing);
+
+    const { error: insertError } = await serviceClient.from('users').insert({
+      first_name: input.firstName.trim(),
+      last_name: input.lastName.trim(),
+      company_name: input.companyName.trim(),
+      email: input.email.trim(),
+      contact_number: input.contactNumber.trim(),
+      auth_id: authId,
+      role_id: roleData.id,
+      user_unique_code: uniqueCode!
+    });
+
+    if (insertError) {
+      await serviceClient.auth.admin.deleteUser(authId);
+      console.error('Error inserting contractor:', insertError);
+      return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+    }
+
+    revalidatePath(AppRoutes.ADMIN_CONTRACTOR_LISTING);
+    return { success: true, message: 'Customer created successfully.' };
+  } catch (err) {
+    console.error('Unexpected error creating contractor:', err);
+    return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+  }
+};
 
 // [#] Fetch contractor by their id (Admin)
 export const fetchContractorById = async (

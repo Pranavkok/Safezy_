@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { handleDownload } from '@/utils/downloadExcel';
 import Spinner from '@/components/loaders/Spinner';
 import { DownloadIcon } from '@radix-ui/react-icons';
+import AddCustomerDialog from './AddCustomerDialog';
 
 type ContractorListingPropsType = {
   contractors: {
@@ -64,6 +65,7 @@ export function ContractorListingTable({
   return (
     <DataTable table={table}>
       <DataTableToolbar table={table} filterFields={filterFields}>
+        <AddCustomerDialog />
         <Button onClick={handleExport} disabled={loading}>
           {loading ? (
             <>
