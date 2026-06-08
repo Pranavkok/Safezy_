@@ -289,16 +289,22 @@ const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }
 
         {intro && <InlineText segs={intro.segs} style={S.introPara} />}
 
-        <View style={hasImage ? S.twoCol : {}}>
-          <View style={hasImage ? S.leftCol : {}}>
-            {body.map((b, i) => renderBlock(b, i))}
+        {hasImage && body.length === 0 ? (
+          <View style={{ marginTop: 8 }}>
+            <Image src={toolboxTalk.pdf_url as string} style={S.topicImage} />
           </View>
-          {hasImage && (
-            <View style={S.rightCol}>
-              <Image src={toolboxTalk.pdf_url as string} style={S.topicImage} />
+        ) : (
+          <View style={hasImage ? S.twoCol : {}}>
+            <View style={hasImage ? S.leftCol : {}}>
+              {body.map((b, i) => renderBlock(b, i))}
             </View>
-          )}
-        </View>
+            {hasImage && (
+              <View style={S.rightCol}>
+                <Image src={toolboxTalk.pdf_url as string} style={S.topicImage} />
+              </View>
+            )}
+          </View>
+        )}
 
         {plainSummary && (
           <View style={S.summaryBox}>
