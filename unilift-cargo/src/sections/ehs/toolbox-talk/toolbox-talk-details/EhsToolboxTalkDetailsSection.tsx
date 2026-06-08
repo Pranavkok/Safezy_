@@ -48,6 +48,7 @@ export const EHSToolboxTalkDetailsSection = ({
   const [isTranslating, setIsTranslating] = useState(false);
   const [translatedDescription, setTranslatedDescription] = useState<string>('');
   const [translatedSummarize, setTranslatedSummarize] = useState<string>('');
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const translationCache = useRef<Partial<Record<Language, { description: string; summarize: string }>>>({});
 
   useEffect(() => {
@@ -189,7 +190,18 @@ export const EHSToolboxTalkDetailsSection = ({
           </div>
 
           {/* Content Box */}
-          {displayDescription && (
+          {isTranslating ? (
+            <div className="relative mt-3 p-6 bg-gray-100 border border-gray-300 rounded-lg space-y-3">
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-full" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-5/6" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-4/5" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-full" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-3/4" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-5/6" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-full" />
+              <div className="h-4 bg-gray-300 rounded animate-pulse w-2/3" />
+            </div>
+          ) : displayDescription ? (
             <div className="relative mt-3 p-6 bg-gray-100 border border-gray-300 rounded-lg overflow-hidden">
               {/* Zoom Controls */}
               <div className="flex justify-end gap-1.5 mb-3 relative z-[11]">
@@ -222,17 +234,23 @@ export const EHSToolboxTalkDetailsSection = ({
                 dangerouslySetInnerHTML={{ __html: displayDescription }}
               />
             </div>
-          )}
+          ) : null}
 
           {toolboxTalk.pdf_url && (
-            <div className="mt-6 w-full rounded-lg overflow-hidden">
-              <Image
-                src={toolboxTalk.pdf_url}
-                alt={toolboxTalk.topic_name}
-                height={1080}
-                width={1080}
-                className="w-[1200px] h-auto max-h-full"
-              />
+            <div className="mt-6 flex justify-center">
+              {!isImageLoaded && (
+                <div className="w-full max-w-2xl h-96 bg-gray-200 animate-pulse rounded-lg" />
+              )}
+              <div className={`w-full max-w-2xl border border-gray-300 rounded-lg shadow-md overflow-hidden transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}>
+                <Image
+                  src={toolboxTalk.pdf_url}
+                  alt={toolboxTalk.topic_name}
+                  height={1080}
+                  width={1080}
+                  className="w-full h-auto"
+                  onLoad={() => setIsImageLoaded(true)}
+                />
+              </div>
             </div>
           )}
         </div>
