@@ -285,22 +285,18 @@ export const updateContractor = async (
 // Finds and deletes any auth user with the given email, regardless of auth_id.
 // Used as a safety net when the stored auth_id may be stale or null.
 async function cleanupAuthUserByEmail(email: string): Promise<void> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
+  const serviceClient = createServiceClient();
   try {
-    const res = await fetch(
-      `${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(email)}&per_page=10`,
-      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
-    );
-    if (!res.ok) return;
+    const { data: authUsers, error } = await serviceClient
+      .schema('auth')
+      .from('users')
+      .select('id')
+      .eq('email', email);
 
-    const body = await res.json();
-    const authUsers: { id: string }[] = body.users ?? [];
+    if (error || !authUsers?.length) return;
 
-    const serviceClient = createServiceClient();
     await Promise.all(
-      authUsers.map((u) => serviceClient.auth.admin.deleteUser(u.id))
+      authUsers.map((u: { id: string }) => serviceClient.auth.admin.deleteUser(u.id))
     );
   } catch (err) {
     console.error('cleanupAuthUserByEmail failed:', err);
