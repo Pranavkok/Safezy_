@@ -287,7 +287,8 @@ export const updateContractor = async (
 async function cleanupAuthUserByEmail(email: string): Promise<void> {
   const serviceClient = createServiceClient();
   try {
-    const { data: authUsers, error } = await serviceClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: authUsers, error } = await (serviceClient as any)
       .schema('auth')
       .from('users')
       .select('id')
