@@ -11,9 +11,10 @@ import { SortedProductDataType } from '@/types/product.types';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AppRoutes } from '@/constants/AppRoutes';
-import { Plus, Upload } from 'lucide-react';
+import { Download, Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BulkUploadSection } from '../BulkUploadSection';
+import toast from 'react-hot-toast';
 
 export interface ProductsTablePropsType {
   products: {
@@ -28,6 +29,7 @@ export function ProductsTable({ products }: ProductsTablePropsType) {
 
   const router = useRouter();
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const columns = useMemo(() => getProductColumns(router), [router]);
 
@@ -63,10 +65,43 @@ export function ProductsTable({ products }: ProductsTablePropsType) {
     getRowId: (originalRow, index) => `${originalRow.id}-${index}`
   });
 
+  const handleDownloadExcel = async () => {
+    setDownloading(true);
+    try {
+      const res = await fetch('/api/admin/products-export');
+      if (!res.ok) {
+        toast.error('Failed to download Excel. Please try again.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `products_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Something went wrong while downloading.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <>
       <DataTable table={table}>
         <DataTableToolbar table={table} filterFields={filterFields}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownloadExcel}
+            disabled={downloading}
+          >
+            <Download className="w-5 h-5 sm:mr-2" />
+            <span className="hidden sm:block">
+              {downloading ? 'Downloading...' : 'Download Excel'}
+            </span>
+          </Button>
           <Button
             type="button"
             variant="outline"
