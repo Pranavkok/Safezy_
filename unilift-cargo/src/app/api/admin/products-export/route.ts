@@ -70,7 +70,14 @@ export async function GET(_req: NextRequest) {
         price: p.price ?? '',
         gst: p.gst ?? '',
         hsn_code: p.hsn_code ?? '',
-        color: Array.isArray(p.color) ? p.color.join(', ') : (p.color ?? ''),
+        color: Array.isArray(p.color)
+          ? p.color
+              .map((c: unknown) =>
+                typeof c === 'string' ? c : (c as { color?: string })?.color ?? ''
+              )
+              .filter(Boolean)
+              .join(', ')
+          : (p.color ?? ''),
         geographical_location: Array.isArray(p.geographical_location)
           ? p.geographical_location.join(', ')
           : (p.geographical_location ?? ''),
