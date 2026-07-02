@@ -96,6 +96,20 @@ export const createContractorByAdmin = async (
     if (insertError) {
       await serviceClient.auth.admin.deleteUser(authId);
       console.error('Error inserting contractor:', insertError);
+
+      // Unique constraint violations (PostgreSQL code 23505)
+      if (insertError.code === '23505') {
+        if (insertError.message?.includes('users_contact_number_unique')) {
+          return { success: false, message: 'This contact number is already in use by another customer.' };
+        }
+        if (insertError.message?.includes('users_user_unique_code')) {
+          return { success: false, message: 'A user with this code already exists. Please try again.' };
+        }
+        if (insertError.message?.includes('email')) {
+          return { success: false, message: 'A customer with this email already exists.' };
+        }
+      }
+
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
