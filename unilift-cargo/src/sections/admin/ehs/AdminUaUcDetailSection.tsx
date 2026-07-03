@@ -223,9 +223,8 @@ const AdminUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
             )}
           </section>
 
-          {/* Close Panel — only shown if already assigned */}
-          {!!report.assigned_to_user_id && (
-            <section className="border-2 border-dashed border-green-200 rounded-lg p-4 space-y-4">
+          {/* Close Panel — admin can close directly without requiring assignment */}
+          <section className="border-2 border-dashed border-green-200 rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold text-green-800">Close This Report</h3>
                 <Button
@@ -318,7 +317,6 @@ const AdminUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
                 {closing ? <ButtonSpinner /> : 'Mark as Closed'}
               </Button>
             </section>
-          )}
         </div>
       )}
 
