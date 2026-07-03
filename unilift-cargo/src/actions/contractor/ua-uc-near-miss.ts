@@ -9,6 +9,7 @@ import {
   UaUcNearMissListItem,
   UaUcNearMissRecord
 } from '@/types/ehs.types';
+import { generateWithRetry } from '@/lib/gemini';
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { getAuthId } from '../user';
@@ -331,9 +332,78 @@ export const getUaUcReportsList = async (): Promise<{
 };
 
 // ─── generateAndSaveUaUcCapa ──────────────────────────────────────────────────
-// Calls the AI CAPA endpoint and saves the result back to the report row.
-// This is a fire-and-forward action — report submission is NEVER blocked by
-// CAPA generation failures.
+// Calls Gemini DIRECTLY (no internal HTTP round-trip — that pattern fails on
+// Vercel because server actions cannot reliably reach their own API routes).
+// Fire-and-forget: report submission is NEVER blocked by CAPA failures.
+
+function buildCapaPrompt(report: Record<string, unknown>): string {
+  const type = report.observation_type as string;
+  const typeLabel =
+    type === 'UA' ? 'Unsafe Act (UA)' : type === 'UC' ? 'Unsafe Condition (UC)' : 'Near Miss';
+
+  let classificationDetail = '';
+  if (type === 'UA') {
+    const items = Array.isArray(report.ua_classifications)
+      ? (report.ua_classifications as string[]).join(', ')
+      : 'N/A';
+    classificationDetail = `- UA Classifications: ${items}${
+      report.ua_other ? ` (Other: ${report.ua_other})` : ''
+    }`;
+  } else if (type === 'UC') {
+    const items = Array.isArray(report.uc_classifications)
+      ? (report.uc_classifications as string[]).join(', ')
+      : 'N/A';
+    classificationDetail = `- UC Classifications: ${items}${
+      report.uc_other ? ` (Other: ${report.uc_other})` : ''
+    }\n- Severity: ${report.uc_severity ?? 'N/A'}\n- Temporary Controls: ${report.uc_temporary_controls ?? 'None'}`;
+  } else {
+    classificationDetail = `- Potential Injury: ${report.nm_potential_injury ?? 'N/A'}\n- What Could Have Happened: ${report.nm_what_could_happen ?? 'N/A'}\n- Severity: ${report.nm_severity ?? 'N/A'}`;
+  }
+
+  return `You are a senior EHS (Environmental, Health & Safety) expert with 20+ years of field experience.
+Analyze the following ${typeLabel} observation report and generate specific, actionable CAPA recommendations.
+
+INSTRUCTIONS:
+- You MUST generate a minimum of 3 corrective actions and a minimum of 3 preventive actions. Generate more if the observation warrants it.
+- Corrective actions = immediate steps to fix the current unsafe situation.
+- Preventive actions = long-term systemic measures to stop recurrence.
+- Be specific and tie each action directly to the details of the report.
+- Do NOT write generic or vague actions. Each point must be actionable.
+
+====================
+OBSERVATION REPORT
+====================
+- Observation Type: ${typeLabel}
+- Location / Department: ${report.location_department ?? 'N/A'}
+- Reported By: ${report.reported_by_name ?? 'N/A'}
+
+====================
+OBSERVATION DETAILS
+====================
+- What happened: ${report.what_happened ?? 'N/A'}
+- Equipment involved: ${report.equipment_involved ?? 'N/A'}
+- Activity at time of observation: ${report.activity_at_time ?? 'N/A'}
+${classificationDetail}
+${report.action_taken ? `- Initial action already taken: ${report.action_taken}` : ''}
+
+====================
+RESPOND WITH ONLY THIS EXACT JSON — NO EXTRA TEXT:
+====================
+{
+  "corrective": [
+    "<specific immediate corrective action 1>",
+    "<specific immediate corrective action 2>",
+    "<specific immediate corrective action 3>",
+    "...more as needed"
+  ],
+  "preventive": [
+    "<long-term preventive measure 1>",
+    "<long-term preventive measure 2>",
+    "<long-term preventive measure 3>",
+    "...more as needed"
+  ]
+}`;
+}
 
 export const generateAndSaveUaUcCapa = async (
   reportId: number,
@@ -342,36 +412,35 @@ export const generateAndSaveUaUcCapa = async (
   const supabase = await createClient();
 
   try {
-    // Determine the base URL for internal API call
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const prompt = buildCapaPrompt(reportData);
 
-    const res = await fetch(`${baseUrl}/api/generate-ua-uc-capa`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reportData)
-    });
+    // Call Gemini directly — avoids the broken internal-HTTP-to-self pattern
+    const result = await generateWithRetry(
+      { contents: [{ role: 'user', parts: [{ text: prompt }] }] },
+      { responseMimeType: 'application/json', temperature: 0.35 }
+    );
 
-    if (!res.ok) {
-      console.warn('[generateAndSaveUaUcCapa] API returned non-OK status:', res.status);
-      return { success: false };
+    const responseText = result.response.text().trim();
+    if (!responseText) throw new Error('Empty Gemini response');
+
+    const capaResponse = JSON.parse(responseText) as {
+      corrective: string[];
+      preventive: string[];
+    };
+
+    if (!Array.isArray(capaResponse.corrective) || !Array.isArray(capaResponse.preventive)) {
+      throw new Error('Invalid CAPA response — missing corrective or preventive arrays');
     }
 
-    const json: {
-      success: boolean;
-      data?: { corrective: string[]; preventive: string[] };
-    } = await res.json();
-
-    if (!json.success || !json.data) {
-      console.warn('[generateAndSaveUaUcCapa] AI generation failed:', json);
-      return { success: false };
+    // Enforce minimum 3 on each list as a safety net
+    if (capaResponse.corrective.length < 3 || capaResponse.preventive.length < 3) {
+      console.warn('[generateAndSaveUaUcCapa] AI returned fewer than 3 points; using what was generated');
     }
 
     const { error } = await supabase
       .from('ehs_ua_uc_near_miss')
       .update({
-        capa_points: json.data,
+        capa_points: capaResponse,
         updated_at: new Date().toISOString()
       })
       .eq('id', reportId);
@@ -388,4 +457,3 @@ export const generateAndSaveUaUcCapa = async (
     return { success: false };
   }
 };
-

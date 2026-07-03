@@ -86,8 +86,8 @@ Based on your analysis, respond with ONLY this exact JSON structure — no expla
   "ua_other": "<only if none of the above classifications fit, briefly describe the unsafe act; otherwise leave as empty string>",
   "action_taken": "<Write 5-7 detailed corrective action points as a numbered list. Put each numbered point on its own line (use \\n between points). Include: (1) immediate stop-work or isolation step, (2) what must be corrected on the spot right now, (3) replacement or provision of correct PPE or tools, (4) supervisory or management notification required, (5) retraining or toolbox talk needed, (6) root cause to investigate and address, and (7) long-term preventive measure such as a procedure update, signage, or periodic audit to prevent recurrence.>",
   "capa_points": {
-    "corrective": ["<specific immediate corrective action 1>", "<specific immediate corrective action 2>", "...as many as needed"],
-    "preventive": ["<long-term preventive measure 1>", "<long-term preventive measure 2>", "...as many as needed"]
+    "corrective": ["<corrective action 1>", "<corrective action 2>", "<corrective action 3>", "...minimum 3, more if needed"],
+    "preventive": ["<preventive measure 1>", "<preventive measure 2>", "<preventive measure 3>", "...minimum 3, more if needed"]
   }
 }`;
   }
@@ -111,8 +111,8 @@ Based on your analysis, respond with ONLY this exact JSON structure — no expla
   "uc_severity": "<one of: Low | Medium | High — based on the potential harm this unsafe condition could cause>",
   "uc_temporary_controls": "<Write 5-7 detailed control measures as a numbered list. Put each numbered point on its own line (use \\n between points). Include: (1) immediate area isolation or barricading step, (2) warning signs or barriers to be placed, (3) which personnel must be evacuated or kept away, (4) who must be notified (supervisor, maintenance, safety officer), (5) interim fix or workaround until permanent repair is done, (6) permanent corrective action required such as repair, replacement, or maintenance work order, and (7) follow-up inspection schedule to confirm the hazard has been eliminated.>",
   "capa_points": {
-    "corrective": ["<specific immediate corrective action 1>", "<specific immediate corrective action 2>", "...as many as needed"],
-    "preventive": ["<long-term preventive measure 1>", "<long-term preventive measure 2>", "...as many as needed"]
+    "corrective": ["<corrective action 1>", "<corrective action 2>", "<corrective action 3>", "...minimum 3, more if needed"],
+    "preventive": ["<preventive measure 1>", "<preventive measure 2>", "<preventive measure 3>", "...minimum 3, more if needed"]
   }
 }`;
   }
@@ -132,8 +132,8 @@ Based on your analysis, respond with ONLY this exact JSON structure — no expla
   "nm_what_could_happen": "<Write 3-4 sentences describing: (1) the worst-case scenario injury or fatality that could have resulted, (2) secondary consequences such as equipment damage or production shutdown, (3) regulatory or legal implications if it had become an actual incident, and (4) how this near miss is a warning sign of a systemic safety gap that requires immediate attention.>",
   "nm_severity": "<one of: Low | Medium | High — based on potential consequences>",
   "capa_points": {
-    "corrective": ["<specific immediate corrective action 1>", "<specific immediate corrective action 2>", "...as many as needed"],
-    "preventive": ["<long-term preventive measure 1>", "<long-term preventive measure 2>", "...as many as needed"]
+    "corrective": ["<corrective action 1>", "<corrective action 2>", "<corrective action 3>", "...minimum 3, more if needed"],
+    "preventive": ["<preventive measure 1>", "<preventive measure 2>", "<preventive measure 3>", "...minimum 3, more if needed"]
   }
 }`;
 }
