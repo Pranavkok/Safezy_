@@ -266,3 +266,63 @@ export const getUaUcReportsList = async (): Promise<{
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
   }
 };
+
+// ─── generateAndSaveUaUcCapa ──────────────────────────────────────────────────
+// Calls the AI CAPA endpoint and saves the result back to the report row.
+// This is a fire-and-forward action — report submission is NEVER blocked by
+// CAPA generation failures.
+
+export const generateAndSaveUaUcCapa = async (
+  reportId: number,
+  reportData: Record<string, unknown>
+): Promise<{ success: boolean }> => {
+  const supabase = await createClient();
+
+  try {
+    // Determine the base URL for internal API call
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ??
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+    const res = await fetch(`${baseUrl}/api/generate-ua-uc-capa`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reportData)
+    });
+
+    if (!res.ok) {
+      console.warn('[generateAndSaveUaUcCapa] API returned non-OK status:', res.status);
+      return { success: false };
+    }
+
+    const json: {
+      success: boolean;
+      data?: { corrective: string[]; preventive: string[] };
+    } = await res.json();
+
+    if (!json.success || !json.data) {
+      console.warn('[generateAndSaveUaUcCapa] AI generation failed:', json);
+      return { success: false };
+    }
+
+    const { error } = await supabase
+      .from('ehs_ua_uc_near_miss')
+      .update({
+        capa_points: json.data,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', reportId);
+
+    if (error) {
+      console.error('[generateAndSaveUaUcCapa] DB update error:', error);
+      return { success: false };
+    }
+
+    revalidatePath(REVALIDATE_PATH);
+    return { success: true };
+  } catch (error) {
+    console.error('[generateAndSaveUaUcCapa] unexpected error:', error);
+    return { success: false };
+  }
+};
+

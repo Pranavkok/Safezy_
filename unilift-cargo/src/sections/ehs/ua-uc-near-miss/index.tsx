@@ -19,7 +19,7 @@ import {
   MediaType,
   UaUcAiAnalysisResponse
 } from '@/types/ehs.types';
-import { submitUaUcReport } from '@/actions/contractor/ua-uc-near-miss';
+import { submitUaUcReport, generateAndSaveUaUcCapa } from '@/actions/contractor/ua-uc-near-miss';
 import { uploadFile } from '@/utils';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -730,6 +730,19 @@ const UaUcNearMissForm = () => {
 
       if (res.success && res.data) {
         toast.success('Report submitted successfully');
+
+        // Fire CAPA generation in the background — do NOT await it here
+        // so the user is redirected immediately
+        const reportPayload: Record<string, unknown> = {
+          ...rest,
+          id: res.data.id,
+          report_no: res.data.report_no,
+          media_urls: mediaItems.map(i => i.url),
+          media_types: mediaItems.map(i => i.type)
+        };
+        generateAndSaveUaUcCapa(res.data.id, reportPayload).catch(() => {});
+        toast('Generating CAPA recommendations…', { icon: '✨', duration: 3500 });
+
         router.push(`/ehs/ua-uc-near-miss/${res.data.id}`);
       } else {
         toast.error(res.message);

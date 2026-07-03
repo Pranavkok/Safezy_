@@ -313,6 +313,7 @@ export type UaUcNearMissRecord = {
   final_approval: string | null;
   final_approval_remarks: string | null;
   final_approval_at: string | null;
+  capa_points: { corrective: string[]; preventive: string[] } | null;
   created_at: string;
   updated_at: string;
 };

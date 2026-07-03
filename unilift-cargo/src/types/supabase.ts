@@ -1004,6 +1004,7 @@ export type Database = {
           uc_temporary_controls: string | null
           updated_at: string
           what_happened: string | null
+          capa_points: Json | null
         }
         Insert: {
           action_by?: string | null
@@ -1042,6 +1043,7 @@ export type Database = {
           uc_temporary_controls?: string | null
           updated_at?: string
           what_happened?: string | null
+          capa_points?: Json | null
         }
         Update: {
           action_by?: string | null
@@ -1080,6 +1082,7 @@ export type Database = {
           uc_temporary_controls?: string | null
           updated_at?: string
           what_happened?: string | null
+          capa_points?: Json | null
         }
         Relationships: []
       }
