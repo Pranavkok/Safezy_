@@ -66,12 +66,13 @@ async function getMonthlyCount(
 
 // ─── submitUaUcReport ─────────────────────────────────────────────────────────
 
-// mediaUrl and mediaType are passed in from the client after upload (same pattern
-// as savePage1 in incident-analysis.ts — client uploads first, then passes URL)
+// capaPoints is optionally pre-supplied from the initial AI analysis call.
+// When present the report is saved with CAPA immediately — no background call needed.
 export const submitUaUcReport = async (
   formData: Omit<UaUcNearMissFormType, 'media' | 'media_type'>,
   mediaUrls: string[],
-  mediaTypes: MediaType[]
+  mediaTypes: MediaType[],
+  capaPoints?: { corrective: string[]; preventive: string[] }
 ): Promise<{ success: boolean; message: string; data?: { id: number; report_no: string } }> => {
   const supabase = await createClient();
 
@@ -142,6 +143,8 @@ export const submitUaUcReport = async (
           action_taken:         formData.action_taken ?? null,
           action_by:            formData.action_by ?? null,
           action_date:          formData.action_date ?? null,
+          // Include pre-generated CAPA if available; otherwise null (background call will fill it)
+          capa_points:          capaPoints ?? null,
           updated_at:           new Date().toISOString()
         })
         .select('id, report_no')

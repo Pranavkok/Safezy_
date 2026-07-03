@@ -595,6 +595,8 @@ const UaUcNearMissForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  // Stores the full AI analysis result so we can reuse its capa_points at submit time
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<UaUcAiAnalysisResponse | null>(null);
 
   const now = new Date();
 
@@ -665,6 +667,8 @@ const UaUcNearMissForm = () => {
       const json = await res.json();
       if (json.success) {
         const analysis: UaUcAiAnalysisResponse = json.data;
+        // Persist full result so we can access capa_points at submit time
+        setAiAnalysisResult(analysis);
 
         setValue('what_happened', analysis.what_happened);
         setValue('equipment_involved', analysis.equipment_involved);
@@ -682,7 +686,7 @@ const UaUcNearMissForm = () => {
             analysis.uc_temporary_controls ?? ''
           );
         } else if (type === 'NearMiss') {
-          setValue('nm_potential_injury', analysis.nm_potential_injury ?? '');
+        setValue('nm_potential_injury', analysis.nm_potential_injury ?? '');
           setValue('nm_what_could_happen', analysis.nm_what_could_happen ?? '');
           setValue('nm_severity', analysis.nm_severity);
         }
@@ -718,30 +722,73 @@ const UaUcNearMissForm = () => {
 
   // ── Submit ─────────────────────────────────────────────────────────────────
 
+  /**
+   * Returns true when the user has edited any of the key fields that influence
+   * CAPA content — meaning the pre-generated capa_points may be stale.
+   */
+  const hasEditedCapaFields = (data: UaUcNearMissFormType): boolean => {
+    if (!aiAnalysisResult) return false;
+    const a = aiAnalysisResult;
+    if (data.what_happened      !== a.what_happened)      return true;
+    if (data.equipment_involved !== a.equipment_involved) return true;
+    if (data.observation_type === 'UA') {
+      if (data.action_taken !== (a.action_taken ?? ''))   return true;
+      const cur = [...(data.ua_classifications ?? [])].sort().join(',');
+      const ai  = [...(a.ua_classifications   ?? [])].sort().join(',');
+      if (cur !== ai)                                      return true;
+      if ((data.ua_other ?? '') !== (a.ua_other ?? ''))   return true;
+    }
+    if (data.observation_type === 'UC') {
+      const cur = [...(data.uc_classifications ?? [])].sort().join(',');
+      const ai  = [...(a.uc_classifications   ?? [])].sort().join(',');
+      if (cur !== ai)                                          return true;
+      if ((data.uc_other             ?? '') !== (a.uc_other             ?? '')) return true;
+      if ((data.uc_severity          ?? '') !== (a.uc_severity          ?? '')) return true;
+      if ((data.uc_temporary_controls ?? '') !== (a.uc_temporary_controls ?? '')) return true;
+    }
+    if (data.observation_type === 'NearMiss') {
+      if ((data.nm_potential_injury  ?? '') !== (a.nm_potential_injury  ?? '')) return true;
+      if ((data.nm_what_could_happen ?? '') !== (a.nm_what_could_happen ?? '')) return true;
+      if ((data.nm_severity          ?? '') !== (a.nm_severity          ?? '')) return true;
+    }
+    return false;
+  };
+
   const onSubmit = async (data: UaUcNearMissFormType) => {
     setIsSubmitting(true);
     try {
       const { media: _media, media_type: _mt, ...rest } = data;
+
+      // Use pre-generated CAPA if the user hasn't edited key fields;
+      // otherwise fall back to the background regeneration path.
+      const fieldsEdited = hasEditedCapaFields(data);
+      const prebuiltCapa =
+        !fieldsEdited && aiAnalysisResult?.capa_points
+          ? aiAnalysisResult.capa_points
+          : undefined;
+
       const res = await submitUaUcReport(
         rest,
         mediaItems.map(i => i.url),
-        mediaItems.map(i => i.type)
+        mediaItems.map(i => i.type),
+        prebuiltCapa
       );
 
       if (res.success && res.data) {
         toast.success('Report submitted successfully');
 
-        // Fire CAPA generation in the background — do NOT await it here
-        // so the user is redirected immediately
-        const reportPayload: Record<string, unknown> = {
-          ...rest,
-          id: res.data.id,
-          report_no: res.data.report_no,
-          media_urls: mediaItems.map(i => i.url),
-          media_types: mediaItems.map(i => i.type)
-        };
-        generateAndSaveUaUcCapa(res.data.id, reportPayload).catch(() => {});
-        toast('Generating CAPA recommendations…', { icon: '✨', duration: 3500 });
+        if (!prebuiltCapa) {
+          // Fields were edited — regenerate CAPA in the background against final values
+          const reportPayload: Record<string, unknown> = {
+            ...rest,
+            id: res.data.id,
+            report_no: res.data.report_no,
+            media_urls: mediaItems.map(i => i.url),
+            media_types: mediaItems.map(i => i.type)
+          };
+          generateAndSaveUaUcCapa(res.data.id, reportPayload).catch(() => {});
+          toast('Generating CAPA recommendations…', { icon: '✨', duration: 3500 });
+        }
 
         router.push(`/ehs/ua-uc-near-miss/${res.data.id}`);
       } else {

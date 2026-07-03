@@ -334,6 +334,8 @@ export type UaUcAiAnalysisResponse = {
   nm_potential_injury?: string;
   nm_what_could_happen?: string;
   nm_severity?: 'Low' | 'Medium' | 'High';
+  // CAPA — generated in the same AI call as the analysis
+  capa_points?: { corrective: string[]; preventive: string[] };
 };
 
 export type UaUcNearMissListItem = Pick<
