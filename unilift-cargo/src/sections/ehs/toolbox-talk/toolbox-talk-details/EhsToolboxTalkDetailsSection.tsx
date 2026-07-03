@@ -9,6 +9,7 @@ import EhsTbtSummarizeModal from '@/components/modals/ehs/EhsTbtSummarize';
 import ToolboxNoteModal from '@/components/modals/ehs/AddNoteForTBT';
 import MarkTBTDoneModal from '@/components/modals/ehs/MarkTBTDoneModal';
 import ToolboxTalkContentDownloadButton from '../ToolboxTalkContentDownloadButton';
+import ToolboxVoicePlayer from '@/components/ToolboxVoicePlayer';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -203,6 +204,12 @@ export const EHSToolboxTalkDetailsSection = ({
             </div>
           ) : displayDescription ? (
             <div className="relative mt-3 p-6 bg-gray-100 border border-gray-300 rounded-lg overflow-hidden">
+              {/* Voice Player — floats bottom-right of content box */}
+              <ToolboxVoicePlayer
+                htmlContent={displayDescription ?? ''}
+                language={activeLanguage}
+              />
+
               {/* Zoom Controls */}
               <div className="flex justify-end gap-1.5 mb-3 relative z-[11]">
                 <button
