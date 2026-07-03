@@ -23,17 +23,36 @@ function getReportPrefix(type: ObservationType): string {
   return 'NM';
 }
 
-async function generateReportNo(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  observationType: ObservationType
-): Promise<string> {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+/**
+ * Build a candidate report number for the given sequence index (1-based).
+ * Does NOT hit the database — callers manage the sequence themselves.
+ */
+function buildReportNo(
+  observationType: ObservationType,
+  year: number,
+  month: string,
+  sequence: number
+): string {
   const prefix = getReportPrefix(observationType);
+  return `${prefix}-${year}-${month}-${sequence.toString().padStart(4, '0')}`;
+}
 
+/**
+ * Count how many reports of this type already exist this calendar month
+ * so we can pick the first candidate sequence number.
+ */
+async function getMonthlyCount(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  observationType: ObservationType,
+  year: number,
+  month: string
+): Promise<number> {
   const monthStart = `${year}-${month}-01T00:00:00.000Z`;
-  const nextMonth = now.getMonth() === 11 ? `${year + 1}-01-01T00:00:00.000Z` : `${year}-${(now.getMonth() + 2).toString().padStart(2, '0')}-01T00:00:00.000Z`;
+  const monthNum = parseInt(month, 10);
+  const nextMonth =
+    monthNum === 12
+      ? `${year + 1}-01-01T00:00:00.000Z`
+      : `${year}-${(monthNum + 1).toString().padStart(2, '0')}-01T00:00:00.000Z`;
 
   const { count } = await supabase
     .from('ehs_ua_uc_near_miss')
@@ -42,8 +61,7 @@ async function generateReportNo(
     .gte('reported_at', monthStart)
     .lt('reported_at', nextMonth);
 
-  const sequence = ((count ?? 0) + 1).toString().padStart(4, '0');
-  return `${prefix}-${year}-${month}-${sequence}`;
+  return count ?? 0;
 }
 
 // ─── submitUaUcReport ─────────────────────────────────────────────────────────
@@ -76,46 +94,71 @@ export const submitUaUcReport = async (
       : '';
     const employeeId = userProfile?.user_unique_code ?? '';
 
-    // 3. Generate report number
-    const reportNo = await generateReportNo(supabase, formData.observation_type);
+    // 3. Determine starting sequence from current month count
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const monthlyCount = await getMonthlyCount(supabase, formData.observation_type, year, month);
 
-    // 5. Insert row
-    const { data: inserted, error } = await supabase
-      .from('ehs_ua_uc_near_miss')
-      .insert({
-        report_no:            reportNo,
-        observation_type:     formData.observation_type,
-        location_department:  formData.location_department,
-        reported_by_user_id:  authId,
-        reported_by_name:     reportedByName,
-        employee_id:          employeeId,
-        what_happened:        formData.what_happened ?? null,
-        equipment_involved:   formData.equipment_involved ?? null,
-        activity_at_time:     formData.activity_at_time ?? null,
-        media_url:            mediaUrls[0] ?? null,
-        media_type:           mediaTypes[0] ?? null,
-        media_urls:           mediaUrls,
-        media_types:          mediaTypes,
-        ua_classifications:   formData.ua_classifications ?? [],
-        ua_other:             formData.ua_other ?? null,
-        uc_classifications:    formData.uc_classifications ?? [],
-        uc_other:              formData.uc_other ?? null,
-        uc_severity:           formData.uc_severity ?? null,
-        uc_temporary_controls: formData.uc_temporary_controls ?? null,
-        nm_potential_injury:  formData.nm_potential_injury ?? null,
-        nm_what_could_happen: formData.nm_what_could_happen ?? null,
-        nm_severity:          formData.nm_severity ?? null,
-        status:               formData.status,
-        action_taken:         formData.action_taken ?? null,
-        action_by:            formData.action_by ?? null,
-        action_date:          formData.action_date ?? null,
-        updated_at:           new Date().toISOString()
-      })
-      .select('id, report_no')
-      .single();
+    // 4. Insert with retry loop to handle concurrent duplicate report_no collisions (HTTP 409 / PG 23505)
+    const MAX_RETRIES = 5;
+    let inserted: { id: number; report_no: string } | null = null;
 
-    if (error || !inserted) {
-      console.error('[submitUaUcReport] insert error:', error);
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const reportNo = buildReportNo(formData.observation_type, year, month, monthlyCount + 1 + attempt);
+
+      const { data, error } = await supabase
+        .from('ehs_ua_uc_near_miss')
+        .insert({
+          report_no:            reportNo,
+          observation_type:     formData.observation_type,
+          location_department:  formData.location_department,
+          reported_by_user_id:  authId,
+          reported_by_name:     reportedByName,
+          employee_id:          employeeId,
+          what_happened:        formData.what_happened ?? null,
+          equipment_involved:   formData.equipment_involved ?? null,
+          activity_at_time:     formData.activity_at_time ?? null,
+          media_url:            mediaUrls[0] ?? null,
+          media_type:           mediaTypes[0] ?? null,
+          media_urls:           mediaUrls,
+          media_types:          mediaTypes,
+          ua_classifications:   formData.ua_classifications ?? [],
+          ua_other:             formData.ua_other ?? null,
+          uc_classifications:   formData.uc_classifications ?? [],
+          uc_other:             formData.uc_other ?? null,
+          uc_severity:          formData.uc_severity ?? null,
+          uc_temporary_controls: formData.uc_temporary_controls ?? null,
+          nm_potential_injury:  formData.nm_potential_injury ?? null,
+          nm_what_could_happen: formData.nm_what_could_happen ?? null,
+          nm_severity:          formData.nm_severity ?? null,
+          status:               formData.status,
+          action_taken:         formData.action_taken ?? null,
+          action_by:            formData.action_by ?? null,
+          action_date:          formData.action_date ?? null,
+          updated_at:           new Date().toISOString()
+        })
+        .select('id, report_no')
+        .single();
+
+      if (data) {
+        inserted = data;
+        break;
+      }
+
+      // 23505 = unique_violation — the report_no was taken by a concurrent insert; retry with next sequence.
+      // Any other error is unexpected — bail out immediately.
+      const pgCode = (error as { code?: string } | null)?.code;
+      if (pgCode !== '23505') {
+        console.error('[submitUaUcReport] insert error:', error);
+        return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
+      }
+
+      console.warn(`[submitUaUcReport] report_no collision on attempt ${attempt + 1}, retrying…`);
+    }
+
+    if (!inserted) {
+      console.error('[submitUaUcReport] exhausted retries — could not generate a unique report_no');
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
