@@ -10,8 +10,9 @@ import ToolboxNoteModal from '@/components/modals/ehs/AddNoteForTBT';
 import MarkTBTDoneModal from '@/components/modals/ehs/MarkTBTDoneModal';
 import ToolboxTalkContentDownloadButton from '../ToolboxTalkContentDownloadButton';
 import ToolboxVoicePlayer from '@/components/ToolboxVoicePlayer';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Volume2, VolumeX } from 'lucide-react';
 
 type Language = 'original' | 'en' | 'hi' | 'mr';
 
@@ -31,6 +32,163 @@ function formatElapsed(seconds: number): string {
     String(m).padStart(2, '0'),
     String(s).padStart(2, '0')
   ].join(':');
+}
+
+// Language → BCP-47 for summary TTS
+const SUMMARY_LANG_CODE: Record<Language, string> = {
+  original: 'en-IN',
+  en: 'en-IN',
+  hi: 'hi-IN',
+  mr: 'mr-IN'
+};
+
+const SUMMARY_LANG_LABEL: Record<Language, string> = {
+  original: 'English',
+  en: 'English',
+  hi: 'Hindi',
+  mr: 'Marathi'
+};
+
+function stripHtmlToText(html: string): string {
+  if (typeof window === 'undefined') return html;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('p, br, li, h1, h2, h3, h4, h5, h6').forEach(el => {
+    el.insertAdjacentText('afterend', ' ');
+  });
+  return (doc.body.innerText || doc.body.textContent || '').trim();
+}
+
+function getSummaryVoice(langCode: string): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const base = langCode.split('-')[0];
+  return (
+    voices.find(v => v.lang === langCode) ||
+    voices.find(v => v.lang.startsWith(base)) ||
+    voices.find(v => v.default) ||
+    voices[0] ||
+    null
+  );
+}
+
+/** Inline play/stop button that speaks the summarized content */
+function SummaryVoiceButton({
+  htmlContent,
+  language
+}: {
+  htmlContent: string;
+  language: Language;
+}) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  // Stop on language change
+  const prevLangRef = useRef(language);
+  useEffect(() => {
+    if (prevLangRef.current !== language) {
+      if (supported) window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      prevLangRef.current = language;
+    }
+  }, [language, supported]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (supported) window.speechSynthesis.cancel();
+    };
+  }, [supported]);
+
+  const handleClick = useCallback(() => {
+    if (!supported) {
+      toast.error('Text-to-speech is not supported in this browser.');
+      return;
+    }
+
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+
+    const text = stripHtmlToText(htmlContent);
+    if (!text) {
+      toast.error('No summary content to read.');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const langCode = SUMMARY_LANG_CODE[language];
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langCode;
+    utterance.rate = 0.95;
+
+    const assignVoice = () => {
+      const voice = getSummaryVoice(langCode);
+      if (voice) {
+        utterance.voice = voice;
+        if (!voice.lang.startsWith(langCode.split('-')[0])) {
+          toast(`${SUMMARY_LANG_LABEL[language]} voice not available. Using default.`, {
+            icon: '⚠️',
+            duration: 3000
+          });
+        }
+      }
+    };
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length) {
+      assignVoice();
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        assignVoice();
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    }
+
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = (e: SpeechSynthesisErrorEvent) => {
+      if (e.error === 'interrupted' || e.error === 'canceled') return;
+      toast.error('Voice playback error. Please try again.');
+      setIsPlaying(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+    setIsPlaying(true);
+  }, [htmlContent, isPlaying, language, supported]);
+
+  if (!supported) return null;
+
+  return (
+    <button
+      onClick={handleClick}
+      title={isPlaying ? 'Stop reading summary' : 'Listen to summary'}
+      className={`
+        flex items-center gap-1.5 px-4 py-2 rounded-md
+        font-extrabold text-xs sm:text-sm md:text-base
+        transition-all duration-150 active:scale-95
+        ${
+          isPlaying
+            ? 'bg-primary/10 text-primary border border-primary'
+            : 'bg-white border border-primary text-primary hover:bg-primary/5'
+        }
+      `}
+      aria-label={isPlaying ? 'Stop reading summary' : 'Listen to summary'}
+      aria-pressed={isPlaying}
+    >
+      {isPlaying ? (
+        <>
+          <VolumeX className="w-4 h-4" />
+          Stop Summary
+        </>
+      ) : (
+        <>
+          <Volume2 className="w-4 h-4" />
+          Listen Summary
+        </>
+      )}
+    </button>
+  );
 }
 
 export const EHSToolboxTalkDetailsSection = ({
@@ -270,6 +428,12 @@ export const EHSToolboxTalkDetailsSection = ({
             />
             {toolboxTalk.summarized && (
               <EhsTbtSummarizeModal summary={displaySummarize || toolboxTalk.summarized} />
+            )}
+            {toolboxTalk.summarized && (
+              <SummaryVoiceButton
+                htmlContent={displaySummarize || toolboxTalk.summarized}
+                language={activeLanguage}
+              />
             )}
             <ToolboxTalkContentDownloadButton toolboxTalk={toolboxTalk} />
           </div>
