@@ -83,16 +83,22 @@ export const submitUaUcReport = async (
     }
 
     // 2. Get user profile snapshot
-    const { data: userProfile } = await supabase
+    // IMPORTANT: reported_by_user_id FK references users.id (app UUID), NOT authId (auth UUID).
+    const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('id, first_name, last_name, user_unique_code')
       .eq('auth_id', authId)
       .single();
 
-    const reportedByName = userProfile
-      ? `${userProfile.first_name} ${userProfile.last_name}`.trim()
-      : '';
-    const employeeId = userProfile?.user_unique_code ?? '';
+    if (profileError || !userProfile) {
+      console.error('[submitUaUcReport] user profile not found for authId:', authId, profileError);
+      return { success: false, message: 'User profile not found. Please contact support.' };
+    }
+
+    const reportedByName = `${userProfile.first_name} ${userProfile.last_name}`.trim();
+    const employeeId = userProfile.user_unique_code ?? '';
+    // users.id is the app-level UUID that the FK constraint points to
+    const appUserId = userProfile.id;
 
     // 3. Determine starting sequence from current month count
     const now = new Date();
@@ -113,7 +119,7 @@ export const submitUaUcReport = async (
           report_no:            reportNo,
           observation_type:     formData.observation_type,
           location_department:  formData.location_department,
-          reported_by_user_id:  authId,
+          reported_by_user_id:  appUserId,   // users.id — the FK target
           reported_by_name:     reportedByName,
           employee_id:          employeeId,
           what_happened:        formData.what_happened ?? null,
@@ -288,10 +294,21 @@ export const getUaUcReportsList = async (): Promise<{
       return { success: false, message: 'You must be logged in to view reports' };
     }
 
+    // Resolve app-level user ID (users.id) since reported_by_user_id stores users.id, not auth UUID
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_id', authId)
+      .single();
+
+    if (!userProfile) {
+      return { success: false, message: 'User profile not found.' };
+    }
+
     const { data, error } = await supabase
       .from('ehs_ua_uc_near_miss')
       .select('id, report_no, observation_type, status, reported_at, location_department')
-      .eq('reported_by_user_id', authId)
+      .eq('reported_by_user_id', userProfile.id)
       .order('reported_at', { ascending: false });
 
     if (error) {
