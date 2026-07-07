@@ -265,7 +265,20 @@ const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }
     ? stripHtmlPlain(toolboxTalk.summarized)
     : null;
 
-  const hasImage = !!toolboxTalk.pdf_url;
+  // pdf_url may be a JSON array of URLs or a legacy single URL string
+  let imageUrls: string[] = [];
+  if (toolboxTalk.pdf_url) {
+    try {
+      const parsed = JSON.parse(toolboxTalk.pdf_url);
+      imageUrls = Array.isArray(parsed) ? parsed : [toolboxTalk.pdf_url];
+    } catch {
+      imageUrls = [toolboxTalk.pdf_url];
+    }
+  }
+  const hasImage = imageUrls.length > 0;
+  const primaryImage = imageUrls[0];
+  const extraImages = imageUrls.slice(1);
+
 
   return (
     <Document>
@@ -291,7 +304,7 @@ const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }
 
         {hasImage && body.length === 0 ? (
           <View style={{ marginTop: 8 }}>
-            <Image src={toolboxTalk.pdf_url as string} style={S.topicImage} />
+            <Image src={primaryImage} style={S.topicImage} />
           </View>
         ) : (
           <View style={hasImage ? S.twoCol : {}}>
@@ -300,11 +313,19 @@ const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }
             </View>
             {hasImage && (
               <View style={S.rightCol}>
-                <Image src={toolboxTalk.pdf_url as string} style={S.topicImage} />
+                <Image src={primaryImage} style={S.topicImage} />
               </View>
             )}
           </View>
         )}
+
+        {/* Extra images rendered below body */}
+        {extraImages.map((url, i) => (
+          <View key={i} style={{ marginTop: 8, alignItems: 'center' }}>
+            <Image src={url} style={S.topicImage} />
+          </View>
+        ))}
+
 
         {plainSummary && (
           <View style={S.summaryBox}>

@@ -33,18 +33,21 @@ import { AddToolboxNoteSchema } from '@/validations/contractor/add-toolbox-note'
 import { UaUcNearMissSchema } from '@/validations/contractor/add-ua-uc-near-miss';
 import { z } from 'zod';
 
+export type addToolboxTalkType = z.infer<typeof AddToolboxTalkSchema>;
+export type updateToolboxTalkType = z.infer<typeof AddToolboxTalkSchema>;
+
 export type addToolboxType = Omit<
   z.infer<typeof AddToolboxTalkSchema>,
-  'pdf_url'
+  'images'
 > & {
-  pdf_url: string;
+  image_urls: string[];
 };
 
 export type updateToolboxType = Omit<
   z.infer<typeof AddToolboxTalkSchema>,
-  'pdf_url'
+  'images'
 > & {
-  pdf_url: string;
+  image_urls: string[];
 };
 
 export type AddBlogType = Omit<z.infer<typeof AddBlogSchema>, 'image_url'> & {
@@ -58,8 +61,7 @@ export type UpdateBlogType = Omit<
   image_url: string;
 };
 
-export type addToolboxTalkType = z.infer<typeof AddToolboxTalkSchema>;
-export type updateToolboxTalkType = z.infer<typeof AddToolboxTalkSchema>;
+
 
 export type addToolboxUserType = z.infer<typeof AddToolboxTalkUserSchema>;
 

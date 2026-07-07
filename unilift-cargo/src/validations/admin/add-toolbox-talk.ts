@@ -11,15 +11,16 @@ export const AddToolboxTalkSchema = z.object({
   topic_name: z.string().min(1, 'Topic name is required'),
   description: z.string().optional(),
   summarize: z.string().optional(),
-  pdf_url: z
-    .custom<FileList>()
-    .transform(file => (file.length > 0 ? file[0] : null))
-    .refine(
-      file => file === null || file.size <= MAX_FILE_SIZE,
-      'File size must be less than 5MB'
+  // Accept a File[] (multiple images) — validated individually
+  images: z
+    .array(
+      z
+        .instanceof(File)
+        .refine(file => file.size <= MAX_FILE_SIZE, 'Each file must be less than 5MB')
+        .refine(
+          file => ACCEPTED_FILE_TYPES.includes(file.type),
+          'Only JPEG, PNG and WEBP images are accepted'
+        )
     )
-    .refine(
-      file => file === null || ACCEPTED_FILE_TYPES.includes(file.type),
-      'Only PDF files are accepted'
-    )
+    .optional()
 });

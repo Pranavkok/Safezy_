@@ -381,10 +381,16 @@ export const addToolboxTalkDetails = async (
   const supabase = createServiceClient();
 
   try {
+    // Store image_urls as JSON string in pdf_url column (supports multiple images)
+    const pdfUrlValue =
+      toolbox.image_urls && toolbox.image_urls.length > 0
+        ? JSON.stringify(toolbox.image_urls)
+        : null;
+
     const newToolBoxTalk = {
       topic_name: toolbox.topic_name,
       description: toolbox.description,
-      pdf_url: toolbox.pdf_url,
+      pdf_url: pdfUrlValue,
       summarized: toolbox.summarize
     };
 
@@ -426,6 +432,7 @@ export const addToolboxTalkDetails = async (
   }
 };
 
+
 export const updateToolboxTalkDetails = async (
   toolbox: updateToolboxType,
   toolboxId: number
@@ -433,9 +440,15 @@ export const updateToolboxTalkDetails = async (
   const supabase = createServiceClient();
 
   try {
+    // Store image_urls as JSON string in pdf_url column
+    const pdfUrlValue =
+      toolbox.image_urls && toolbox.image_urls.length > 0
+        ? JSON.stringify(toolbox.image_urls)
+        : null;
+
     const toolBoxTalk = {
       topic_name: toolbox.topic_name,
-      pdf_url: toolbox.pdf_url,
+      pdf_url: pdfUrlValue,
       description: toolbox.description,
       summarized: toolbox.summarize
     };
@@ -469,6 +482,7 @@ export const updateToolboxTalkDetails = async (
     };
   }
 };
+
 
 export const deleteToolboxTalk = async (toolboxId: number) => {
   const supabase = createServiceClient();

@@ -401,23 +401,35 @@ export const EHSToolboxTalkDetailsSection = ({
             </div>
           ) : null}
 
-          {toolboxTalk.pdf_url && (
-            <div className="mt-6 flex justify-center">
-              {!isImageLoaded && (
-                <div className="w-full max-w-2xl h-96 bg-gray-200 animate-pulse rounded-lg" />
-              )}
-              <div className={`w-full max-w-2xl border border-gray-300 rounded-lg shadow-md overflow-hidden transition-opacity duration-300 ${isImageLoaded ? 'opacity-100' : 'opacity-0 absolute'}`}>
-                <Image
-                  src={toolboxTalk.pdf_url}
-                  alt={toolboxTalk.topic_name}
-                  height={1080}
-                  width={1080}
-                  className="w-full h-auto"
-                  onLoad={() => setIsImageLoaded(true)}
-                />
+          {toolboxTalk.pdf_url && (() => {
+            // pdf_url may be a JSON array of URLs or a legacy single URL string
+            let imageUrls: string[] = [];
+            try {
+              const parsed = JSON.parse(toolboxTalk.pdf_url);
+              imageUrls = Array.isArray(parsed) ? parsed : [toolboxTalk.pdf_url];
+            } catch {
+              imageUrls = [toolboxTalk.pdf_url];
+            }
+            return imageUrls.length > 0 ? (
+              <div className="mt-6 space-y-4">
+                {imageUrls.map((url, idx) => (
+                  <div key={idx} className="flex justify-center">
+                    <div className="w-full max-w-2xl border border-gray-300 rounded-lg shadow-md overflow-hidden">
+                      <Image
+                        src={url}
+                        alt={`${toolboxTalk.topic_name} - Image ${idx + 1}`}
+                        height={1080}
+                        width={1080}
+                        className="w-full h-auto"
+                        onLoad={() => setIsImageLoaded(true)}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          )}
+            ) : null;
+          })()}
+
         </div>
 
         <div className="w-full flex flex-col gap-2 sm:flex-row sm:justify-between items-center mt-6">
