@@ -85,13 +85,35 @@ Respond with this exact JSON structure:
       { responseMimeType: 'application/json', temperature: 0.6 }
     );
 
-    const responseText = result.response.text().trim();
+    let responseText = result.response.text().trim();
 
     if (!responseText) {
       throw new Error('Empty response from Gemini');
     }
 
-    const parsed = JSON.parse(responseText);
+    // Strip markdown code fences that Gemini sometimes wraps around JSON
+    // e.g. ```json\n{...}\n```
+    responseText = responseText
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+
+    let parsed: { description?: string; summarize?: string };
+    try {
+      parsed = JSON.parse(responseText);
+    } catch {
+      // Last-resort: try to extract description and summarize via regex
+      const descMatch = responseText.match(/"description"\s*:\s*"((?:[^"]|\\")*)"/s);
+      const summMatch = responseText.match(/"summarize"\s*:\s*"((?:[^"]|\\")*)"/s);
+      if (descMatch && summMatch) {
+        parsed = {
+          description: descMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'),
+          summarize: summMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"')
+        };
+      } else {
+        throw new Error('Failed to parse AI response as JSON');
+      }
+    }
 
     if (!parsed.description || !parsed.summarize) {
       throw new Error('Invalid response format from AI');
@@ -104,6 +126,7 @@ Respond with this exact JSON structure:
         summarize: parsed.summarize
       }
     });
+
   } catch (error) {
     console.error('Error generating toolbox content:', error);
 
