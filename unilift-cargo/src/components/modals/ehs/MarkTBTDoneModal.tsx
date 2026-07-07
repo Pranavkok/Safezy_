@@ -80,8 +80,15 @@ const MarkTBTDoneModal = ({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setSelectedFiles(Array.from(event.target.files));
+      const selected = Array.from(event.target.files);
+      setSelectedFiles(prev => [...prev, ...selected]);
+      // Reset so selecting the same file again still fires onChange
+      event.target.value = '';
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleRatingChange = (newRating: number) => {
@@ -270,9 +277,19 @@ const MarkTBTDoneModal = ({
           />
 
           {selectedFiles.length > 0 && (
-            <ul className="mt-2 text-sm text-gray-700">
+            <ul className="mt-2 text-sm text-gray-700 space-y-1">
               {selectedFiles.map((file, index) => (
-                <li key={index}>{file.name}</li>
+                <li key={index} className="flex items-center justify-between gap-2">
+                  <span className="truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile(index)}
+                    aria-label={`Remove ${file.name}`}
+                    className="text-gray-400 hover:text-red-500 shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </li>
               ))}
             </ul>
           )}

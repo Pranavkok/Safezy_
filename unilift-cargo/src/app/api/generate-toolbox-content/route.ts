@@ -5,15 +5,15 @@ type ResponseLength = 'short' | 'medium' | 'long';
 
 const LENGTH_GUIDANCE: Record<ResponseLength, { description: string; summary: string }> = {
   short: {
-    description: '150-200 words. One brief intro paragraph, one short list of 3-4 key hazards or practices.',
+    description: '150-200 words. One brief intro paragraph, one short list of 3-4 key hazards or practices, and a brief CAPA Points section (1-2 corrective + 1-2 preventive actions).',
     summary: '2-3 bullet points only.'
   },
   medium: {
-    description: '350-450 words. Intro paragraph, Key Hazards section, Safe Work Practices section, brief Emergency note.',
+    description: '350-450 words. Intro paragraph, Key Hazards section, Safe Work Practices section, CAPA Points section (Corrective Actions + Preventive Actions), brief Emergency note.',
     summary: '4-5 bullet points.'
   },
   long: {
-    description: '650-800 words. Comprehensive coverage with Intro, Key Hazards, Safe Work Practices, PPE Requirements, Emergency Procedures, and a closing reminder.',
+    description: '650-800 words. Comprehensive coverage with Intro, Key Hazards, Safe Work Practices, PPE Requirements, CAPA Points section (Corrective Actions + Preventive Actions), Emergency Procedures, and a closing reminder.',
     summary: '6-8 bullet points covering all major sections.'
   }
 };
@@ -65,6 +65,8 @@ IMPORTANT INSTRUCTIONS:
 - Write from the perspective of an EHS trainer addressing workers
 - Use clear, simple language that workers can understand
 - Focus on practical, actionable safety guidance
+- Do NOT use greetings or casual openers (e.g. "Good morning", "Hello team") — open directly with a formal statement of the topic's purpose, written in a professional training-document register throughout
+- Include a "CAPA Points" section (use an <h3>CAPA Points</h3> heading) with two clearly labeled sub-lists: "Corrective Actions" (immediate steps to fix unsafe conditions related to this topic) and "Preventive Actions" (long-term measures to prevent recurrence) — both specific to this topic's hazards, not generic filler
 - Format using proper HTML tags: <p>, <ul>, <li>, <strong>, <h3>
 
 Respond with this exact JSON structure:
