@@ -103,8 +103,8 @@ Respond with this exact JSON structure:
       parsed = JSON.parse(responseText);
     } catch {
       // Last-resort: try to extract description and summarize via regex
-      const descMatch = responseText.match(/"description"\s*:\s*"((?:[^"]|\\")*)"/s);
-      const summMatch = responseText.match(/"summarize"\s*:\s*"((?:[^"]|\\")*)"/s);
+      const descMatch = responseText.match(/"description"\s*:\s*"((?:[^"]|\\")*)"/);
+      const summMatch = responseText.match(/"summarize"\s*:\s*"((?:[^"]|\\")*)"/);
       if (descMatch && summMatch) {
         parsed = {
           description: descMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'),
