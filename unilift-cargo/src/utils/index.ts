@@ -22,6 +22,29 @@ export const getProductBrandLabel = (value: string): string => {
   return brand ? brand.label : '';
 };
 
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'heic', 'heif'];
+
+// Derive the file extension from a (possibly query-stringed) public URL.
+export const getUrlExtension = (url: string): string => {
+  const withoutQuery = url.split(/[?#]/)[0];
+  const lastSegment = withoutQuery.split('/').pop() ?? '';
+  const dotIndex = lastSegment.lastIndexOf('.');
+  return dotIndex === -1 ? '' : lastSegment.slice(dotIndex + 1).toLowerCase();
+};
+
+// True when the URL points at an image we can safely render with <img>/<Image>.
+export const isImageUrl = (url: string): boolean =>
+  IMAGE_EXTENSIONS.includes(getUrlExtension(url));
+
+// Human-friendly label for a non-image attachment based on its extension.
+export const getAttachmentLabel = (url: string): string => {
+  const ext = getUrlExtension(url);
+  if (ext === 'pdf') return 'PDF';
+  if (ext === 'doc' || ext === 'docx') return 'Word';
+  if (ext === 'xls' || ext === 'xlsx') return 'Excel';
+  return ext ? ext.toUpperCase() : 'File';
+};
+
 interface UploadResult {
   publicUrl: string;
 }

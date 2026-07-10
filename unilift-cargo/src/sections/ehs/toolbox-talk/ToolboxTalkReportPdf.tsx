@@ -12,6 +12,7 @@ import {
 } from '@react-pdf/renderer';
 import ASSETS from '@/assets';
 import { ToolboxTalkCompletionReport } from '@/types/ehs.types';
+import { isImageUrl, getAttachmentLabel } from '@/utils';
 
 Font.register({
   family: 'Inter',
@@ -142,7 +143,19 @@ const S = StyleSheet.create({
   imageGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -3 },
   imageCell: { width: '50%', paddingHorizontal: 3, marginBottom: 6 },
   imageThumb: { height: 110, objectFit: 'contain', borderRadius: 3, backgroundColor: '#F9FAFB' },
-  imageLabel: { fontSize: 7, color: '#6B7280', textAlign: 'center', marginTop: 2 }
+  imageLabel: { fontSize: 7, color: '#6B7280', textAlign: 'center', marginTop: 2 },
+  // Non-image attachment row
+  docRow: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderStyle: 'solid',
+    borderRadius: 3,
+    padding: 6,
+    marginBottom: 4,
+    backgroundColor: '#F9FAFB'
+  },
+  docText: { fontSize: 8, color: '#374151' },
+  docUrl: { fontSize: 7, color: '#6B7280', marginTop: 2 }
 });
 
 const PageHeader = ({ topicName, date }: { topicName: string; date: string }) => (
@@ -236,20 +249,32 @@ const ToolboxTalkReportPdf = ({ report }: { report: ToolboxTalkCompletionReport 
           </View>
         </View>
 
-        {/* Attendance Sheets — inline thumbnail grid */}
+        {/* Attendance Sheets — images as a thumbnail grid, docs as link rows */}
         {report.attendance_images.length > 0 && (
           <>
             <Text style={S.sectionTitle}>Attendance Sheets</Text>
             <View style={S.imageGrid}>
-              {report.attendance_images.map((url, i) => (
-                <View key={i} style={S.imageCell}>
-                  <Image src={url} style={S.imageThumb} />
-                  {report.attendance_images.length > 1 && (
-                    <Text style={S.imageLabel}>Sheet {i + 1}</Text>
-                  )}
+              {report.attendance_images
+                .filter(url => isImageUrl(url))
+                .map((url, i) => (
+                  <View key={i} style={S.imageCell}>
+                    <Image src={url} style={S.imageThumb} />
+                    {report.attendance_images.filter(u => isImageUrl(u)).length > 1 && (
+                      <Text style={S.imageLabel}>Sheet {i + 1}</Text>
+                    )}
+                  </View>
+                ))}
+            </View>
+            {report.attendance_images
+              .filter(url => !isImageUrl(url))
+              .map((url, i) => (
+                <View key={i} style={S.docRow}>
+                  <Text style={S.docText}>
+                    {getAttachmentLabel(url)} attachment
+                  </Text>
+                  <Text style={S.docUrl}>{url}</Text>
                 </View>
               ))}
-            </View>
           </>
         )}
 

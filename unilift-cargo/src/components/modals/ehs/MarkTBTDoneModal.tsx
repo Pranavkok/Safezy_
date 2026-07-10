@@ -78,10 +78,24 @@ const MarkTBTDoneModal = ({
     setAdditionalEmails(prev => prev.filter(e => e !== email));
   };
 
+  // Keep in sync with the file input's `accept` attribute below.
+  const MAX_FILE_SIZE_MB = 20;
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selected = Array.from(event.target.files);
-      setSelectedFiles(prev => [...prev, ...selected]);
+      // Guard against oversized files — Gmail rejects attachments over 25MB,
+      // so keep each well under that to avoid a silent email-send failure.
+      const withinLimit = selected.filter(
+        file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024
+      );
+      const rejected = selected.length - withinLimit.length;
+      if (rejected > 0) {
+        toast.error(
+          `${rejected} file(s) skipped — each file must be under ${MAX_FILE_SIZE_MB}MB.`
+        );
+      }
+      setSelectedFiles(prev => [...prev, ...withinLimit]);
       // Reset so selecting the same file again still fires onChange
       event.target.value = '';
     }
@@ -271,10 +285,13 @@ const MarkTBTDoneModal = ({
             label="Upload Attendance Sheet"
             type="file"
             multiple
-            accept="image/*"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
             required={false}
             onChange={handleFileChange}
           />
+          <p className="text-xs text-gray-500">
+            Images, PDF, Word or Excel files (max {MAX_FILE_SIZE_MB}MB each).
+          </p>
 
           {selectedFiles.length > 0 && (
             <ul className="mt-2 text-sm text-gray-700 space-y-1">

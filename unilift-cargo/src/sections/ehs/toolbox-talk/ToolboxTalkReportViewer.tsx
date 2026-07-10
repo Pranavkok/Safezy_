@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { ToolboxTalkCompletionReport } from '@/types/ehs.types';
-import { CheckCircle2, Clock, Star, Mail, ImageIcon } from 'lucide-react';
+import { CheckCircle2, Clock, Star, Mail, ImageIcon, FileText, Download } from 'lucide-react';
+import { isImageUrl, getAttachmentLabel } from '@/utils';
 
 function formatDate(str: string) {
   return new Date(str).toLocaleString('en-IN', {
@@ -119,14 +120,34 @@ const ToolboxTalkReportViewer = ({ report }: { report: ToolboxTalkCompletionRepo
       {report.attendance_images.length > 0 && (
         <SectionCard title="Attendance Sheets">
           <div className="space-y-4">
-            {report.attendance_images.map((url, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <ImageIcon className="w-4 h-4" /> Attendance Sheet {report.attendance_images.length > 1 ? i + 1 : ''}
-                </div>
-                <img src={url} alt={`Attendance ${i + 1}`} className="max-h-64 object-contain rounded border border-gray-200" />
-              </div>
-            ))}
+            {report.attendance_images.map((url, i) => {
+              const label = report.attendance_images.length > 1 ? i + 1 : '';
+              if (isImageUrl(url)) {
+                return (
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <ImageIcon className="w-4 h-4" /> Attendance Sheet {label}
+                    </div>
+                    <img src={url} alt={`Attendance ${i + 1}`} className="max-h-64 object-contain rounded border border-gray-200" />
+                  </div>
+                );
+              }
+              return (
+                <a
+                  key={i}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <FileText className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-sm text-gray-700 flex-1 truncate">
+                    Attendance Sheet {label} <span className="text-gray-400">({getAttachmentLabel(url)})</span>
+                  </span>
+                  <Download className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                </a>
+              );
+            })}
           </div>
         </SectionCard>
       )}
