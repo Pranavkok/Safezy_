@@ -474,10 +474,12 @@ const IncidentPage1Step = ({
             <input
               id="date-of-report"
               type="date"
-              value={new Date().toISOString().split('T')[0]}
-              readOnly
-              className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              {...register('date')}
             />
+            {errors.date && (
+              <p className="text-sm text-red-500">{errors.date.message}</p>
+            )}
           </div>
 
           <div className="space-y-1">
