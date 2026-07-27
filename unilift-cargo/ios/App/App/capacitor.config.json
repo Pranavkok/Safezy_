@@ -3,7 +3,7 @@
 	"appName": "Safezy",
 	"webDir": "public",
 	"server": {
-		"url": "http://192.168.0.135:3000",
+		"url": "https://www.safezy.in/",
 		"cleartext": true,
 		"allowNavigation": [
 			"*.payu.in",

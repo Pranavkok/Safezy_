@@ -19,16 +19,14 @@ const DashboardStatCard = ({
   return (
     <Link
       href={url}
-      className="min-h-40 sm:min-h-52 bg-primary  p-5 text-black rounded-xl flex flex-col 2xl:px-10 items-center justify-center lg:flex-row lg:justify-between transition-shadow duration-300 hover:shadow-lg cursor-pointer "
+      className="min-w-0 min-h-36 sm:min-h-44 bg-primary p-4 sm:p-5 text-black rounded-xl flex items-center justify-between gap-4 overflow-hidden transition-shadow duration-300 hover:shadow-lg cursor-pointer"
     >
-      <div className="flex justify-center items-center mb-4 lg:mb-0 lg:mr-4">
-        {icon}
-      </div>
-      <div className="flex flex-col items-center lg:items-end">
-        <p className="text-3xl sm:text-4xl font-extrabold md:text-7xl ">
+      <div className="flex shrink-0 items-center justify-center">{icon}</div>
+      <div className="min-w-0 flex flex-col items-end text-right">
+        <p className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-none">
           {count}
         </p>
-        <p className="text-base sm:text-lg md:text-xl font-extrabold">
+        <p className="mt-2 text-sm sm:text-base lg:text-lg font-extrabold whitespace-nowrap">
           {title}
         </p>
       </div>
@@ -52,7 +50,7 @@ const AdminDashboardSection = async () => {
       count: resolvedCounts.contractors,
       icon: (
         <UserCircle
-          className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
+          className="font-thin text-black/90 w-14 h-14 sm:w-20 sm:h-20"
           strokeWidth={1}
         />
       ),
@@ -63,7 +61,7 @@ const AdminDashboardSection = async () => {
       count: resolvedCounts.orders,
       icon: (
         <PackageOpen
-          className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
+          className="font-thin text-black/90 w-14 h-14 sm:w-20 sm:h-20"
           strokeWidth={1}
         />
       ),
@@ -74,7 +72,7 @@ const AdminDashboardSection = async () => {
       count: resolvedCounts.products,
       icon: (
         <Boxes
-          className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
+          className="font-thin text-black/90 w-14 h-14 sm:w-20 sm:h-20"
           strokeWidth={1}
         />
       ),
@@ -85,7 +83,7 @@ const AdminDashboardSection = async () => {
       count: resolvedCounts.complaints,
       icon: (
         <NotepadText
-          className="font-thin text-black/90 w-16 h-16 sm:w-24 sm:h-24"
+          className="font-thin text-black/90 w-14 h-14 sm:w-20 sm:h-20"
           strokeWidth={1}
         />
       ),
@@ -94,7 +92,7 @@ const AdminDashboardSection = async () => {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+    <div className="grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-3">
       {dashboardStats.map(item => (
         <DashboardStatCard
           key={item.route}
