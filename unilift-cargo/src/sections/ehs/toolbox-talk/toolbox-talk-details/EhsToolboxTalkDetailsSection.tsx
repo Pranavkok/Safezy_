@@ -2,6 +2,7 @@
 
 import ASSETS from '@/assets';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { ToolboxTalkType } from '@/types/index.types';
 import { SecondaryLogo } from '@/components/svgs';
 import { ToolboxNoteType } from '@/types/ehs.types';
@@ -20,6 +21,15 @@ import {
 } from '@/utils';
 
 type Language = 'original' | 'en' | 'hi' | 'mr';
+
+const PDFViewer = dynamic(() => import('@/components/PdfViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-72 items-center justify-center bg-gray-100 text-sm text-gray-500">
+      Loading PDF…
+    </div>
+  )
+});
 
 const LANGUAGES: { key: Language; label: string }[] = [
   { key: 'original', label: 'Original' },
@@ -86,6 +96,37 @@ const ToolboxTalkAttachment = ({
   index: number;
 }) => {
   const [loadFailed, setLoadFailed] = useState(false);
+  const attachmentLabel = getAttachmentLabel(url);
+
+  if (attachmentLabel === 'PDF') {
+    return (
+      <section className="w-full max-w-5xl overflow-hidden rounded-xl border border-gray-300 bg-white shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="rounded-lg bg-red-50 p-2 text-red-600">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-800">
+                {topic}
+              </p>
+              <p className="text-xs text-gray-500">PDF document</p>
+            </div>
+          </div>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-primary hover:text-primary"
+          >
+            Open full PDF
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+        <PDFViewer pdfUrl={url} />
+      </section>
+    );
+  }
 
   if (!isImageUrl(url) || loadFailed) {
     return (
@@ -100,7 +141,7 @@ const ToolboxTalkAttachment = ({
           <p className="font-medium">
             {loadFailed
               ? 'Image could not be displayed'
-              : `${getAttachmentLabel(url)} attachment`}
+              : `${attachmentLabel} attachment`}
           </p>
           <p className="text-xs text-gray-500">Open the original attachment</p>
         </div>
