@@ -20,6 +20,7 @@ import { formats, modules } from '@/constants/editor';
 import {
   Images,
   ImagePlus,
+  FileText,
   Loader2,
   Sparkles,
   Trash2,
@@ -34,20 +35,13 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
+import {
+  getAttachmentLabel,
+  isImageUrl,
+  parseToolboxAttachmentUrls
+} from '@/utils';
 
 const MAX_PREVIEW_THUMBNAILS = 4;
-
-/** Parse pdf_url which may be a JSON array or a plain URL string */
-const parsePdfUrl = (pdf_url: string | null | undefined): string[] => {
-  if (!pdf_url) return [];
-  try {
-    const parsed = JSON.parse(pdf_url);
-    if (Array.isArray(parsed)) return parsed as string[];
-    return [pdf_url];
-  } catch {
-    return [pdf_url];
-  }
-};
 
 const ToolboxTalkDetailsUpdateSection = ({
   toolboxDetails
@@ -57,17 +51,23 @@ const ToolboxTalkDetailsUpdateSection = ({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('medium');
+  const [responseLength, setResponseLength] = useState<
+    'short' | 'medium' | 'long'
+  >('medium');
   const [isDragging, setIsDragging] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [editorContent, setEditorContent] = useState(toolboxDetails.description ?? '');
-  const [summarizeContent, setSummarizeContent] = useState(toolboxDetails.summarized ?? '');
+  const [editorContent, setEditorContent] = useState(
+    toolboxDetails.description ?? ''
+  );
+  const [summarizeContent, setSummarizeContent] = useState(
+    toolboxDetails.summarized ?? ''
+  );
 
   // Existing images parsed from pdf_url (JSON array or plain URL)
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>(
-    parsePdfUrl(toolboxDetails.pdf_url)
+    parseToolboxAttachmentUrls(toolboxDetails.pdf_url)
   );
 
   const {
@@ -123,10 +123,7 @@ const ToolboxTalkDetailsUpdateSection = ({
   );
 
   const handleDeleteNewImage = (idx: number) => {
-    setValue(
-      'images',
-      watchImages.filter((_, i) => i !== idx) as File[]
-    );
+    setValue('images', watchImages.filter((_, i) => i !== idx) as File[]);
   };
 
   const handleDeleteExistingImage = (idx: number) => {
@@ -148,7 +145,9 @@ const ToolboxTalkDetailsUpdateSection = ({
 
     try {
       setIsGenerating(true);
-      toast.loading('Generating content with Safezy...', { id: 'generate-toolbox' });
+      toast.loading('Generating content with Safezy...', {
+        id: 'generate-toolbox'
+      });
 
       const newFile = watchImages[0];
       let image_base64: string | undefined;
@@ -161,20 +160,28 @@ const ToolboxTalkDetailsUpdateSection = ({
           reader.onload = e => {
             const dataUrl = e.target?.result as string;
             const [header, data] = dataUrl.split(',');
-            image_mime_type = header.replace('data:', '').replace(';base64', '');
+            image_mime_type = header
+              .replace('data:', '')
+              .replace(';base64', '');
             image_base64 = data;
             resolve();
           };
           reader.readAsDataURL(newFile);
         });
-      } else if (existingImageUrls[0]) {
-        image_url = existingImageUrls[0];
+      } else {
+        image_url = existingImageUrls.find(isImageUrl);
       }
 
       const response = await fetch('/api/generate-toolbox-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topicName, length: responseLength, image_base64, image_mime_type, image_url })
+        body: JSON.stringify({
+          topic: topicName,
+          length: responseLength,
+          image_base64,
+          image_mime_type,
+          image_url
+        })
       });
 
       const result = await response.json();
@@ -209,9 +216,19 @@ const ToolboxTalkDetailsUpdateSection = ({
             'toolbox_talk_pdfs',
             'images'
           );
-          newImageUrls = uploaded.filter(r => r.publicUrl).map(r => r.publicUrl);
+          if (uploaded.some(result => !result.publicUrl)) {
+            throw new Error(
+              'One or more images could not be uploaded. Please try again.'
+            );
+          }
+          newImageUrls = uploaded.map(result => result.publicUrl);
         } catch (error) {
-          setError('images', { message: error.message });
+          setError('images', {
+            message:
+              error instanceof Error
+                ? error.message
+                : 'One or more images could not be uploaded.'
+          });
           throw error;
         }
       }
@@ -226,7 +243,10 @@ const ToolboxTalkDetailsUpdateSection = ({
         image_urls: allImageUrls
       };
 
-      const response = await updateToolboxTalkDetails(submitData, toolboxDetails.id);
+      const response = await updateToolboxTalkDetails(
+        submitData,
+        toolboxDetails.id
+      );
 
       if (response.success) {
         toast.success(response.message);
@@ -237,7 +257,9 @@ const ToolboxTalkDetailsUpdateSection = ({
       }
     } catch (error) {
       console.error('Error updating toolbox talk details:', error);
-      toast.error('An unexpected error occurred while updating toolbox talk details.');
+      toast.error(
+        'An unexpected error occurred while updating toolbox talk details.'
+      );
     } finally {
       setLoading(false);
     }
@@ -258,7 +280,9 @@ const ToolboxTalkDetailsUpdateSection = ({
               {...register('topic_name')}
             />
             <div className="mt-2 space-y-2">
-              <label className="text-sm font-medium text-gray-700">Response Length</label>
+              <label className="text-sm font-medium text-gray-700">
+                Response Length
+              </label>
               <div className="flex gap-2">
                 {(['short', 'medium', 'long'] as const).map(len => (
                   <button
@@ -311,21 +335,31 @@ const ToolboxTalkDetailsUpdateSection = ({
           {/* Drag-and-drop zone */}
           <div
             onDrop={handleDrop}
-            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={e => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
             onDragLeave={() => setIsDragging(false)}
             onClick={() => fileInputRef.current?.click()}
             className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200 py-6 px-4 select-none
-              ${isDragging
-                ? 'border-primary bg-primary/5 scale-[1.01]'
-                : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+              ${
+                isDragging
+                  ? 'border-primary bg-primary/5 scale-[1.01]'
+                  : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
               }`}
           >
-            <Upload className={`w-8 h-8 transition-colors ${isDragging ? 'text-primary' : 'text-gray-400'}`} />
+            <Upload
+              className={`w-8 h-8 transition-colors ${isDragging ? 'text-primary' : 'text-gray-400'}`}
+            />
             <div className="text-center">
               <p className="text-sm font-medium text-gray-700">
-                {isDragging ? 'Drop images here' : 'Drag & drop images or click to browse'}
+                {isDragging
+                  ? 'Drop images here'
+                  : 'Drag & drop images or click to browse'}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">You can select multiple images at once</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                You can select multiple images at once
+              </p>
             </div>
           </div>
 
@@ -338,40 +372,56 @@ const ToolboxTalkDetailsUpdateSection = ({
                     item.type === 'existing'
                       ? item.url
                       : URL.createObjectURL(item.file);
+                  const isImage = item.type === 'new' || isImageUrl(item.url);
                   return (
                     <div
                       key={i}
-                      className="w-10 h-10 rounded-md overflow-hidden border border-gray-200 shrink-0 bg-gray-100"
+                      className="w-10 h-10 rounded-md overflow-hidden border border-gray-200 shrink-0 bg-gray-100 flex items-center justify-center"
                     >
-                      <Image
-                        width={40}
-                        height={40}
-                        src={src}
-                        alt={`thumb-${i}`}
-                        className="w-full h-full object-cover"
-                        onLoad={() => { if (item.type === 'new') URL.revokeObjectURL(src); }}
-                        onError={() => { if (item.type === 'new') URL.revokeObjectURL(src); }}
-                      />
+                      {isImage ? (
+                        <Image
+                          width={40}
+                          height={40}
+                          src={src}
+                          alt={`thumb-${i}`}
+                          className="w-full h-full object-cover"
+                          onLoad={() => {
+                            if (item.type === 'new') URL.revokeObjectURL(src);
+                          }}
+                          onError={() => {
+                            if (item.type === 'new') URL.revokeObjectURL(src);
+                          }}
+                        />
+                      ) : (
+                        <FileText className="w-5 h-5 text-gray-400" />
+                      )}
                     </div>
                   );
                 })}
                 {extraCount > 0 && (
                   <div className="w-10 h-10 rounded-md border border-gray-200 bg-gray-100 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-semibold text-gray-500">+{extraCount}</span>
+                    <span className="text-xs font-semibold text-gray-500">
+                      +{extraCount}
+                    </span>
                   </div>
                 )}
               </div>
 
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
-                  <Button type="button" variant="secondary" size="sm" className="shrink-0 gap-1.5">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                  >
                     <Images className="w-4 h-4" />
                     View all ({totalImageCount})
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[800px] max-h-[90vh] bg-white">
                   <DialogHeader>
-                    <DialogTitle>Images ({totalImageCount})</DialogTitle>
+                    <DialogTitle>Attachments ({totalImageCount})</DialogTitle>
                   </DialogHeader>
                   <div className="flex items-center justify-end mb-4">
                     <Button
@@ -387,15 +437,29 @@ const ToolboxTalkDetailsUpdateSection = ({
                     {/* Existing images */}
                     {existingImageUrls.map((url, idx) => (
                       <div key={`existing-${idx}`} className="relative group">
-                        <div className="aspect-square overflow-hidden rounded-xl shadow-md border">
-                          <Image
-                            width={200}
-                            height={200}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                            src={url}
-                            alt={`Existing Image ${idx + 1}`}
-                          />
-                        </div>
+                        {isImageUrl(url) ? (
+                          <div className="aspect-square overflow-hidden rounded-xl shadow-md border">
+                            <Image
+                              width={200}
+                              height={200}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                              src={url}
+                              alt={`Existing Image ${idx + 1}`}
+                            />
+                          </div>
+                        ) : (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="aspect-square rounded-xl shadow-md border flex flex-col items-center justify-center gap-2 p-3 text-center hover:border-primary"
+                          >
+                            <FileText className="w-8 h-8 text-gray-400" />
+                            <span className="text-xs text-gray-600">
+                              {getAttachmentLabel(url)} attachment
+                            </span>
+                          </a>
+                        )}
                         <Button
                           className="absolute top-2 right-2 bg-white/90 hover:bg-white rounded-full w-8 h-8 transition-all duration-300 shadow-md hover:shadow-lg"
                           title="Remove"
@@ -440,7 +504,9 @@ const ToolboxTalkDetailsUpdateSection = ({
           )}
 
           {errors.images && (
-            <p className="text-sm text-red-500">{errors.images.message as string}</p>
+            <p className="text-sm text-red-500">
+              {errors.images.message as string}
+            </p>
           )}
         </div>
       </div>

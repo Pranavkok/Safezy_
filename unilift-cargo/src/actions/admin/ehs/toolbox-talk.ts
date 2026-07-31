@@ -2,7 +2,11 @@
 
 import { getAuthId, getUserIdFromAuth } from '@/actions/user';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '@/constants/constants';
-import { ToolboxTalkType, SuggestionType, SuggestionWithUserType } from '@/types/index.types';
+import {
+  ToolboxTalkType,
+  SuggestionType,
+  SuggestionWithUserType
+} from '@/types/index.types';
 import {
   addSuggestionType,
   addToolboxType,
@@ -18,6 +22,10 @@ import { createServiceClient } from '@/utils/supabase/service';
 import { revalidatePath } from 'next/cache';
 import { notifyAllContractors } from '@/lib/notify-all-contractors';
 import { sendPushNotification } from '@/lib/web-push';
+import {
+  parseToolboxAttachmentUrls,
+  serializeToolboxAttachmentUrls
+} from '@/utils';
 
 type ToolboxSuggestionReviewStatus = 'completed' | 'rejected';
 
@@ -62,7 +70,12 @@ export const getAllToolboxTalkDetails = async (
     return {
       success: true,
       message: SUCCESS_MESSAGES.TOOLBOX_DETAILS_FETCHED,
-      data,
+      data: (data ?? []).map(toolboxTalk => ({
+        ...toolboxTalk,
+        pdf_url: serializeToolboxAttachmentUrls(
+          parseToolboxAttachmentUrls(toolboxTalk.pdf_url)
+        )
+      })),
       pageCount: count ? Math.ceil(count / pageSize) : 1,
       count: count ? count : 0
     };
@@ -75,30 +88,6 @@ export const getAllToolboxTalkDetails = async (
       success: false,
       message: ERROR_MESSAGES.UNEXPECTED_ERROR
     };
-  }
-};
-
-const SIGNED_URL_EXPIRY = 60 * 60 * 24; // 24 hours
-
-const toSignedUrl = async (
-  serviceClient: ReturnType<typeof createServiceClient>,
-  publicUrl: string | null | undefined,
-  bucket: string
-): Promise<string | null> => {
-  if (!publicUrl) return null;
-  try {
-    // Extract the file path after /object/public/<bucket>/ or /object/sign/<bucket>/
-    const marker = `/object/public/${bucket}/`;
-    const idx = publicUrl.indexOf(marker);
-    if (idx === -1) return publicUrl;
-    const filePath = publicUrl.slice(idx + marker.length);
-    const { data, error } = await serviceClient.storage
-      .from(bucket)
-      .createSignedUrl(filePath, SIGNED_URL_EXPIRY);
-    if (error || !data?.signedUrl) return publicUrl;
-    return data.signedUrl;
-  } catch {
-    return publicUrl;
   }
 };
 
@@ -126,12 +115,15 @@ export const getToolboxTalkDetailsById = async (
       };
     }
 
-    const signedPdfUrl = await toSignedUrl(serviceClient, data.pdf_url, 'toolbox_talk_pdfs');
+    const attachmentUrls = parseToolboxAttachmentUrls(data.pdf_url);
 
     return {
       success: true,
       message: SUCCESS_MESSAGES.TOOLBOX_DETAILS_FETCHED,
-      data: { ...data, pdf_url: signedPdfUrl ?? data.pdf_url }
+      data: {
+        ...data,
+        pdf_url: serializeToolboxAttachmentUrls(attachmentUrls)
+      }
     };
   } catch (error) {
     console.error(
@@ -228,7 +220,8 @@ export const addToolboxUserDetails = async (
       user_id: userId,
       toolbox_talk_id: toolboxTalkId,
       ...(rating > 0 && { rating }),
-      ...(durationSeconds !== undefined && durationSeconds > 0 && { duration_seconds: durationSeconds })
+      ...(durationSeconds !== undefined &&
+        durationSeconds > 0 && { duration_seconds: durationSeconds })
     };
 
     const { data: userData, error: userError } = await supabase
@@ -273,15 +266,19 @@ export const addToolboxUserDetails = async (
       bestPerformer: userData.best_performer
     };
 
-    getAuthId().then((authId) => {
-      if (authId) {
-        sendPushNotification(authId, 'toolbox_talk_completion', {
-          title: 'Toolbox Talk Completed',
-          body: 'Well done! You have completed a toolbox talk.',
-          url: '/contractor/ehs/toolbox-talks',
-        }).catch((err) => console.error('[push] toolbox completion notification failed:', err));
-      }
-    }).catch(() => {});
+    getAuthId()
+      .then(authId => {
+        if (authId) {
+          sendPushNotification(authId, 'toolbox_talk_completion', {
+            title: 'Toolbox Talk Completed',
+            body: 'Well done! You have completed a toolbox talk.',
+            url: '/contractor/ehs/toolbox-talks'
+          }).catch(err =>
+            console.error('[push] toolbox completion notification failed:', err)
+          );
+        }
+      })
+      .catch(() => {});
 
     return {
       success: true,
@@ -382,10 +379,7 @@ export const addToolboxTalkDetails = async (
 
   try {
     // Store image_urls as JSON string in pdf_url column (supports multiple images)
-    const pdfUrlValue =
-      toolbox.image_urls && toolbox.image_urls.length > 0
-        ? JSON.stringify(toolbox.image_urls)
-        : null;
+    const pdfUrlValue = serializeToolboxAttachmentUrls(toolbox.image_urls);
 
     const newToolBoxTalk = {
       topic_name: toolbox.topic_name,
@@ -410,11 +404,17 @@ export const addToolboxTalkDetails = async (
 
     revalidatePath('/admin/ehs/toolbox-talk');
 
-    notifyAllContractors('portal_toolbox_talk', {
-      title: 'New Toolbox Talk Available',
-      body: `"${toolbox.topic_name}" has been added. Complete it to stay compliant.`,
-      url: '/contractor/ehs/toolbox-talks',
-    }, { toolbox_talk_id: insertedTbt.id }).catch((err) => console.error('[push] toolbox talk notification failed:', err));
+    notifyAllContractors(
+      'portal_toolbox_talk',
+      {
+        title: 'New Toolbox Talk Available',
+        body: `"${toolbox.topic_name}" has been added. Complete it to stay compliant.`,
+        url: '/contractor/ehs/toolbox-talks'
+      },
+      { toolbox_talk_id: insertedTbt.id }
+    ).catch(err =>
+      console.error('[push] toolbox talk notification failed:', err)
+    );
 
     return {
       success: true,
@@ -432,7 +432,6 @@ export const addToolboxTalkDetails = async (
   }
 };
 
-
 export const updateToolboxTalkDetails = async (
   toolbox: updateToolboxType,
   toolboxId: number
@@ -441,10 +440,7 @@ export const updateToolboxTalkDetails = async (
 
   try {
     // Store image_urls as JSON string in pdf_url column
-    const pdfUrlValue =
-      toolbox.image_urls && toolbox.image_urls.length > 0
-        ? JSON.stringify(toolbox.image_urls)
-        : null;
+    const pdfUrlValue = serializeToolboxAttachmentUrls(toolbox.image_urls);
 
     const toolBoxTalk = {
       topic_name: toolbox.topic_name,
@@ -482,7 +478,6 @@ export const updateToolboxTalkDetails = async (
     };
   }
 };
-
 
 export const deleteToolboxTalk = async (toolboxId: number) => {
   const supabase = createServiceClient();
@@ -568,7 +563,8 @@ export const getMyToolboxSuggestions = async (): Promise<{
 
   try {
     const userId = await getAuthId();
-    if (!userId) return { success: false, message: 'Not authenticated', data: [] };
+    if (!userId)
+      return { success: false, message: 'Not authenticated', data: [] };
 
     const { data, error } = await serviceClient
       .from('ehs_suggestions')
@@ -582,7 +578,11 @@ export const getMyToolboxSuggestions = async (): Promise<{
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    return { success: true, message: 'Fetched successfully', data: data as SuggestionType[] };
+    return {
+      success: true,
+      message: 'Fetched successfully',
+      data: data as SuggestionType[]
+    };
   } catch (error) {
     console.error('Unexpected error fetching my toolbox suggestions', error);
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
@@ -612,15 +612,25 @@ export const getToolboxTalkSuggestions = async (): Promise<{
       };
     }
 
-    const userIds = Array.from(new Set(data.filter(s => s.user_id).map(s => s.user_id as string)));
-    const userMap = new Map<string, { first_name: string; last_name: string }>();
+    const userIds = Array.from(
+      new Set(data.filter(s => s.user_id).map(s => s.user_id as string))
+    );
+    const userMap = new Map<
+      string,
+      { first_name: string; last_name: string }
+    >();
 
     if (userIds.length > 0) {
       const { data: users } = await serviceClient
         .from('users')
         .select('auth_id, first_name, last_name')
         .in('auth_id', userIds);
-      users?.forEach(u => userMap.set(u.auth_id, { first_name: u.first_name, last_name: u.last_name }));
+      users?.forEach(u =>
+        userMap.set(u.auth_id, {
+          first_name: u.first_name,
+          last_name: u.last_name
+        })
+      );
     }
 
     const enrichedData: SuggestionWithUserType[] = data.map(s => ({
@@ -759,19 +769,32 @@ export const getToolboxTalkSuggestionsHistory = async (): Promise<{
       .order('reviewed_at', { ascending: false });
 
     if (error) {
-      console.error('Error while fetching toolbox talk suggestion history', error);
+      console.error(
+        'Error while fetching toolbox talk suggestion history',
+        error
+      );
       return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
     }
 
-    const userIds = Array.from(new Set(data.filter(s => s.user_id).map(s => s.user_id as string)));
-    const userMap = new Map<string, { first_name: string; last_name: string }>();
+    const userIds = Array.from(
+      new Set(data.filter(s => s.user_id).map(s => s.user_id as string))
+    );
+    const userMap = new Map<
+      string,
+      { first_name: string; last_name: string }
+    >();
 
     if (userIds.length > 0) {
       const { data: users } = await serviceClient
         .from('users')
         .select('auth_id, first_name, last_name')
         .in('auth_id', userIds);
-      users?.forEach(u => userMap.set(u.auth_id, { first_name: u.first_name, last_name: u.last_name }));
+      users?.forEach(u =>
+        userMap.set(u.auth_id, {
+          first_name: u.first_name,
+          last_name: u.last_name
+        })
+      );
     }
 
     const enrichedData: SuggestionWithUserType[] = data.map(s => ({
@@ -779,9 +802,16 @@ export const getToolboxTalkSuggestionsHistory = async (): Promise<{
       user: s.user_id ? (userMap.get(s.user_id) ?? null) : null
     }));
 
-    return { success: true, message: 'Fetched successfully', data: enrichedData };
+    return {
+      success: true,
+      message: 'Fetched successfully',
+      data: enrichedData
+    };
   } catch (error) {
-    console.error('Unexpected error fetching toolbox suggestion history', error);
+    console.error(
+      'Unexpected error fetching toolbox suggestion history',
+      error
+    );
     return { success: false, message: ERROR_MESSAGES.UNEXPECTED_ERROR };
   }
 };
@@ -827,7 +857,9 @@ export const getToolboxTalkReportEntries = async (): Promise<{
     }
 
     const reportEntries: ToolboxTalkReportEntry[] = (data ?? []).map(entry => {
-      const usersData = Array.isArray(entry.users) ? entry.users[0] : entry.users;
+      const usersData = Array.isArray(entry.users)
+        ? entry.users[0]
+        : entry.users;
       const talkData = Array.isArray(entry.ehs_toolbox_talk)
         ? entry.ehs_toolbox_talk[0]
         : entry.ehs_toolbox_talk;

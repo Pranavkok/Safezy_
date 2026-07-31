@@ -9,10 +9,16 @@ import {
   StyleSheet,
   Image,
   Font,
+  Link,
   Styles
 } from '@react-pdf/renderer';
 import ASSETS from '@/assets';
 import { ToolboxTalkType } from '@/types/index.types';
+import {
+  getAttachmentLabel,
+  isImageUrl,
+  parseToolboxAttachmentUrls
+} from '@/utils';
 
 Font.register({
   family: 'Inter',
@@ -44,10 +50,20 @@ function parseInline(html: string): Seg[] {
   for (const part of parts) {
     const m = /^<(?:strong|b)[^>]*>([\s\S]*?)<\/(?:strong|b)>$/i.exec(part);
     if (m) {
-      const t = decode(m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
+      const t = decode(
+        m[1]
+          .replace(/<[^>]+>/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+      );
       if (t) segs.push({ text: t, bold: true });
     } else {
-      const t = decode(part.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
+      const t = decode(
+        part
+          .replace(/<[^>]+>/g, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+      );
       if (t) segs.push({ text: t, bold: false });
     }
   }
@@ -96,7 +112,9 @@ const S = StyleSheet.create({
   header: {
     backgroundColor: '#FF914D',
     position: 'absolute',
-    top: 0, left: 0, right: 0,
+    top: 0,
+    left: 0,
+    right: 0,
     height: 74,
     flexDirection: 'row',
     alignItems: 'center',
@@ -192,7 +210,9 @@ const S = StyleSheet.create({
   footer: {
     backgroundColor: '#FF914D',
     position: 'absolute',
-    bottom: 0, left: 0, right: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     height: 36,
     paddingHorizontal: 28,
     flexDirection: 'row',
@@ -202,7 +222,10 @@ const S = StyleSheet.create({
   },
   watermark: {
     position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 0,
     justifyContent: 'center',
     alignItems: 'center'
@@ -250,8 +273,14 @@ function renderBlock(block: Block, i: number) {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }) => {
-  const blocks = toolboxTalk.description ? parseHtml(toolboxTalk.description) : [];
+const ToolboxTalkContentPdf = ({
+  toolboxTalk
+}: {
+  toolboxTalk: ToolboxTalkType;
+}) => {
+  const blocks = toolboxTalk.description
+    ? parseHtml(toolboxTalk.description)
+    : [];
 
   // Hoist first paragraph (before any heading) as full-width intro
   let intro: Block | null = null;
@@ -265,20 +294,12 @@ const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }
     ? stripHtmlPlain(toolboxTalk.summarized)
     : null;
 
-  // pdf_url may be a JSON array of URLs or a legacy single URL string
-  let imageUrls: string[] = [];
-  if (toolboxTalk.pdf_url) {
-    try {
-      const parsed = JSON.parse(toolboxTalk.pdf_url);
-      imageUrls = Array.isArray(parsed) ? parsed : [toolboxTalk.pdf_url];
-    } catch {
-      imageUrls = [toolboxTalk.pdf_url];
-    }
-  }
+  const attachmentUrls = parseToolboxAttachmentUrls(toolboxTalk.pdf_url);
+  const imageUrls = attachmentUrls.filter(isImageUrl);
+  const fileUrls = attachmentUrls.filter(url => !isImageUrl(url));
   const hasImage = imageUrls.length > 0;
   const primaryImage = imageUrls[0];
   const extraImages = imageUrls.slice(1);
-
 
   return (
     <Document>
@@ -326,6 +347,22 @@ const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }
           </View>
         ))}
 
+        {fileUrls.length > 0 && (
+          <View style={{ marginTop: 10 }}>
+            <Text style={{ fontSize: 9, fontWeight: 'bold', marginBottom: 4 }}>
+              Source Attachments
+            </Text>
+            {fileUrls.map((url, index) => (
+              <Link
+                key={url}
+                src={url}
+                style={{ fontSize: 8, color: '#FF914D', marginBottom: 3 }}
+              >
+                {getAttachmentLabel(url)} attachment {index + 1}
+              </Link>
+            ))}
+          </View>
+        )}
 
         {plainSummary && (
           <View style={S.summaryBox}>
@@ -340,7 +377,9 @@ const ToolboxTalkContentPdf = ({ toolboxTalk }: { toolboxTalk: ToolboxTalkType }
           </Text>
           <Text
             style={{ fontSize: 8, color: '#FFFFFF' }}
-            render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+            render={({ pageNumber, totalPages }) =>
+              `Page ${pageNumber} of ${totalPages}`
+            }
           />
         </View>
       </Page>

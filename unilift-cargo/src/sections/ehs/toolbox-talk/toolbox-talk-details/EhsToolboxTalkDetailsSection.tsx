@@ -12,7 +12,12 @@ import ToolboxTalkContentDownloadButton from '../ToolboxTalkContentDownloadButto
 import ToolboxVoicePlayer from '@/components/ToolboxVoicePlayer';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Volume2, VolumeX } from 'lucide-react';
+import { ExternalLink, FileText, Volume2, VolumeX } from 'lucide-react';
+import {
+  getAttachmentLabel,
+  isImageUrl,
+  parseToolboxAttachmentUrls
+} from '@/utils';
 
 type Language = 'original' | 'en' | 'hi' | 'mr';
 
@@ -71,6 +76,59 @@ function getSummaryVoice(langCode: string): SpeechSynthesisVoice | null {
   );
 }
 
+const ToolboxTalkAttachment = ({
+  url,
+  topic,
+  index
+}: {
+  url: string;
+  topic: string;
+  index: number;
+}) => {
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  if (!isImageUrl(url) || loadFailed) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex w-full max-w-2xl items-center gap-3 rounded-lg border border-gray-300 bg-gray-50 p-4 text-gray-700 shadow-sm transition-colors hover:border-primary hover:text-primary"
+      >
+        <FileText className="h-6 w-6 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">
+            {loadFailed
+              ? 'Image could not be displayed'
+              : `${getAttachmentLabel(url)} attachment`}
+          </p>
+          <p className="text-xs text-gray-500">Open the original attachment</p>
+        </div>
+        <ExternalLink className="h-4 w-4 shrink-0" />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block w-full max-w-2xl overflow-hidden rounded-lg border border-gray-300 shadow-md transition hover:border-primary"
+      title="Open full-size image"
+    >
+      <Image
+        src={url}
+        alt={`${topic} - Image ${index + 1}`}
+        height={1080}
+        width={1080}
+        className="h-auto w-full"
+        onError={() => setLoadFailed(true)}
+      />
+    </a>
+  );
+};
+
 /** Inline play/stop button that speaks the summarized content */
 function SummaryVoiceButton({
   htmlContent,
@@ -80,7 +138,8 @@ function SummaryVoiceButton({
   language: Language;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const supported =
+    typeof window !== 'undefined' && 'speechSynthesis' in window;
 
   // Stop on language change
   const prevLangRef = useRef(language);
@@ -128,10 +187,13 @@ function SummaryVoiceButton({
       if (voice) {
         utterance.voice = voice;
         if (!voice.lang.startsWith(langCode.split('-')[0])) {
-          toast(`${SUMMARY_LANG_LABEL[language]} voice not available. Using default.`, {
-            icon: '⚠️',
-            duration: 3000
-          });
+          toast(
+            `${SUMMARY_LANG_LABEL[language]} voice not available. Using default.`,
+            {
+              icon: '⚠️',
+              duration: 3000
+            }
+          );
         }
       }
     };
@@ -205,10 +267,12 @@ export const EHSToolboxTalkDetailsSection = ({
 
   const [activeLanguage, setActiveLanguage] = useState<Language>('original');
   const [isTranslating, setIsTranslating] = useState(false);
-  const [translatedDescription, setTranslatedDescription] = useState<string>('');
+  const [translatedDescription, setTranslatedDescription] =
+    useState<string>('');
   const [translatedSummarize, setTranslatedSummarize] = useState<string>('');
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const translationCache = useRef<Partial<Record<Language, { description: string; summarize: string }>>>({});
+  const translationCache = useRef<
+    Partial<Record<Language, { description: string; summarize: string }>>
+  >({});
 
   useEffect(() => {
     const stored = sessionStorage.getItem(storageKey);
@@ -260,7 +324,8 @@ export const EHSToolboxTalkDetailsSection = ({
 
       if (!res.ok) throw new Error('Translation failed');
 
-      const { translatedDescription: desc, translatedSummarize: summ } = await res.json();
+      const { translatedDescription: desc, translatedSummarize: summ } =
+        await res.json();
 
       translationCache.current[lang] = { description: desc, summarize: summ };
       setTranslatedDescription(desc);
@@ -274,9 +339,14 @@ export const EHSToolboxTalkDetailsSection = ({
   };
 
   const displayDescription =
-    activeLanguage === 'original' ? toolboxTalk.description : translatedDescription;
+    activeLanguage === 'original'
+      ? toolboxTalk.description
+      : translatedDescription;
   const displaySummarize =
-    activeLanguage === 'original' ? toolboxTalk.summarized : translatedSummarize;
+    activeLanguage === 'original'
+      ? toolboxTalk.summarized
+      : translatedSummarize;
+  const attachmentUrls = parseToolboxAttachmentUrls(toolboxTalk.pdf_url);
 
   return (
     <div className="relative overflow-hidden">
@@ -328,17 +398,22 @@ export const EHSToolboxTalkDetailsSection = ({
                   onClick={() => handleLanguageChange(key)}
                   disabled={isTranslating}
                   className={`px-3 py-1 text-xs rounded-full border font-medium transition-colors
-                    ${activeLanguage === key
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
+                    ${
+                      activeLanguage === key
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
                     }
                     disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {isTranslating && activeLanguage !== key && key !== 'original' ? label : label}
+                  {isTranslating && activeLanguage !== key && key !== 'original'
+                    ? label
+                    : label}
                 </button>
               ))}
               {isTranslating && (
-                <span className="text-xs text-gray-400 italic">Translating...</span>
+                <span className="text-xs text-gray-400 italic">
+                  Translating...
+                </span>
               )}
             </div>
 
@@ -401,35 +476,19 @@ export const EHSToolboxTalkDetailsSection = ({
             </div>
           ) : null}
 
-          {toolboxTalk.pdf_url && (() => {
-            // pdf_url may be a JSON array of URLs or a legacy single URL string
-            let imageUrls: string[] = [];
-            try {
-              const parsed = JSON.parse(toolboxTalk.pdf_url);
-              imageUrls = Array.isArray(parsed) ? parsed : [toolboxTalk.pdf_url];
-            } catch {
-              imageUrls = [toolboxTalk.pdf_url];
-            }
-            return imageUrls.length > 0 ? (
-              <div className="mt-6 space-y-4">
-                {imageUrls.map((url, idx) => (
-                  <div key={idx} className="flex justify-center">
-                    <div className="w-full max-w-2xl border border-gray-300 rounded-lg shadow-md overflow-hidden">
-                      <Image
-                        src={url}
-                        alt={`${toolboxTalk.topic_name} - Image ${idx + 1}`}
-                        height={1080}
-                        width={1080}
-                        className="w-full h-auto"
-                        onLoad={() => setIsImageLoaded(true)}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null;
-          })()}
-
+          {attachmentUrls.length > 0 && (
+            <div className="mt-6 space-y-4">
+              {attachmentUrls.map((url, index) => (
+                <div key={url} className="flex justify-center">
+                  <ToolboxTalkAttachment
+                    url={url}
+                    topic={toolboxTalk.topic_name}
+                    index={index}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="w-full flex flex-col gap-2 sm:flex-row sm:justify-between items-center mt-6">
@@ -439,7 +498,9 @@ export const EHSToolboxTalkDetailsSection = ({
               toolboxId={toolboxTalk.id}
             />
             {toolboxTalk.summarized && (
-              <EhsTbtSummarizeModal summary={displaySummarize || toolboxTalk.summarized} />
+              <EhsTbtSummarizeModal
+                summary={displaySummarize || toolboxTalk.summarized}
+              />
             )}
             {toolboxTalk.summarized && (
               <SummaryVoiceButton

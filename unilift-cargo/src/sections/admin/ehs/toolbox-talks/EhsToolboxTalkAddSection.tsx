@@ -53,7 +53,9 @@ const EhsToolboxTalkAddSection = () => {
   const [editorContent, setEditorContent] = useState('');
   const [summarizeContent, setSummarizeContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [responseLength, setResponseLength] = useState<'short' | 'medium' | 'long'>('medium');
+  const [responseLength, setResponseLength] = useState<
+    'short' | 'medium' | 'long'
+  >('medium');
   const [isDragging, setIsDragging] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,10 +96,7 @@ const EhsToolboxTalkAddSection = () => {
   );
 
   const handleDeleteImage = (idx: number) => {
-    setValue(
-      'images',
-      watchImages.filter((_, i) => i !== idx) as File[]
-    );
+    setValue('images', watchImages.filter((_, i) => i !== idx) as File[]);
   };
 
   const visibleThumbs = watchImages.slice(0, MAX_PREVIEW_THUMBNAILS);
@@ -113,7 +112,9 @@ const EhsToolboxTalkAddSection = () => {
 
     try {
       setIsGenerating(true);
-      toast.loading('Generating content with Safezy...', { id: 'generate-toolbox' });
+      toast.loading('Generating content with Safezy...', {
+        id: 'generate-toolbox'
+      });
 
       // Use first selected image as base64 hint for the AI (optional)
       let image_base64: string | undefined;
@@ -125,7 +126,9 @@ const EhsToolboxTalkAddSection = () => {
           reader.onload = e => {
             const dataUrl = e.target?.result as string;
             const [header, data] = dataUrl.split(',');
-            image_mime_type = header.replace('data:', '').replace(';base64', '');
+            image_mime_type = header
+              .replace('data:', '')
+              .replace(';base64', '');
             image_base64 = data;
             resolve();
           };
@@ -136,7 +139,12 @@ const EhsToolboxTalkAddSection = () => {
       const response = await fetch('/api/generate-toolbox-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: topicName, length: responseLength, image_base64, image_mime_type })
+        body: JSON.stringify({
+          topic: topicName,
+          length: responseLength,
+          image_base64,
+          image_mime_type
+        })
       });
 
       const result = await response.json();
@@ -170,11 +178,19 @@ const EhsToolboxTalkAddSection = () => {
             'toolbox_talk_pdfs',
             'images'
           );
-          imageUrls = uploaded
-            .filter(r => r.publicUrl)
-            .map(r => r.publicUrl);
+          if (uploaded.some(result => !result.publicUrl)) {
+            throw new Error(
+              'One or more images could not be uploaded. Please try again.'
+            );
+          }
+          imageUrls = uploaded.map(result => result.publicUrl);
         } catch (error) {
-          setError('images', { message: error.message });
+          setError('images', {
+            message:
+              error instanceof Error
+                ? error.message
+                : 'One or more images could not be uploaded.'
+          });
           throw error;
         }
       }
@@ -197,7 +213,9 @@ const EhsToolboxTalkAddSection = () => {
       }
     } catch (error) {
       console.error('Error adding toolbox talk details:', error);
-      toast.error('An unexpected error occurred while adding toolbox talk details.');
+      toast.error(
+        'An unexpected error occurred while adding toolbox talk details.'
+      );
     }
   };
 
@@ -216,7 +234,9 @@ const EhsToolboxTalkAddSection = () => {
               {...register('topic_name')}
             />
             <div className="mt-2 space-y-2">
-              <label className="text-sm font-medium text-gray-700">Response Length</label>
+              <label className="text-sm font-medium text-gray-700">
+                Response Length
+              </label>
               <div className="flex gap-2">
                 {(['short', 'medium', 'long'] as const).map(len => (
                   <button
@@ -269,19 +289,27 @@ const EhsToolboxTalkAddSection = () => {
           {/* Drag-and-drop zone */}
           <div
             onDrop={handleDrop}
-            onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+            onDragOver={e => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
             onDragLeave={() => setIsDragging(false)}
             onClick={() => fileInputRef.current?.click()}
             className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200 py-6 px-4 select-none
-              ${isDragging
-                ? 'border-primary bg-primary/5 scale-[1.01]'
-                : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+              ${
+                isDragging
+                  ? 'border-primary bg-primary/5 scale-[1.01]'
+                  : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
               }`}
           >
-            <Upload className={`w-8 h-8 transition-colors ${isDragging ? 'text-primary' : 'text-gray-400'}`} />
+            <Upload
+              className={`w-8 h-8 transition-colors ${isDragging ? 'text-primary' : 'text-gray-400'}`}
+            />
             <div className="text-center">
               <p className="text-sm font-medium text-gray-700">
-                {isDragging ? 'Drop images here' : 'Drag & drop images or click to browse'}
+                {isDragging
+                  ? 'Drop images here'
+                  : 'Drag & drop images or click to browse'}
               </p>
               <p className="text-xs text-gray-400 mt-0.5">
                 You can select multiple images at once
@@ -314,14 +342,21 @@ const EhsToolboxTalkAddSection = () => {
                 })}
                 {extraCount > 0 && (
                   <div className="w-10 h-10 rounded-md border border-gray-200 bg-gray-100 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-semibold text-gray-500">+{extraCount}</span>
+                    <span className="text-xs font-semibold text-gray-500">
+                      +{extraCount}
+                    </span>
                   </div>
                 )}
               </div>
 
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
-                  <Button type="button" variant="secondary" size="sm" className="shrink-0 gap-1.5">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                  >
                     <Images className="w-4 h-4" />
                     View all ({imageCount})
                   </Button>
@@ -374,7 +409,9 @@ const EhsToolboxTalkAddSection = () => {
           )}
 
           {errors.images && (
-            <p className="text-sm text-red-500">{errors.images.message as string}</p>
+            <p className="text-sm text-red-500">
+              {errors.images.message as string}
+            </p>
           )}
         </div>
       </div>

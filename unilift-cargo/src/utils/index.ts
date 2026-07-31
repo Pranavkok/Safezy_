@@ -22,7 +22,19 @@ export const getProductBrandLabel = (value: string): string => {
   return brand ? brand.label : '';
 };
 
-const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'heic', 'heif'];
+const IMAGE_EXTENSIONS = [
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'bmp',
+  'svg',
+  'heic',
+  'heif'
+];
+
+const TOOLBOX_STORAGE_BUCKET = 'toolbox_talk_pdfs';
 
 // Derive the file extension from a (possibly query-stringed) public URL.
 export const getUrlExtension = (url: string): string => {
@@ -43,6 +55,59 @@ export const getAttachmentLabel = (url: string): string => {
   if (ext === 'doc' || ext === 'docx') return 'Word';
   if (ext === 'xls' || ext === 'xlsx') return 'Excel';
   return ext ? ext.toUpperCase() : 'File';
+};
+
+// Convert temporary signed Toolbox Talk links back into stable public links.
+// Older admin edits could persist 24-hour signed URLs in the database, causing
+// attachments to stop loading after the token expired.
+export const normalizeToolboxAttachmentUrl = (rawUrl: string): string => {
+  const url = rawUrl.trim();
+  if (!url) return '';
+
+  const signedMarker = `/object/sign/${TOOLBOX_STORAGE_BUCKET}/`;
+  if (!url.includes(signedMarker)) return url;
+
+  return url
+    .split(/[?#]/)[0]
+    .replace(signedMarker, `/object/public/${TOOLBOX_STORAGE_BUCKET}/`);
+};
+
+// pdf_url is a legacy column. Depending on when a talk was created, it may
+// contain one plain URL, one JSON-encoded URL, or an array of URLs.
+export const parseToolboxAttachmentUrls = (
+  storedValue: string | null | undefined
+): string[] => {
+  if (!storedValue?.trim()) return [];
+
+  let parsed: unknown = storedValue.trim();
+  for (let attempt = 0; attempt < 2 && typeof parsed === 'string'; attempt++) {
+    const candidate = parsed.trim();
+    if (!candidate.startsWith('[') && !candidate.startsWith('"')) break;
+    try {
+      parsed = JSON.parse(candidate);
+    } catch {
+      break;
+    }
+  }
+
+  const values = Array.isArray(parsed) ? parsed : [parsed];
+  return Array.from(
+    new Set(
+      values
+        .filter((value): value is string => typeof value === 'string')
+        .map(normalizeToolboxAttachmentUrl)
+        .filter(Boolean)
+    )
+  );
+};
+
+export const serializeToolboxAttachmentUrls = (
+  urls: string[] | null | undefined
+): string | null => {
+  const normalized = Array.from(
+    new Set((urls ?? []).map(normalizeToolboxAttachmentUrl).filter(Boolean))
+  );
+  return normalized.length > 0 ? JSON.stringify(normalized) : null;
 };
 
 interface UploadResult {
