@@ -10,7 +10,11 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import React, { useEffect, useRef, useState } from 'react';
@@ -26,12 +30,55 @@ import { useUser } from '@/context/UserContext';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
 import CustomRating from '@/components/CustomRating';
 import { getStaffList } from '@/actions/admin/staff';
-import { Camera, ChevronDown, Eye, FileText, X } from 'lucide-react';
+import {
+  Camera,
+  ChevronDown,
+  Download,
+  ExternalLink,
+  Eye,
+  FileText,
+  X
+} from 'lucide-react';
 import { AppRoutes } from '@/constants/AppRoutes';
 import Image from 'next/image';
 
 function isMobileDevice(): boolean {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function getFileExtension(file: File): string {
+  return file.name.split('.').pop()?.toLowerCase() ?? '';
+}
+
+function isImageFile(file: File): boolean {
+  return (
+    file.type.startsWith('image/') ||
+    ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(
+      getFileExtension(file)
+    )
+  );
+}
+
+function isPdfFile(file: File): boolean {
+  return file.type === 'application/pdf' || getFileExtension(file) === 'pdf';
+}
+
+function openLocalFile(file: File) {
+  const objectUrl = URL.createObjectURL(file);
+  window.open(objectUrl, '_blank', 'noopener,noreferrer');
+  // Keep the URL alive long enough for a browser or device app to load it.
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
+function downloadLocalFile(file: File) {
+  const objectUrl = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = file.name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }
 
 const PhotoCaptureModal = ({
@@ -76,7 +123,12 @@ const PhotoCaptureModal = ({
   const handleCapture = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
+    if (
+      !video ||
+      !canvas ||
+      video.videoWidth === 0 ||
+      video.videoHeight === 0
+    ) {
       toast.error('Camera is not ready yet. Please try again.');
       return;
     }
@@ -148,7 +200,9 @@ const SelectedAttachmentRow = ({
   onPreview: () => void;
   onRemove: () => void;
 }) => {
-  const isImage = file.type.startsWith('image/');
+  const isImage = isImageFile(file);
+  const isPdf = isPdfFile(file);
+  const canPreview = isImage || isPdf;
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -162,11 +216,11 @@ const SelectedAttachmentRow = ({
     <li className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2">
       <button
         type="button"
-        onClick={isImage ? onPreview : undefined}
-        disabled={!isImage}
-        aria-label={isImage ? `Preview ${file.name}` : undefined}
+        onClick={canPreview ? onPreview : undefined}
+        disabled={!canPreview}
+        aria-label={canPreview ? `Preview ${file.name}` : undefined}
         className={`relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-white ${
-          isImage ? 'cursor-zoom-in hover:border-primary' : 'cursor-default'
+          canPreview ? 'cursor-zoom-in hover:border-primary' : 'cursor-default'
         }`}
       >
         {isImage && thumbnailUrl ? (
@@ -185,17 +239,47 @@ const SelectedAttachmentRow = ({
 
       <button
         type="button"
-        onClick={isImage ? onPreview : undefined}
-        disabled={!isImage}
-        className={`min-w-0 flex-1 text-left ${isImage ? 'cursor-zoom-in' : 'cursor-default'}`}
+        onClick={canPreview ? onPreview : undefined}
+        disabled={!canPreview}
+        className={`min-w-0 flex-1 text-left ${canPreview ? 'cursor-zoom-in' : 'cursor-default'}`}
       >
-        <span className="block truncate text-sm text-gray-700">{file.name}</span>
-        {isImage && (
+        <span className="block truncate text-sm text-gray-700">
+          {file.name}
+        </span>
+        {canPreview && (
           <span className="mt-0.5 flex items-center gap-1 text-xs font-medium text-primary">
-            <Eye className="h-3 w-3" /> Preview image
+            <Eye className="h-3 w-3" /> Preview {isImage ? 'image' : 'PDF'}
+          </span>
+        )}
+        {!canPreview && (
+          <span className="mt-0.5 block text-xs text-gray-400">
+            Open or download file
           </span>
         )}
       </button>
+
+      {!canPreview && (
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => openLocalFile(file)}
+            title={`Open ${file.name}`}
+            aria-label={`Open ${file.name}`}
+            className="rounded-full p-1.5 text-gray-500 hover:bg-primary/10 hover:text-primary"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadLocalFile(file)}
+            title={`Download ${file.name}`}
+            aria-label={`Download ${file.name}`}
+            className="rounded-full p-1.5 text-gray-500 hover:bg-primary/10 hover:text-primary"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <button
         type="button"
@@ -209,18 +293,19 @@ const SelectedAttachmentRow = ({
   );
 };
 
-const AttendanceImagePreview = ({
+const AttendanceAttachmentPreview = ({
   file,
   onClose
 }: {
   file: File;
   onClose: () => void;
 }) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const isImage = isImageFile(file);
 
   useEffect(() => {
     const objectUrl = URL.createObjectURL(file);
-    setImageUrl(objectUrl);
+    setFileUrl(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
 
@@ -245,25 +330,38 @@ const AttendanceImagePreview = ({
         onClick={event => event.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
-          <p className="truncate text-sm font-semibold text-gray-800">{file.name}</p>
+          <p className="truncate text-sm font-semibold text-gray-800">
+            {file.name}
+          </p>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close image preview"
+            aria-label="Close attachment preview"
             className="shrink-0 rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex min-h-0 flex-1 items-center justify-center bg-gray-950 p-3">
-          {imageUrl && (
+        <div
+          className={`flex min-h-0 flex-1 items-center justify-center ${
+            isImage ? 'bg-gray-950 p-3' : 'bg-gray-200'
+          }`}
+        >
+          {fileUrl && isImage && (
             <Image
-              src={imageUrl}
+              src={fileUrl}
               alt={`Preview of ${file.name}`}
               width={1600}
               height={1200}
               unoptimized
               className="max-h-[80vh] w-auto max-w-full object-contain"
+            />
+          )}
+          {fileUrl && !isImage && (
+            <iframe
+              src={fileUrl}
+              title={`Preview of ${file.name}`}
+              className="h-[80vh] w-full bg-white"
             />
           )}
         </div>
@@ -424,8 +522,8 @@ const MarkTBTDoneModal = ({
 
         // Email is non-fatal — fire and forget so a slow SMTP connection
         // never blocks the user from reaching the success screen.
-        fetch('/api/send-email', { method: 'POST', body: formData }).catch(err =>
-          console.error('[tbt] email send failed:', err)
+        fetch('/api/send-email', { method: 'POST', body: formData }).catch(
+          err => console.error('[tbt] email send failed:', err)
         );
 
         toast.success(res.message);
@@ -446,7 +544,10 @@ const MarkTBTDoneModal = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button" className="bg-primary rounded-md px-4 sm:px-6 py-2  text-white font-extrabold text-xs sm:text-sm md:text-base">
+        <button
+          type="button"
+          className="bg-primary rounded-md px-4 sm:px-6 py-2  text-white font-extrabold text-xs sm:text-sm md:text-base"
+        >
           MARK AS TBT DONE
         </button>
       </DialogTrigger>
@@ -493,7 +594,9 @@ const MarkTBTDoneModal = ({
               <PopoverContent className="w-full p-2" align="start">
                 <div className="max-h-48 overflow-y-auto space-y-1">
                   {staffEmails.filter(e => e !== FIXED_EMAIL).length === 0 ? (
-                    <p className="text-sm text-muted-foreground px-2 py-1">No staff emails found.</p>
+                    <p className="text-sm text-muted-foreground px-2 py-1">
+                      No staff emails found.
+                    </p>
                   ) : (
                     staffEmails
                       .filter(e => e !== FIXED_EMAIL)
@@ -523,7 +626,10 @@ const MarkTBTDoneModal = ({
                     className="flex items-center gap-1 bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5"
                   >
                     {email}
-                    <button type="button" onClick={() => removeAdditionalEmail(email)}>
+                    <button
+                      type="button"
+                      onClick={() => removeAdditionalEmail(email)}
+                    >
                       <X className="h-3 w-3" />
                     </button>
                   </span>
@@ -543,7 +649,9 @@ const MarkTBTDoneModal = ({
               {...register('comments')}
             />
             {errors.comments?.message && (
-              <div className="text-sm text-red-500">{errors.comments.message}</div>
+              <div className="text-sm text-red-500">
+                {errors.comments.message}
+              </div>
             )}
           </div>
 
@@ -605,7 +713,7 @@ const MarkTBTDoneModal = ({
           )}
 
           {previewFile && (
-            <AttendanceImagePreview
+            <AttendanceAttachmentPreview
               file={previewFile}
               onClose={() => setPreviewFile(null)}
             />
