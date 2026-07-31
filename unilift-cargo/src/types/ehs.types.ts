@@ -278,6 +278,11 @@ export type ObservationStatus = 'Open' | 'Assigned' | 'Closed';
 export type NearMissSeverity = 'Low' | 'Medium' | 'High';
 export type MediaType = 'image' | 'video' | 'voice';
 
+export type CapaPoints = {
+  corrective: string[];
+  preventive: string[];
+};
+
 export type UaUcNearMissFormType = z.infer<typeof UaUcNearMissSchema>;
 
 export type UaUcNearMissRecord = {
@@ -315,7 +320,7 @@ export type UaUcNearMissRecord = {
   final_approval: string | null;
   final_approval_remarks: string | null;
   final_approval_at: string | null;
-  capa_points: { corrective: string[]; preventive: string[] } | null;
+  capa_points: CapaPoints | null;
   created_at: string;
   updated_at: string;
 };
@@ -323,7 +328,6 @@ export type UaUcNearMissRecord = {
 export type UaUcAiAnalysisResponse = {
   what_happened: string;
   equipment_involved: string;
-  action_taken?: string;
   // UA
   ua_classifications?: string[];
   ua_other?: string;
@@ -337,7 +341,7 @@ export type UaUcAiAnalysisResponse = {
   nm_what_could_happen?: string;
   nm_severity?: 'Low' | 'Medium' | 'High';
   // CAPA — generated in the same AI call as the analysis
-  capa_points?: { corrective: string[]; preventive: string[] };
+  capa_points?: CapaPoints;
 };
 
 export type UaUcNearMissListItem = Pick<

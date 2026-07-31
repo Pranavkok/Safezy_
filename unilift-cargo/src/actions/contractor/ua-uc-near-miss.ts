@@ -361,7 +361,7 @@ function buildCapaPrompt(report: Record<string, unknown>): string {
   }
 
   return `You are a senior EHS (Environmental, Health & Safety) expert with 20+ years of field experience.
-Analyze the following ${typeLabel} observation report and generate specific, actionable CAPA recommendations.
+Analyze the following ${typeLabel} observation report and generate specific, actionable CAPA points.
 
 INSTRUCTIONS:
 - You MUST generate a minimum of 3 corrective actions and a minimum of 3 preventive actions. Generate more if the observation warrants it.

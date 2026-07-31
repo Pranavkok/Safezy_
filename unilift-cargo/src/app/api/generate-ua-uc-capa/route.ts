@@ -34,7 +34,7 @@ function buildCapaPrompt(report: Record<string, unknown>): string {
   }
 
   return `You are a senior EHS (Environmental, Health & Safety) expert with 20+ years of field experience.
-Analyze the following ${typeLabel} observation report and generate specific, actionable CAPA (Corrective and Preventive Action) recommendations.
+Analyze the following ${typeLabel} observation report and generate specific, actionable CAPA (Corrective and Preventive Action) points.
 
 INSTRUCTIONS:
 - Generate as many points as necessary to fully address the observation — do NOT limit to 5.
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'CAPA recommendations generated successfully',
+      message: 'CAPA points generated successfully',
       data: {
         corrective: capaResponse.corrective,
         preventive: capaResponse.preventive
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to generate CAPA recommendations',
+        error: 'Failed to generate CAPA points',
         message: error instanceof Error ? error.message : 'An unknown error occurred'
       },
       { status: 500 }

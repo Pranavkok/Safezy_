@@ -87,6 +87,14 @@ export const UaUcNearMissSchema = z
     nm_what_could_happen: z.string().optional(),
     nm_severity:          z.enum(['Low', 'Medium', 'High']).optional(),
 
+    // CAPA points — shared by UA, UC, and Near Miss
+    capa_points: z
+      .object({
+        corrective: z.array(z.string()),
+        preventive: z.array(z.string()),
+      })
+      .optional(),
+
     // Section 6 — status
     status: z.enum(['Open', 'Closed'], {
       required_error: 'Please select a status',

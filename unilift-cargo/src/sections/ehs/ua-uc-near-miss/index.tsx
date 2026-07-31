@@ -20,6 +20,7 @@ import {
   UaUcAiAnalysisResponse
 } from '@/types/ehs.types';
 import { submitUaUcReport, generateAndSaveUaUcCapa } from '@/actions/contractor/ua-uc-near-miss';
+import CapaPointsEditor from './CapaPointsEditor';
 import { uploadFile } from '@/utils';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -597,6 +598,7 @@ const UaUcNearMissForm = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   // Stores the full AI analysis result so we can reuse its capa_points at submit time
   const [aiAnalysisResult, setAiAnalysisResult] = useState<UaUcAiAnalysisResponse | null>(null);
+  const [capaEdited, setCapaEdited] = useState(false);
 
   const now = new Date();
 
@@ -613,13 +615,15 @@ const UaUcNearMissForm = () => {
       status: 'Open',
       observation_type: undefined,
       ua_classifications: [],
-      uc_classifications: []
+      uc_classifications: [],
+      capa_points: { corrective: [], preventive: [] }
     }
   });
 
   const observationType = watch('observation_type');
   const whatHappened = watch('what_happened');
   const equipmentInvolved = watch('equipment_involved');
+  const capaPoints = watch('capa_points') ?? { corrective: [], preventive: [] };
 
   const showGeneratedSection =
     Boolean(observationType) &&
@@ -633,7 +637,6 @@ const UaUcNearMissForm = () => {
 
     setValue('ua_classifications', []);
     setValue('ua_other', '');
-    setValue('action_taken', '');
 
     setValue('uc_classifications', []);
     setValue('uc_other', '');
@@ -643,6 +646,8 @@ const UaUcNearMissForm = () => {
     setValue('nm_potential_injury', '');
     setValue('nm_what_could_happen', '');
     setValue('nm_severity', undefined);
+    setValue('capa_points', { corrective: [], preventive: [] });
+    setCapaEdited(false);
   };
 
   // ── AI Analysis trigger ────────────────────────────────────────────────────
@@ -669,6 +674,19 @@ const UaUcNearMissForm = () => {
         const analysis: UaUcAiAnalysisResponse = json.data;
         // Persist full result so we can access capa_points at submit time
         setAiAnalysisResult(analysis);
+        const generatedCapa = analysis.capa_points;
+        setValue(
+          'capa_points',
+          {
+            corrective: Array.isArray(generatedCapa?.corrective)
+              ? generatedCapa.corrective
+              : [],
+            preventive: Array.isArray(generatedCapa?.preventive)
+              ? generatedCapa.preventive
+              : []
+          }
+        );
+        setCapaEdited(false);
 
         setValue('what_happened', analysis.what_happened);
         setValue('equipment_involved', analysis.equipment_involved);
@@ -676,7 +694,6 @@ const UaUcNearMissForm = () => {
         if (type === 'UA') {
           setValue('ua_classifications', analysis.ua_classifications ?? []);
           setValue('ua_other', analysis.ua_other ?? '');
-          setValue('action_taken', analysis.action_taken ?? '');
         } else if (type === 'UC') {
           setValue('uc_classifications', analysis.uc_classifications ?? []);
           setValue('uc_other', analysis.uc_other ?? '');
@@ -732,7 +749,6 @@ const UaUcNearMissForm = () => {
     if (data.what_happened      !== a.what_happened)      return true;
     if (data.equipment_involved !== a.equipment_involved) return true;
     if (data.observation_type === 'UA') {
-      if (data.action_taken !== (a.action_taken ?? ''))   return true;
       const cur = [...(data.ua_classifications ?? [])].sort().join(',');
       const ai  = [...(a.ua_classifications   ?? [])].sort().join(',');
       if (cur !== ai)                                      return true;
@@ -762,9 +778,19 @@ const UaUcNearMissForm = () => {
       // Use pre-generated CAPA if the user hasn't edited key fields;
       // otherwise fall back to the background regeneration path.
       const fieldsEdited = hasEditedCapaFields(data);
+      const normalizedCapa = data.capa_points
+        ? {
+            corrective: data.capa_points.corrective.map(point => point.trim()).filter(Boolean),
+            preventive: data.capa_points.preventive.map(point => point.trim()).filter(Boolean)
+          }
+        : undefined;
+      const hasCapaPoints = Boolean(
+        normalizedCapa &&
+          (normalizedCapa.corrective.length > 0 || normalizedCapa.preventive.length > 0)
+      );
       const prebuiltCapa =
-        !fieldsEdited && aiAnalysisResult?.capa_points
-          ? aiAnalysisResult.capa_points
+        hasCapaPoints && (capaEdited || !fieldsEdited)
+          ? normalizedCapa
           : undefined;
 
       const res = await submitUaUcReport(
@@ -787,7 +813,7 @@ const UaUcNearMissForm = () => {
             media_types: mediaItems.map(i => i.type)
           };
           generateAndSaveUaUcCapa(res.data.id, reportPayload).catch(() => {});
-          toast('Generating CAPA recommendations…', { icon: '✨', duration: 3500 });
+          toast('Generating CAPA points…', { icon: '✨', duration: 3500 });
         }
 
         router.push(`/ehs/ua-uc-near-miss/${res.data.id}`);
@@ -961,12 +987,6 @@ const UaUcNearMissForm = () => {
                     {...register('ua_other')}
                   />
 
-                  <TextareaWithLabel
-                    label="Immediate Corrective Action"
-                    rows={3}
-                    placeholder="Recommended or manually updated immediate action"
-                    {...register('action_taken')}
-                  />
                 </FieldGroupCard>
               )}
 
@@ -1059,6 +1079,19 @@ const UaUcNearMissForm = () => {
                   </div>
                 </FieldGroupCard>
               )}
+
+              <FieldGroupCard
+                title="CAPA Points"
+                subtitle="Review and edit both corrective and preventive actions before submitting."
+              >
+                <CapaPointsEditor
+                  value={capaPoints}
+                  onChange={value => {
+                    setValue('capa_points', value, { shouldDirty: true });
+                    setCapaEdited(true);
+                  }}
+                />
+              </FieldGroupCard>
             </div>
           </div>
         </>

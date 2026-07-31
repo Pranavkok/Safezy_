@@ -123,6 +123,8 @@ const S = StyleSheet.create({
   // Bullet
   bulletRow: { flexDirection: 'row', marginBottom: 4 },
   bulletDot: { fontSize: 10, marginRight: 6, color: '#FF914D' },
+  actionNumber: { width: 18, fontSize: 9, color: '#FF914D' },
+  actionText: { flex: 1, fontSize: 10, color: '#111827', lineHeight: 1.4 },
   // Chip
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
   chip: {
@@ -242,10 +244,25 @@ const ChipList = ({ label, items, extra }: { label: string; items: string[]; ext
   );
 };
 
-const BulletItem = ({ text }: { text: string }) => (
-  <View style={S.bulletRow}>
-    <Text style={S.bulletDot}>•</Text>
-    <Text style={S.value}>{text}</Text>
+const ActionList = ({
+  label,
+  items
+}: {
+  label: string;
+  items: string[];
+}) => (
+  <View style={[S.fieldGroup, { marginBottom: 12 }]}>
+    <Text style={[S.label, { marginBottom: 6 }]}>{label}</Text>
+    {items.length === 0 ? (
+      <Text style={[S.value, { color: '#9CA3AF' }]}>No points added.</Text>
+    ) : (
+      items.map((item, index) => (
+        <View key={index} style={S.bulletRow} wrap={false}>
+          <Text style={S.actionNumber}>{index + 1}.</Text>
+          <Text style={S.actionText}>{item}</Text>
+        </View>
+      ))
+    )}
   </View>
 );
 
@@ -374,7 +391,35 @@ const UaUcReportPdf = ({ report }: { report: UaUcNearMissRecord }) => {
       </Page>
 
       {/* ══════════════════════════════════════════════
-          PAGE 2 — Evidence (only if image)
+          PAGE 2 — CAPA Points
+      ══════════════════════════════════════════════ */}
+      <Page {...pageProps}>
+        <Watermark />
+        <PageHeader reportNo={report.report_no} type={observationLabel} date={createdDate} />
+        <Text style={S.pageTitle}>Section 5 — CAPA Points</Text>
+
+        {report.capa_points ? (
+          <>
+            <ActionList
+              label="Corrective Actions — immediate actions to correct the issue"
+              items={report.capa_points.corrective ?? []}
+            />
+            <ActionList
+              label="Preventive Actions — long-term actions to prevent recurrence"
+              items={report.capa_points.preventive ?? []}
+            />
+          </>
+        ) : (
+          <View style={S.fieldGroup}>
+            <Text style={[S.value, { color: '#6B7280' }]}>CAPA points are not yet available.</Text>
+          </View>
+        )}
+
+        <PageFooter />
+      </Page>
+
+      {/* ══════════════════════════════════════════════
+          PAGE 3 — Evidence (only if image)
           For video/voice: show link + note instead
       ══════════════════════════════════════════════ */}
       {(() => {
@@ -385,7 +430,7 @@ const UaUcReportPdf = ({ report }: { report: UaUcNearMissRecord }) => {
           <Page {...pageProps}>
             <Watermark />
             <PageHeader reportNo={report.report_no} type={observationLabel} date={createdDate} />
-            <Text style={S.pageTitle}>Section 5 — Evidence</Text>
+            <Text style={S.pageTitle}>Section 6 — Evidence</Text>
             {urls.map((url, i) => {
               const type = types[i] ?? 'image';
               return (

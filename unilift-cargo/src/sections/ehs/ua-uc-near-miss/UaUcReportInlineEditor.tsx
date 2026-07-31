@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { UaUcNearMissRecord } from '@/types/ehs.types';
+import { CapaPoints, UaUcNearMissRecord } from '@/types/ehs.types';
 import {
   UA_CLASSIFICATIONS,
   UC_CLASSIFICATIONS,
@@ -10,6 +10,7 @@ import {
 import { updateUaUcReportFull } from '@/actions/contractor/ua-uc-near-miss';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import CapaPointsEditor from './CapaPointsEditor';
 
 // ─── Shared input components ──────────────────────────────────────────────────
 
@@ -147,7 +148,9 @@ const UaUcReportInlineEditor = ({
   const [nmPotentialInjury, setNmPotentialInjury] = useState(report.nm_potential_injury ?? '');
   const [nmWhatCouldHappen, setNmWhatCouldHappen] = useState(report.nm_what_could_happen ?? '');
   const [nmSeverity, setNmSeverity] = useState<'Low' | 'Medium' | 'High' | null>(report.nm_severity ?? null);
-
+  const [capaPoints, setCapaPoints] = useState<CapaPoints>(
+    report.capa_points ?? { corrective: [], preventive: [] }
+  );
 
   const handleSave = async () => {
     setSaving(true);
@@ -171,6 +174,18 @@ const UaUcReportInlineEditor = ({
       payload.nm_potential_injury = nmPotentialInjury || null;
       payload.nm_what_could_happen = nmWhatCouldHappen || null;
       payload.nm_severity = nmSeverity;
+    }
+
+    const normalizedCapa = {
+      corrective: capaPoints.corrective.map(point => point.trim()).filter(Boolean),
+      preventive: capaPoints.preventive.map(point => point.trim()).filter(Boolean)
+    };
+    if (
+      report.capa_points ||
+      normalizedCapa.corrective.length > 0 ||
+      normalizedCapa.preventive.length > 0
+    ) {
+      payload.capa_points = normalizedCapa;
     }
 
     const { success } = await updateUaUcReportFull(report.id, payload);
@@ -346,6 +361,10 @@ const UaUcReportInlineEditor = ({
             </div>
           </>
         )}
+      </SectionCard>
+
+      <SectionCard title="CAPA Points">
+        <CapaPointsEditor value={capaPoints} onChange={setCapaPoints} />
       </SectionCard>
 
 
