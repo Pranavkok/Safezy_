@@ -13,7 +13,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { addToolboxUserDetails } from '@/actions/admin/ehs/toolbox-talk';
 import { addToolboxUserType } from '@/types/ehs.types';
@@ -26,8 +26,117 @@ import { useUser } from '@/context/UserContext';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
 import CustomRating from '@/components/CustomRating';
 import { getStaffList } from '@/actions/admin/staff';
-import { ChevronDown, X } from 'lucide-react';
+import { Camera, ChevronDown, X } from 'lucide-react';
 import { AppRoutes } from '@/constants/AppRoutes';
+
+function isMobileDevice(): boolean {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+const PhotoCaptureModal = ({
+  onCaptured,
+  onClose
+}: {
+  onCaptured: (file: File) => void;
+  onClose: () => void;
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error('Camera capture is not supported in this browser.');
+      onClose();
+      return;
+    }
+
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(stream => {
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          void videoRef.current.play();
+        }
+        setIsReady(true);
+      })
+      .catch(() => {
+        toast.error('Camera access denied. Please allow camera permission.');
+        onClose();
+      });
+
+    return () => {
+      streamRef.current?.getTracks().forEach(track => track.stop());
+    };
+  }, [onClose]);
+
+  const handleCapture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
+      toast.error('Camera is not ready yet. Please try again.');
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    canvas.toBlob(
+      blob => {
+        if (!blob) {
+          toast.error('Could not capture the photo. Please try again.');
+          return;
+        }
+        onCaptured(
+          new File([blob], `attendance_photo_${Date.now()}.jpg`, {
+            type: 'image/jpeg'
+          })
+        );
+        onClose();
+      },
+      'image/jpeg',
+      0.92
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800">Take Attendance Photo</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close camera"
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          className="aspect-video w-full rounded-lg bg-black object-cover"
+        />
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            onClick={handleCapture}
+            disabled={!isReady}
+            className="gap-2 rounded-full px-5"
+          >
+            <Camera className="h-4 w-4" />
+            Capture Photo
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const MarkTBTDoneModal = ({
   toolboxTalkId,
@@ -48,6 +157,8 @@ const MarkTBTDoneModal = ({
   const [staffEmails, setStaffEmails] = useState<string[]>([]);
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [emailPopoverOpen, setEmailPopoverOpen] = useState(false);
+  const [showPhotoCapture, setShowPhotoCapture] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -81,23 +192,39 @@ const MarkTBTDoneModal = ({
   // Keep in sync with the file input's `accept` attribute below.
   const MAX_FILE_SIZE_MB = 20;
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const selected = Array.from(event.target.files);
-      // Guard against oversized files — Gmail rejects attachments over 25MB,
-      // so keep each well under that to avoid a silent email-send failure.
-      const withinLimit = selected.filter(
-        file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024
+  const addSelectedFiles = (files: File[]): number => {
+    // Guard against oversized files — Gmail rejects attachments over 25MB,
+    // so keep each well under that to avoid a silent email-send failure.
+    const withinLimit = files.filter(
+      file => file.size <= MAX_FILE_SIZE_MB * 1024 * 1024
+    );
+    const rejected = files.length - withinLimit.length;
+    if (rejected > 0) {
+      toast.error(
+        `${rejected} file(s) skipped — each file must be under ${MAX_FILE_SIZE_MB}MB.`
       );
-      const rejected = selected.length - withinLimit.length;
-      if (rejected > 0) {
-        toast.error(
-          `${rejected} file(s) skipped — each file must be under ${MAX_FILE_SIZE_MB}MB.`
-        );
-      }
-      setSelectedFiles(prev => [...prev, ...withinLimit]);
-      // Reset so selecting the same file again still fires onChange
-      event.target.value = '';
+    }
+    setSelectedFiles(prev => [...prev, ...withinLimit]);
+    return withinLimit.length;
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    addSelectedFiles(Array.from(event.target.files ?? []));
+    // Reset so selecting the same file again still fires onChange
+    event.target.value = '';
+  };
+
+  const handleCameraCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const addedCount = addSelectedFiles(Array.from(event.target.files ?? []));
+    event.target.value = '';
+    if (addedCount > 0) {
+      toast.success('Photo added to the attendance attachments.');
+    }
+  };
+
+  const handleCapturedPhoto = (file: File) => {
+    if (addSelectedFiles([file]) > 0) {
+      toast.success('Photo added to the attendance attachments.');
     }
   };
 
@@ -114,6 +241,7 @@ const MarkTBTDoneModal = ({
     setSelectedFiles([]);
     setAdditionalEmails([]);
     setRating(0);
+    setShowPhotoCapture(false);
   };
 
   const onSubmit = async (data: addToolboxUserType) => {
@@ -282,7 +410,7 @@ const MarkTBTDoneModal = ({
           </div>
 
           <InputFieldWithLabel
-            label="Upload Attendance Sheet"
+            label="Upload Attendance Sheet / Image"
             type="file"
             multiple
             accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
@@ -292,6 +420,38 @@ const MarkTBTDoneModal = ({
           <p className="text-xs text-gray-500">
             Images, PDF, Word or Excel files (max {MAX_FILE_SIZE_MB}MB each).
           </p>
+
+          {/* Opens the rear camera on supported mobile devices. The captured
+              image follows the same upload, storage and email flow as files. */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleCameraCapture}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              isMobileDevice()
+                ? cameraInputRef.current?.click()
+                : setShowPhotoCapture(true)
+            }
+            disabled={loading}
+            className="w-full gap-2 border-primary text-primary hover:bg-primary/5 hover:text-primary"
+          >
+            <Camera className="h-4 w-4" />
+            Take Photo
+          </Button>
+
+          {showPhotoCapture && (
+            <PhotoCaptureModal
+              onCaptured={handleCapturedPhoto}
+              onClose={() => setShowPhotoCapture(false)}
+            />
+          )}
 
           {selectedFiles.length > 0 && (
             <ul className="mt-2 text-sm text-gray-700 space-y-1">
