@@ -26,8 +26,9 @@ import { useUser } from '@/context/UserContext';
 import InputFieldWithLabel from '@/components/inputs-fields/InputFieldWithLabel';
 import CustomRating from '@/components/CustomRating';
 import { getStaffList } from '@/actions/admin/staff';
-import { Camera, ChevronDown, X } from 'lucide-react';
+import { Camera, ChevronDown, Eye, FileText, X } from 'lucide-react';
 import { AppRoutes } from '@/constants/AppRoutes';
+import Image from 'next/image';
 
 function isMobileDevice(): boolean {
   return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -138,6 +139,139 @@ const PhotoCaptureModal = ({
   );
 };
 
+const SelectedAttachmentRow = ({
+  file,
+  onPreview,
+  onRemove
+}: {
+  file: File;
+  onPreview: () => void;
+  onRemove: () => void;
+}) => {
+  const isImage = file.type.startsWith('image/');
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isImage) return;
+    const objectUrl = URL.createObjectURL(file);
+    setThumbnailUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file, isImage]);
+
+  return (
+    <li className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2">
+      <button
+        type="button"
+        onClick={isImage ? onPreview : undefined}
+        disabled={!isImage}
+        aria-label={isImage ? `Preview ${file.name}` : undefined}
+        className={`relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-white ${
+          isImage ? 'cursor-zoom-in hover:border-primary' : 'cursor-default'
+        }`}
+      >
+        {isImage && thumbnailUrl ? (
+          <Image
+            src={thumbnailUrl}
+            alt=""
+            width={48}
+            height={48}
+            unoptimized
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <FileText className="h-5 w-5 text-gray-400" />
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={isImage ? onPreview : undefined}
+        disabled={!isImage}
+        className={`min-w-0 flex-1 text-left ${isImage ? 'cursor-zoom-in' : 'cursor-default'}`}
+      >
+        <span className="block truncate text-sm text-gray-700">{file.name}</span>
+        {isImage && (
+          <span className="mt-0.5 flex items-center gap-1 text-xs font-medium text-primary">
+            <Eye className="h-3 w-3" /> Preview image
+          </span>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${file.name}`}
+        className="shrink-0 rounded-full p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </li>
+  );
+};
+
+const AttendanceImagePreview = ({
+  file,
+  onClose
+}: {
+  file: File;
+  onClose: () => void;
+}) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file);
+    setImageUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Preview ${file.name}`}
+    >
+      <div
+        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+        onClick={event => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
+          <p className="truncate text-sm font-semibold text-gray-800">{file.name}</p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close image preview"
+            className="shrink-0 rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex min-h-0 flex-1 items-center justify-center bg-gray-950 p-3">
+          {imageUrl && (
+            <Image
+              src={imageUrl}
+              alt={`Preview of ${file.name}`}
+              width={1600}
+              height={1200}
+              unoptimized
+              className="max-h-[80vh] w-auto max-w-full object-contain"
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MarkTBTDoneModal = ({
   toolboxTalkId,
   toolboxTopic,
@@ -158,6 +292,7 @@ const MarkTBTDoneModal = ({
   const [additionalEmails, setAdditionalEmails] = useState<string[]>([]);
   const [emailPopoverOpen, setEmailPopoverOpen] = useState(false);
   const [showPhotoCapture, setShowPhotoCapture] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -229,6 +364,8 @@ const MarkTBTDoneModal = ({
   };
 
   const handleRemoveFile = (index: number) => {
+    const fileToRemove = selectedFiles[index];
+    if (previewFile === fileToRemove) setPreviewFile(null);
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -242,6 +379,7 @@ const MarkTBTDoneModal = ({
     setAdditionalEmails([]);
     setRating(0);
     setShowPhotoCapture(false);
+    setPreviewFile(null);
   };
 
   const onSubmit = async (data: addToolboxUserType) => {
@@ -454,21 +592,23 @@ const MarkTBTDoneModal = ({
           )}
 
           {selectedFiles.length > 0 && (
-            <ul className="mt-2 text-sm text-gray-700 space-y-1">
+            <ul className="mt-2 space-y-2">
               {selectedFiles.map((file, index) => (
-                <li key={index} className="flex items-center justify-between gap-2">
-                  <span className="truncate">{file.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFile(index)}
-                    aria-label={`Remove ${file.name}`}
-                    className="text-gray-400 hover:text-red-500 shrink-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </li>
+                <SelectedAttachmentRow
+                  key={`${file.name}-${file.lastModified}-${index}`}
+                  file={file}
+                  onPreview={() => setPreviewFile(file)}
+                  onRemove={() => handleRemoveFile(index)}
+                />
               ))}
             </ul>
+          )}
+
+          {previewFile && (
+            <AttendanceImagePreview
+              file={previewFile}
+              onClose={() => setPreviewFile(null)}
+            />
           )}
           <div className="space-y-2">
             <label>Rate this toolbox talk</label>
