@@ -31,7 +31,11 @@ async function signUpWithOrphanCleanup(
   metadata?: Record<string, unknown>
 ): Promise<{ id: string } | { error: string }> {
   const attempt = async () =>
-    supabase.auth.signUp({ email, password, options: metadata ? { data: metadata } : undefined });
+    supabase.auth.signUp({
+      email,
+      password,
+      options: metadata ? { data: metadata } : undefined
+    });
 
   let { data, error } = await attempt();
 
@@ -54,44 +58,68 @@ export const signUpUser = async (
   userDetails: SignUpType
 ): Promise<{ success: boolean; message: string; redirectPath?: string }> => {
   const supabase = await createClient();
+  const serviceClient = createServiceClient();
   try {
-    const { data: existingUser, error: existingUserError } = await supabase
-      .from('users')
-      .select('email')
-      .eq('email', userDetails.email)
-      .single();
+    const [existingUserResult, existingContactResult] = await Promise.all([
+      serviceClient
+        .from('users')
+        .select('id')
+        .ilike('email', userDetails.email.trim())
+        .maybeSingle(),
+      serviceClient
+        .from('users')
+        .select('id')
+        .eq('contact_number', userDetails.contactNumber.trim())
+        .maybeSingle()
+    ]);
 
-    if (existingUser) {
-      return {
-        success: false,
-        message: ERROR_MESSAGES.USER_ALREADY_REGISTERED
-      };
-    }
-
-    if (existingUserError && existingUserError.code !== 'PGRST116') {
-      console.error('Error checking for existing user:', existingUserError);
+    if (existingUserResult.error || existingContactResult.error) {
+      console.error(
+        'Error checking for existing user:',
+        existingUserResult.error ?? existingContactResult.error
+      );
       return {
         success: false,
         message: ERROR_MESSAGES.ERROR_CHECKING_EXISTING
       };
     }
 
-    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password, {
-      _pending_db_insert: 'contractor',
-      fName: userDetails.fName,
-      lName: userDetails.lName,
-      cName: userDetails.cName,
-      contactNumber: userDetails.contactNumber,
-      email: userDetails.email,
-      noOfWorkers: userDetails.noOfWorkers ?? null,
-      typeOfServicesProvided: userDetails.typeOfServicesProvided ?? [],
-      typeOfServicesProvidedOther: userDetails.typeOfServicesProvidedOther ?? null,
-      industriesServed: userDetails.industriesServed ?? [],
-      geographicalLocation: userDetails.geographicalLocation ?? [],
-      industriesServedOther: userDetails.industriesServedOther ?? null,
-      companies: userDetails.companies ?? [],
-      locations: userDetails.locations ?? [],
-    });
+    if (existingUserResult.data) {
+      return {
+        success: false,
+        message: ERROR_MESSAGES.USER_ALREADY_REGISTERED
+      };
+    }
+
+    if (existingContactResult.data) {
+      return {
+        success: false,
+        message: ERROR_MESSAGES.CONTACT_ALREADY_REGISTERED
+      };
+    }
+
+    const result = await signUpWithOrphanCleanup(
+      supabase,
+      userDetails.email,
+      userDetails.password,
+      {
+        _pending_db_insert: 'contractor',
+        fName: userDetails.fName,
+        lName: userDetails.lName,
+        cName: userDetails.cName,
+        contactNumber: userDetails.contactNumber,
+        email: userDetails.email,
+        noOfWorkers: userDetails.noOfWorkers ?? null,
+        typeOfServicesProvided: userDetails.typeOfServicesProvided ?? [],
+        typeOfServicesProvidedOther:
+          userDetails.typeOfServicesProvidedOther ?? null,
+        industriesServed: userDetails.industriesServed ?? [],
+        geographicalLocation: userDetails.geographicalLocation ?? [],
+        industriesServedOther: userDetails.industriesServedOther ?? null,
+        companies: userDetails.companies ?? [],
+        locations: userDetails.locations ?? []
+      }
+    );
 
     if ('error' in result) {
       return { success: false, message: result.error };
@@ -117,10 +145,11 @@ export const loginUser = async (
   const serviceClient = createServiceClient();
 
   try {
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: userDetails.email,
-      password: userDetails.password
-    });
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email: userDetails.email,
+        password: userDetails.password
+      });
 
     if (authError) {
       console.error('Error while logging in:', authError);
@@ -208,25 +237,42 @@ export const verifyOtp = async (
 
     // If this was a contractor self-registration, insert DB row now that email is confirmed.
     // We use serviceClient to avoid any session-cookie timing dependency.
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
     const meta = user?.user_metadata;
 
     if (meta?._pending_db_insert === 'contractor' && user?.id) {
       const serviceClient = createServiceClient();
 
       // Safeguard: skip if a row was somehow already created (re-verify edge case)
-      const { data: existing } = await serviceClient
+      const { data: existing, error: existingError } = await serviceClient
         .from('users')
         .select('id')
         .eq('auth_id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (existingError) {
+        console.error('Error checking for a completed signup:', existingError);
+        await serviceClient.auth.admin.deleteUser(user.id);
+        return { success: false, message: ERROR_MESSAGES.OTP_VERIFY_ERROR };
+      }
 
       if (!existing) {
-        const { data: roleData } = await serviceClient
+        const { data: roleData, error: roleError } = await serviceClient
           .from('user_roles')
           .select('id')
           .eq('role', USER_ROLES.CONTRACTOR)
           .single();
+
+        if (roleError || !roleData) {
+          console.error(
+            'Error fetching contractor role during signup:',
+            roleError
+          );
+          await serviceClient.auth.admin.deleteUser(user.id);
+          return { success: false, message: ERROR_MESSAGES.OTP_VERIFY_ERROR };
+        }
 
         if (roleData) {
           const fName = meta.fName as string;
@@ -252,7 +298,9 @@ export const verifyOtp = async (
           } while (taken);
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (serviceClient.from('users') as any).insert({
+          const { error: insertError } = await (
+            serviceClient.from('users') as any
+          ).insert({
             first_name: fName,
             last_name: lName,
             contact_number: contact,
@@ -268,14 +316,50 @@ export const verifyOtp = async (
             geographical_location: meta.geographicalLocation ?? [],
             auth_id: user.id,
             role_id: roleData.id,
-            user_unique_code: code!,
+            user_unique_code: code!
           });
+
+          if (insertError) {
+            console.error(
+              'Error creating user profile after OTP verification:',
+              insertError
+            );
+
+            // Do not leave an Auth-only account behind when profile creation fails.
+            const { error: cleanupError } =
+              await serviceClient.auth.admin.deleteUser(user.id);
+            if (
+              cleanupError &&
+              !cleanupError.message?.toLowerCase().includes('not found')
+            ) {
+              console.error(
+                'Error cleaning up incomplete Auth account:',
+                cleanupError
+              );
+            }
+
+            const uniqueErrorText = `${insertError.message ?? ''} ${insertError.details ?? ''}`;
+            if (
+              insertError.code === '23505' &&
+              (uniqueErrorText.includes('users_contact_number_unique') ||
+                uniqueErrorText.includes('contact_number'))
+            ) {
+              return {
+                success: false,
+                message: ERROR_MESSAGES.CONTACT_ALREADY_REGISTERED
+              };
+            }
+
+            return { success: false, message: ERROR_MESSAGES.SIGNUP_ERROR };
+          }
 
           sendPushNotification(user.id, 'registration', {
             title: 'Welcome to Safezy!',
             body: 'Your account is ready. Start exploring safety tools and manage your equipment.',
-            url: '/contractor/dashboard',
-          }).catch((err) => console.error('[push] registration notification failed:', err));
+            url: '/contractor/dashboard'
+          }).catch(err =>
+            console.error('[push] registration notification failed:', err)
+          );
         }
       }
     }
@@ -416,7 +500,11 @@ export const signUpWarehouseOperator = async (
       };
     }
 
-    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password);
+    const result = await signUpWithOrphanCleanup(
+      supabase,
+      userDetails.email,
+      userDetails.password
+    );
 
     if ('error' in result) {
       return { success: false, message: result.error };
@@ -485,7 +573,11 @@ export const signUpPrincipalUser = async (
       };
     }
 
-    const result = await signUpWithOrphanCleanup(supabase, userDetails.email, userDetails.password);
+    const result = await signUpWithOrphanCleanup(
+      supabase,
+      userDetails.email,
+      userDetails.password
+    );
 
     if ('error' in result) {
       return { success: false, message: result.error };

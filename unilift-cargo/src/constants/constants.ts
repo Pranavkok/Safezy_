@@ -26,7 +26,8 @@ export const ERROR_MESSAGES = {
   BULK_UPLOAD_ZIP_TOO_LARGE: 'ZIP file exceeds the 100MB limit',
   BULK_UPLOAD_NO_EXCEL: 'No Excel (.xlsx) file found in the ZIP',
   BULK_UPLOAD_MULTIPLE_EXCEL: 'ZIP must contain exactly one Excel (.xlsx) file',
-  BULK_UPLOAD_INVALID_HEADERS: 'Excel headers do not match the expected template format',
+  BULK_UPLOAD_INVALID_HEADERS:
+    'Excel headers do not match the expected template format',
   BULK_UPLOAD_NO_DATA: 'No product rows found in the Excel file',
   BULK_UPLOAD_FAILED: 'Bulk upload failed. Please try again',
 
@@ -84,6 +85,8 @@ export const ERROR_MESSAGES = {
 
   // User
   USER_ALREADY_REGISTERED: 'User with this email is already registered',
+  CONTACT_ALREADY_REGISTERED:
+    'This contact number is already in use. Please try a different contact number.',
   ERROR_CHECKING_EXISTING:
     'An error occurred while checking for existing users',
   USER_ID_NOT_FOUND: 'User ID not found after sign-up',
@@ -558,7 +561,10 @@ export const USER_ROLES: {
   SAFETY_OFFICER: 'safety_officer'
 } as const;
 
-export const STATIC_CHECKLIST_HEADER_FIELDS: { label: string; options?: string[] }[] = [
+export const STATIC_CHECKLIST_HEADER_FIELDS: {
+  label: string;
+  options?: string[];
+}[] = [
   { label: 'Location' },
   { label: 'Types of equipment' },
   { label: 'Equipment No' },
