@@ -296,7 +296,11 @@ const ToolboxTalkContentPdf = ({
 
   const attachmentUrls = parseToolboxAttachmentUrls(toolboxTalk.pdf_url);
   const imageUrls = attachmentUrls.filter(isImageUrl);
-  const fileUrls = attachmentUrls.filter(url => !isImageUrl(url));
+  const fileUrls = attachmentUrls.filter(
+    url =>
+      !isImageUrl(url) &&
+      !(toolboxTalk.description?.trim() && getAttachmentLabel(url) === 'PDF')
+  );
   const hasImage = imageUrls.length > 0;
   const primaryImage = imageUrls[0];
   const extraImages = imageUrls.slice(1);

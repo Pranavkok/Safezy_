@@ -387,7 +387,12 @@ export const EHSToolboxTalkDetailsSection = ({
     activeLanguage === 'original'
       ? toolboxTalk.summarized
       : translatedSummarize;
-  const attachmentUrls = parseToolboxAttachmentUrls(toolboxTalk.pdf_url);
+  // Legacy app-generated PDFs are retained as backups after their structured
+  // content is restored, but should not be shown as duplicate user content.
+  const hasStructuredContent = Boolean(toolboxTalk.description?.trim());
+  const attachmentUrls = parseToolboxAttachmentUrls(toolboxTalk.pdf_url).filter(
+    url => !(hasStructuredContent && getAttachmentLabel(url) === 'PDF')
+  );
 
   return (
     <div className="relative overflow-hidden">
