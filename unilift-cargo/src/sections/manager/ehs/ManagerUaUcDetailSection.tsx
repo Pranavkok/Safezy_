@@ -10,7 +10,7 @@ import ButtonSpinner from '@/components/ButtonSpinner';
 import UaUcReportViewer from '@/sections/ehs/ua-uc-near-miss/UaUcReportViewer';
 
 interface SafetyOfficer {
-  authId: string;
+  userId: string;
   name: string;
 }
 
@@ -29,12 +29,12 @@ const ManagerUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
       toast.error('Please select a Safety Officer to assign.');
       return;
     }
-    const officer = safetyOfficers.find(o => o.authId === selectedOfficer);
+    const officer = safetyOfficers.find(o => o.userId === selectedOfficer);
     if (!officer) return;
 
     setAssigning(true);
     try {
-      const result = await assignUaUcReport(report.id, officer.authId, officer.name);
+      const result = await assignUaUcReport(report.id, officer.userId, officer.name);
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -79,7 +79,7 @@ const ManagerUaUcDetailSection = ({ report, safetyOfficers }: Props) => {
                 >
                   <option value="">Choose officer...</option>
                   {safetyOfficers.map(o => (
-                    <option key={o.authId} value={o.authId}>
+                    <option key={o.userId} value={o.userId}>
                       {o.name}
                     </option>
                   ))}

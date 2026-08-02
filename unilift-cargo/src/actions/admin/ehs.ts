@@ -9,7 +9,7 @@ import { AppRoutes } from '@/constants/AppRoutes';
 
 export const adminAssignUaUcReport = async (
   reportId: number,
-  safetyOfficerId: string,
+  safetyOfficerUserId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
   const supabase = createServiceClient();
@@ -18,7 +18,7 @@ export const adminAssignUaUcReport = async (
     const { error } = await supabase
       .from('ehs_ua_uc_near_miss')
       .update({
-        assigned_to_user_id: safetyOfficerId,
+        assigned_to_user_id: safetyOfficerUserId,
         assigned_to_name: safetyOfficerName,
         status: 'Assigned',
         updated_at: new Date().toISOString()
@@ -79,7 +79,7 @@ export const adminCloseUaUcReport = async (
 
 export const adminAssignIncidentReport = async (
   reportId: number,
-  safetyOfficerId: string,
+  safetyOfficerUserId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
   const supabase = createServiceClient();
@@ -88,7 +88,7 @@ export const adminAssignIncidentReport = async (
     const { error } = await supabase
       .from('ehs_incident_analysis')
       .update({
-        assigned_to_user_id: safetyOfficerId,
+        assigned_to_user_id: safetyOfficerUserId,
         assigned_to_name: safetyOfficerName,
         updated_at: new Date().toISOString()
       })
@@ -234,13 +234,23 @@ export const rejectUaUcReport = async (
     }
 
     if (report?.assigned_to_user_id) {
-      await supabase.from('notifications').insert({
-        user_id: report.assigned_to_user_id,
-        type: 'uauc_rejected_by_admin',
-        title: 'UA/UC Closure Rejected',
-        body: `Your closure of report "${report.report_no}" was rejected. Reason: ${remarks}`,
-        is_read: false
-      });
+      const { data: assignedOfficer } = await supabase
+        .from('users')
+        .select('auth_id')
+        .eq('id', report.assigned_to_user_id)
+        .maybeSingle();
+
+      if (!assignedOfficer?.auth_id) {
+        console.error('Could not resolve assigned Safety Officer Auth ID for UA/UC rejection notification.');
+      } else {
+        await supabase.from('notifications').insert({
+          user_id: assignedOfficer.auth_id,
+          type: 'uauc_rejected_by_admin',
+          title: 'UA/UC Closure Rejected',
+          body: `Your closure of report "${report.report_no}" was rejected. Reason: ${remarks}`,
+          is_read: false
+        });
+      }
     }
 
     revalidatePath(AppRoutes.ADMIN_EHS_UA_UC_NEAR_MISS_LISTING);
@@ -284,13 +294,23 @@ export const rejectIncidentReport = async (
 
     // Notify the assigned safety officer
     if (incident?.assigned_to_user_id) {
-      await supabase.from('notifications').insert({
-        user_id: incident.assigned_to_user_id,
-        type: 'incident_rejected_by_admin',
-        title: 'Incident Closure Rejected',
-        body: `Your closure of incident "${incident.title}" was rejected. Reason: ${remarks}`,
-        is_read: false
-      });
+      const { data: assignedOfficer } = await supabase
+        .from('users')
+        .select('auth_id')
+        .eq('id', incident.assigned_to_user_id)
+        .maybeSingle();
+
+      if (!assignedOfficer?.auth_id) {
+        console.error('Could not resolve assigned Safety Officer Auth ID for incident rejection notification.');
+      } else {
+        await supabase.from('notifications').insert({
+          user_id: assignedOfficer.auth_id,
+          type: 'incident_rejected_by_admin',
+          title: 'Incident Closure Rejected',
+          body: `Your closure of incident "${incident.title}" was rejected. Reason: ${remarks}`,
+          is_read: false
+        });
+      }
     }
 
     revalidatePath(AppRoutes.ADMIN_EHS_INCIDENT_ANALYSIS_LISTING);

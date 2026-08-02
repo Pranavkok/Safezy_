@@ -14,7 +14,7 @@ import { ImageIcon, FileVideo, X, Sparkles, Loader2 } from 'lucide-react';
 const MAX_SIZE_BYTES = 50 * 1024 * 1024;
 
 interface SafetyOfficer {
-  authId: string;
+  userId: string;
   name: string;
 }
 
@@ -98,12 +98,12 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
       toast.error('Please select a Safety Officer to assign.');
       return;
     }
-    const officer = safetyOfficers.find(o => o.authId === selectedOfficer);
+    const officer = safetyOfficers.find(o => o.userId === selectedOfficer);
     if (!officer) return;
 
     setAssigning(true);
     try {
-      const result = await adminAssignIncidentReport(incident.id, officer.authId, officer.name);
+      const result = await adminAssignIncidentReport(incident.id, officer.userId, officer.name);
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -217,7 +217,7 @@ const AdminIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
                   >
                     <option value="">Choose officer...</option>
                     {safetyOfficers.map(o => (
-                      <option key={o.authId} value={o.authId}>{o.name}</option>
+                      <option key={o.userId} value={o.userId}>{o.name}</option>
                     ))}
                   </select>
                 </div>

@@ -10,7 +10,7 @@ import { IncidentAnalysisWithImageType } from '@/types/index.types';
 import IncidentReport from '@/sections/ehs/incident-analysis/IncidentReport';
 
 interface SafetyOfficer {
-  authId: string;
+  userId: string;
   name: string;
 }
 
@@ -38,12 +38,12 @@ const ManagerIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
       toast.error('Please select a Safety Officer to assign.');
       return;
     }
-    const officer = safetyOfficers.find(o => o.authId === selectedOfficer);
+    const officer = safetyOfficers.find(o => o.userId === selectedOfficer);
     if (!officer) return;
 
     setAssigning(true);
     try {
-      const result = await assignIncidentReport(incident.id, officer.authId, officer.name);
+      const result = await assignIncidentReport(incident.id, officer.userId, officer.name);
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -106,7 +106,7 @@ const ManagerIncidentDetailSection = ({ incident, safetyOfficers }: Props) => {
                   >
                     <option value="">Choose officer...</option>
                     {safetyOfficers.map(o => (
-                      <option key={o.authId} value={o.authId}>
+                      <option key={o.userId} value={o.userId}>
                         {o.name}
                       </option>
                     ))}

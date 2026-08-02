@@ -6,7 +6,7 @@ import { ERROR_MESSAGES } from '@/constants/constants';
 import { UaUcNearMissRecord } from '@/types/ehs.types';
 import { revalidatePath } from 'next/cache';
 import { AppRoutes } from '@/constants/AppRoutes';
-import { getAuthId } from '@/actions/user';
+import { getUserIdFromAuth } from '@/actions/user';
 import { IncidentListItem } from '@/actions/manager/ehs';
 
 // ─── UA / UC / Near Miss ──────────────────────────────────────────────────────
@@ -20,13 +20,13 @@ export const getMyAssignedUaUcReports = async (): Promise<{
   const supabase = createServiceClient();
 
   try {
-    const authId = await getAuthId();
-    if (!authId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+    const userId = await getUserIdFromAuth();
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
     const { data, error } = await supabase
       .from('ehs_ua_uc_near_miss')
       .select('*')
-      .eq('assigned_to_user_id', authId)
+      .eq('assigned_to_user_id', userId)
       .order('reported_at', { ascending: false });
 
     if (error) {
@@ -56,8 +56,8 @@ export const closeUaUcReport = async (
   const supabase = createServiceClient();
 
   try {
-    const authId = await getAuthId();
-    if (!authId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+    const userId = await getUserIdFromAuth();
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
     // Verify this report is actually assigned to this safety officer
     const { data: existing } = await supabase
@@ -66,7 +66,7 @@ export const closeUaUcReport = async (
       .eq('id', reportId)
       .single();
 
-    if (!existing || existing.assigned_to_user_id !== authId) {
+    if (!existing || existing.assigned_to_user_id !== userId) {
       return { success: false, message: 'You are not authorized to close this report.' };
     }
 
@@ -111,13 +111,13 @@ export const getMyAssignedIncidents = async (): Promise<{
   const supabase = createServiceClient();
 
   try {
-    const authId = await getAuthId();
-    if (!authId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+    const userId = await getUserIdFromAuth();
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
     const { data, error } = await supabase
       .from('ehs_incident_analysis')
       .select('id, title, incident_type, severity_level, location, date, created_at, updated_at, is_completed, assigned_to_name, assigned_to_user_id, final_approval')
-      .eq('assigned_to_user_id', authId)
+      .eq('assigned_to_user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -153,8 +153,8 @@ export const closeIncidentReport = async (
   const supabase = createServiceClient();
 
   try {
-    const authId = await getAuthId();
-    if (!authId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
+    const userId = await getUserIdFromAuth();
+    if (!userId) return { success: false, message: ERROR_MESSAGES.USER_NOT_FOUND };
 
     const { data: existing } = await supabase
       .from('ehs_incident_analysis')
@@ -162,7 +162,7 @@ export const closeIncidentReport = async (
       .eq('id', reportId)
       .single();
 
-    if (!existing || existing.assigned_to_user_id !== authId) {
+    if (!existing || existing.assigned_to_user_id !== userId) {
       return { success: false, message: 'You are not authorized to close this incident.' };
     }
 
@@ -206,18 +206,18 @@ export const getSafetyOfficerDashboardStats = async (): Promise<{
   const supabase = createServiceClient();
 
   try {
-    const authId = await getAuthId();
-    if (!authId) return { success: false };
+    const userId = await getUserIdFromAuth();
+    if (!userId) return { success: false };
 
     const [uaUcResult, incidentResult] = await Promise.all([
       supabase
         .from('ehs_ua_uc_near_miss')
         .select('status')
-        .eq('assigned_to_user_id', authId),
+        .eq('assigned_to_user_id', userId),
       supabase
         .from('ehs_incident_analysis')
         .select('is_completed')
-        .eq('assigned_to_user_id', authId)
+        .eq('assigned_to_user_id', userId)
     ]);
 
     const uaUcData = uaUcResult.data ?? [];

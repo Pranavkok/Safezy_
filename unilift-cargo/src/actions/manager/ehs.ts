@@ -49,7 +49,7 @@ export const getAllUaUcReports = async (filters?: {
 // Assign a UA/UC/Near Miss report to a Safety Officer
 export const assignUaUcReport = async (
   reportId: number,
-  safetyOfficerId: string,
+  safetyOfficerUserId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
   const serviceClient = createServiceClient();
@@ -58,7 +58,7 @@ export const assignUaUcReport = async (
     const { error } = await serviceClient
       .from('ehs_ua_uc_near_miss')
       .update({
-        assigned_to_user_id: safetyOfficerId,
+        assigned_to_user_id: safetyOfficerUserId,
         assigned_to_name: safetyOfficerName,
         status: 'Assigned',
         updated_at: new Date().toISOString()
@@ -189,7 +189,7 @@ export const closeIncidentReport = async (
 // Assign an Incident Analysis report to a Safety Officer
 export const assignIncidentReport = async (
   reportId: number,
-  safetyOfficerId: string,
+  safetyOfficerUserId: string,
   safetyOfficerName: string
 ): Promise<{ success: boolean; message: string }> => {
   const serviceClient = createServiceClient();
@@ -198,7 +198,7 @@ export const assignIncidentReport = async (
     const { error } = await serviceClient
       .from('ehs_incident_analysis')
       .update({
-        assigned_to_user_id: safetyOfficerId,
+        assigned_to_user_id: safetyOfficerUserId,
         assigned_to_name: safetyOfficerName,
         updated_at: new Date().toISOString()
       })
@@ -223,14 +223,14 @@ export const assignIncidentReport = async (
 // Get dropdown list of all active Safety Officers (for the assign panel)
 export const getSafetyOfficersList = async (): Promise<{
   success: boolean;
-  data?: { authId: string; name: string }[];
+  data?: { userId: string; name: string }[];
 }> => {
   const serviceClient = createServiceClient();
 
   try {
     const { data, error } = await serviceClient
       .from('users')
-      .select('auth_id, first_name, last_name, user_roles!inner(role)')
+      .select('id, first_name, last_name, user_roles!inner(role)')
       .eq('user_roles.role', USER_ROLES.SAFETY_OFFICER)
       .eq('is_active', true);
 
@@ -240,7 +240,7 @@ export const getSafetyOfficersList = async (): Promise<{
     }
 
     const officers = (data ?? []).map((u: any) => ({
-      authId: u.auth_id,
+      userId: u.id,
       name: `${u.first_name} ${u.last_name}`
     }));
 
