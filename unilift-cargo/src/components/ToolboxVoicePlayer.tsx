@@ -15,6 +15,7 @@ import {
   X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { configureTbtUtterance, getBestTbtVoice } from '@/utils/tbtSpeech';
 
 // ------------------------------------------------------------------
 // Types
@@ -59,22 +60,6 @@ function stripHtml(html: string): string {
     el.insertAdjacentText('afterend', ' ');
   });
   return (doc.body.innerText || doc.body.textContent || '').trim();
-}
-
-/** Find the best available TTS voice for the given BCP-47 language code */
-function getBestVoice(langCode: string): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  const primary = langCode;           // e.g. "hi-IN"
-  const base = langCode.split('-')[0]; // e.g. "hi"
-
-  return (
-    voices.find(v => v.lang === primary) ||
-    voices.find(v => v.lang.startsWith(base)) ||
-    voices.find(v => v.default) ||
-    voices[0] ||
-    null
-  );
 }
 
 // ------------------------------------------------------------------
@@ -139,15 +124,13 @@ const ToolboxVoicePlayer: React.FC<ToolboxVoicePlayerProps> = ({
 
     const langCode = LANG_CODE[language];
     const utterance = new SpeechSynthesisUtterance(plainText);
-    utterance.lang = langCode;
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
+    configureTbtUtterance(utterance, langCode);
 
     totalCharsRef.current = plainText.length;
 
     // Find voice — wait for voices to load if needed (some browsers are async)
     const assignVoice = () => {
-      const voice = getBestVoice(langCode);
+      const voice = getBestTbtVoice(langCode);
       if (voice) {
         utterance.voice = voice;
         // Warn if the voice language doesn't match what was requested

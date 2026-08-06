@@ -19,6 +19,7 @@ import {
   isImageUrl,
   parseToolboxAttachmentUrls
 } from '@/utils';
+import { configureTbtUtterance, getBestTbtVoice } from '@/utils/tbtSpeech';
 
 type Language = 'original' | 'en' | 'hi' | 'mr';
 
@@ -71,19 +72,6 @@ function stripHtmlToText(html: string): string {
     el.insertAdjacentText('afterend', ' ');
   });
   return (doc.body.innerText || doc.body.textContent || '').trim();
-}
-
-function getSummaryVoice(langCode: string): SpeechSynthesisVoice | null {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return null;
-  const base = langCode.split('-')[0];
-  return (
-    voices.find(v => v.lang === langCode) ||
-    voices.find(v => v.lang.startsWith(base)) ||
-    voices.find(v => v.default) ||
-    voices[0] ||
-    null
-  );
 }
 
 const ToolboxTalkAttachment = ({
@@ -220,11 +208,10 @@ function SummaryVoiceButton({
     window.speechSynthesis.cancel();
     const langCode = SUMMARY_LANG_CODE[language];
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = langCode;
-    utterance.rate = 0.95;
+    configureTbtUtterance(utterance, langCode);
 
     const assignVoice = () => {
-      const voice = getSummaryVoice(langCode);
+      const voice = getBestTbtVoice(langCode);
       if (voice) {
         utterance.voice = voice;
         if (!voice.lang.startsWith(langCode.split('-')[0])) {
