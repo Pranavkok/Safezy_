@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { EhsChecklistFormSchema } from '@/validations/admin/add-checklist';
 import { deleteFile, uploadFile } from '@/utils';
+import Image from 'next/image';
 
 const EhsChecklistAddUpdateSection = ({
   initialData
@@ -29,6 +30,10 @@ const EhsChecklistAddUpdateSection = ({
   initialData?: ChecklistTopicAndQuestionsType;
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExistingImageRemoved, setIsExistingImageRemoved] = useState(false);
+  const [selectedImagePreview, setSelectedImagePreview] = useState<
+    string | null
+  >(null);
   const router = useRouter();
   const isEditMode = !!initialData;
 
@@ -49,6 +54,7 @@ const EhsChecklistAddUpdateSection = ({
     handleSubmit,
     control,
     setError,
+    resetField,
     formState: { errors },
     watch
   } = useForm<EhsChecklistType>({
@@ -72,6 +78,19 @@ const EhsChecklistAddUpdateSection = ({
   });
 
   const questions = watch('questions');
+  const imageField = register('image_url');
+  const displayedImageUrl =
+    selectedImagePreview ||
+    (!isExistingImageRemoved ? initialData?.image_url : '');
+
+  useEffect(() => {
+    return () => {
+      if (selectedImagePreview) {
+        URL.revokeObjectURL(selectedImagePreview);
+      }
+    };
+  }, [selectedImagePreview]);
+
   const totalWeight = questions.reduce(
     (sum, q) => sum + Number(q.weight || 0),
     0
@@ -81,7 +100,7 @@ const EhsChecklistAddUpdateSection = ({
     setIsSubmitting(true);
     try {
       if (isEditMode) {
-        let image = initialData.image_url;
+        let image = isExistingImageRemoved ? '' : initialData.image_url;
 
         if (data.image_url) {
           try {
@@ -90,14 +109,6 @@ const EhsChecklistAddUpdateSection = ({
               'product_images',
               'images'
             );
-
-            if (initialData.image_url) {
-              await deleteFile(
-                initialData.image_url,
-                'product_images',
-                'images'
-              );
-            }
           } catch (error) {
             setError('image_url', { message: error.message });
             throw error;
@@ -117,6 +128,21 @@ const EhsChecklistAddUpdateSection = ({
           deletedQuestionIds
         );
         if (res.success) {
+          if (
+            initialData.image_url &&
+            (isExistingImageRemoved || data.image_url)
+          ) {
+            try {
+              await deleteFile(
+                initialData.image_url,
+                'product_images',
+                'images'
+              );
+            } catch (error) {
+              console.error('Failed to remove the previous image:', error);
+            }
+          }
+
           toast.success('Checklist updated successfully');
           router.refresh();
           router.push(AppRoutes.ADMIN_EHS_CHECKLIST_LISTING);
@@ -280,7 +306,15 @@ const EhsChecklistAddUpdateSection = ({
               <Input
                 type="file"
                 accept="image/*"
-                {...register('image_url')}
+                {...imageField}
+                onChange={event => {
+                  imageField.onChange(event);
+                  const selectedFile = event.target.files?.[0];
+
+                  setSelectedImagePreview(
+                    selectedFile ? URL.createObjectURL(selectedFile) : null
+                  );
+                }}
                 className="file:p-[5px] file:mb-1 file:rounded-lg mt-2 file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
               />
               {errors.image_url && (
@@ -289,10 +323,42 @@ const EhsChecklistAddUpdateSection = ({
                 </p>
               )}
 
-              {existingFileName && (
-                <p className="text-sm mt-1">
-                  Existing File: <strong>{originalFileName}</strong>
-                </p>
+              {existingFileName &&
+                !isExistingImageRemoved &&
+                !selectedImagePreview && (
+                  <p className="text-sm mt-1">
+                    Existing File: <strong>{originalFileName}</strong>
+                  </p>
+                )}
+
+              {displayedImageUrl && (
+                <div className="relative mt-3 flex min-h-40 max-h-80 w-full items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-gray-50 p-2">
+                  <Image
+                    src={displayedImageUrl}
+                    alt="Checklist preview"
+                    width={1200}
+                    height={600}
+                    className="h-auto max-h-[19rem] w-auto max-w-full object-contain"
+                    unoptimized
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute right-3 top-3"
+                    onClick={() => {
+                      if (selectedImagePreview) {
+                        resetField('image_url');
+                        setSelectedImagePreview(null);
+                      } else {
+                        setIsExistingImageRemoved(true);
+                      }
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove Image
+                  </Button>
+                </div>
               )}
             </div>
           </div>

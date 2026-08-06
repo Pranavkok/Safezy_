@@ -346,13 +346,13 @@ const ChecklistResponseFormSection = ({
 
             {/* Reference Image */}
             {checklistQuestions.image_url && (
-              <div className="mt-4">
+              <div className="mt-4 flex min-h-48 max-h-[32rem] w-full items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-gray-50 p-2">
                 <Image
                   src={checklistQuestions.image_url}
                   alt={checklistQuestions.topic_name}
                   width={1200}
                   height={600}
-                  className="w-full max-h-72 object-cover rounded-md border border-gray-200"
+                  className="h-auto max-h-[31rem] w-auto max-w-full object-contain"
                 />
               </div>
             )}
