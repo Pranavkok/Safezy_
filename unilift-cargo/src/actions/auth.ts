@@ -405,23 +405,61 @@ export const resendOtp = async (
 
 export const forgotPassword = async (email: string) => {
   const supabase = await createClient();
-  try {
-    const { data: userData } = await supabase
-      .from('users')
-      .select('email')
-      .eq('email', email)
-      .single();
+  const serviceClient = createServiceClient();
+  const normalizedEmail = email.trim().toLowerCase();
 
-    if (!userData) {
+  try {
+    const { data: userData, error: userLookupError } = await serviceClient
+      .from('users')
+      .select('id, email, auth_id, is_active, is_deleted')
+      .ilike('email', normalizedEmail)
+      .maybeSingle();
+
+    if (userLookupError) {
+      console.error('Error checking password reset user:', userLookupError);
+      return {
+        success: false,
+        message: ERROR_MESSAGES.RESET_EMAIL_NOT_SENT
+      };
+    }
+
+    if (
+      !userData ||
+      userData.is_active === false ||
+      userData.is_deleted === true
+    ) {
       return {
         success: false,
         message: ERROR_MESSAGES.USER_NOT_REGISTERED
       };
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://safezy.in/auth/reset-confirm'
-    });
+    const canonicalEmail = userData.email.trim().toLowerCase();
+    const { data: authData, error: authLookupError } =
+      await serviceClient.auth.admin.getUserById(userData.auth_id);
+
+    if (
+      authLookupError ||
+      !authData.user ||
+      authData.user.email?.trim().toLowerCase() !== canonicalEmail
+    ) {
+      console.error('Password reset Auth account mismatch:', {
+        publicUserId: userData.id,
+        authUserId: userData.auth_id,
+        error: authLookupError?.message
+      });
+      return {
+        success: false,
+        message: ERROR_MESSAGES.RESET_EMAIL_NOT_SENT
+      };
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      canonicalEmail,
+      {
+        redirectTo: 'https://safezy.in/auth/reset-confirm'
+      }
+    );
 
     if (error) {
       console.error('Error during password reset:', error.message);
